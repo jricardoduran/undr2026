@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kobalt Minimal Flat 1.0.0 — prueba básica adicional</title>
+<style>body{font:15px/1.6 system-ui,sans-serif;max-width:850px;margin:2rem auto;padding:0 1rem}pre{white-space:pre-wrap;background:#f5f5f5;padding:1rem;border-radius:8px}</style></head>
+<body><h1>Kobalt Minimal Flat 1.0.0 — prueba básica</h1>
+<p>Prueba adicional creada en la consolidación. <strong>No sustituye la probeta histórica de 38/38.</strong> Abre este HTML en un navegador con WebCrypto.</p>
+<pre id="out">Ejecutando...</pre>
+<script src="../Minimal/2026-09-11_0014_kobalt-minimal-flat-1.0.0.js"></script>
+<script>
+(async () => {
+  const K=globalThis.KobaltMinimalFlat, enc=new TextEncoder(), out=document.getElementById('out');
+  const equal=(a,b)=>a.length===b.length && a.every((v,i)=>v===b[i]);
+  const rows=[];
+  const test=(n,ok)=>rows.push([n,!!ok]);
+  try {
+    test('Versión 1.0.0',K.VERSION==='1.0.0');
+    const D=crypto.getRandomValues(new Uint8Array(16));
+    const node=Uint8Array.from([1,2,3,4,5,6,7,8]);
+    const r1=await K.registrarPrefix(D,node), r2=await K.registrarPrefix(D,node);
+    test('RegistrarPrefix de 8 B determinista',r1.length===8 && equal(r1,r2));
+    const user=await K.identity.user(D,enc.encode('user:test'));
+    test('Identidad HMAC de 32 B',user.length===32);
+    const a=K.table.ensure(K.table.empty(),user);
+    const b=K.table.ensure(a.table,user);
+    test('Tabla: asignación/reuso slot 1',a.slot===1 && a.added && b.slot===1 && !b.added);
+    test('Varuint roundtrip', [0,1,127,128,16384].every(v=>K.varuint.decode(K.varuint.encode(v))===v));
+    const base=K.names.continuityBase(r1,1,node,2,3);
+    test('Decodificación de base de continuidad', K.names.decode(base).kind==='continuityBase');
+    const t1=K.version.nextTimestamp(0n,1000), t2=K.version.nextTimestamp(t1,900);
+    test('Timestamp local monotónico',t1===1000n && t2===1001n);
+    const payload=enc.encode('hola minimal');
+    const name=await K.names.version(D,base,payload,t2);
+    const envelope=await K.seal(D,name,payload);
+    const opened=await K.open(D,name,envelope);
+    test('AES-GCM: apertura + overhead 28 B',equal(opened,payload) && envelope.length===payload.length+28);
+    let wrongRejected=false;
+    try {await K.open(D,name.slice(0,-1),envelope);} catch (_) {wrongRejected=true;}
+    test('AAD: nombre incorrecto rechazado', wrongRejected);
+    const count=rows.filter(x=>x[1]).length;
+    out.textContent=rows.map(([n,pass])=>`${pass?'PASS':'FAIL'} — ${n}`).join('\n')+`\n\nResultado de esta prueba adicional: ${count}/${rows.length}`;
+  } catch(err) {out.textContent=rows.map(([n,pass])=>`${pass?'PASS':'FAIL'} — ${n}`).join('\n')+'\nERROR: '+err.stack;}
+})();
+</script></body></html>

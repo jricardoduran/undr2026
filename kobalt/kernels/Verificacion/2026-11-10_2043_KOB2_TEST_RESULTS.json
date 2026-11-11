@@ -1,0 +1,178 @@
+{
+  "source": "pruebas expuestas por los JavaScript originales; runner añadido por consolidación",
+  "node": "v22.23.4",
+  "kernel": {
+    "release": "9.0.1",
+    "passed": 26,
+    "total": 26,
+    "pass": true,
+    "tests": [
+      {
+        "name": "View distingue Clear de Keyed(0^256)",
+        "pass": true
+      },
+      {
+        "name": "Cell = 36 bytes",
+        "pass": true
+      },
+      {
+        "name": "Cell roundtrip",
+        "pass": true
+      },
+      {
+        "name": "Name incluye DescriptorSlot",
+        "pass": true
+      },
+      {
+        "name": "Frame preserva fronteras",
+        "pass": true
+      },
+      {
+        "name": "Vector prefix = extensión conservativa",
+        "pass": true
+      },
+      {
+        "name": "Trajectory rechaza FOLLOW",
+        "pass": true
+      },
+      {
+        "name": "Index acepta FOLLOW/EMIT/EXPAND",
+        "pass": true
+      },
+      {
+        "name": "Trajectory prefix resuelve CHAIN",
+        "pass": true
+      },
+      {
+        "name": "Trayectorias incompatibles resuelven FORK",
+        "pass": true
+      },
+      {
+        "name": "Trayectoria reconocida vacía es EMPTY",
+        "pass": true
+      },
+      {
+        "name": "Keyed EMIT roundtrip",
+        "pass": true
+      },
+      {
+        "name": "Keyed FOLLOW roundtrip",
+        "pass": true
+      },
+      {
+        "name": "Clear EMIT roundtrip",
+        "pass": true
+      },
+      {
+        "name": "Clear EXPAND roundtrip",
+        "pass": true
+      },
+      {
+        "name": "Clear materializa plaintext realmente claro",
+        "pass": true
+      },
+      {
+        "name": "Keyed y Clear producen Names distintos",
+        "pass": true
+      },
+      {
+        "name": "Envelope rechaza View incorrecta",
+        "pass": true
+      },
+      {
+        "name": "Cell exacta rechaza bytes ajenos",
+        "pass": true
+      },
+      {
+        "name": "Clear detecta corrupción material",
+        "pass": true
+      },
+      {
+        "name": "Recognition ignora otra Cell y reconoce la esperada",
+        "pass": true
+      },
+      {
+        "name": "Exact resolution es exacta",
+        "pass": true
+      },
+      {
+        "name": "Follow resolution elige máximo por prefijo",
+        "pass": true
+      },
+      {
+        "name": "Follow resolution expone FORK, no merge",
+        "pass": true
+      },
+      {
+        "name": "Descriptor desconocido exige resolver",
+        "pass": true
+      },
+      {
+        "name": "I/Q/Name = 32 bytes",
+        "pass": true
+      }
+    ]
+  },
+  "mechanisms": {
+    "release": "1.0.0",
+    "passed": 11,
+    "total": 11,
+    "pass": true,
+    "tests": [
+      {
+        "name": "Continuity: identidad estable, Current cambia por trayectoria",
+        "pass": true
+      },
+      {
+        "name": "Publication: realización precede FOLLOW",
+        "pass": true
+      },
+      {
+        "name": "CoordinateTable: slot es posición estable",
+        "pass": true
+      },
+      {
+        "name": "CoordinateTable: coordenada es (I_T,slot), no slot global",
+        "pass": true
+      },
+      {
+        "name": "Coproduct: valores locales iguales no colisionan entre contextos",
+        "pass": true
+      },
+      {
+        "name": "Evidence: mismos bytes en dos Sources conservan procedencia",
+        "pass": true
+      },
+      {
+        "name": "DescriptorTable: gramática extendida emerge sin descriptor TABLE",
+        "pass": true
+      },
+      {
+        "name": "D como Continuity: rotación cambia d sin cambiar J_D",
+        "pass": true
+      },
+      {
+        "name": "Authority como Continuity: revocación emerge de cambiar Current(A)",
+        "pass": true
+      },
+      {
+        "name": "Closure: FOLLOW→EXPAND→EMIT deriva estructura sin GraphDB",
+        "pass": true
+      },
+      {
+        "name": "Colaboración: multi-actor global sin trayectoria multi-writer",
+        "pass": true
+      }
+    ]
+  },
+  "knownAnswer": {
+    "pass": true,
+    "checks": {
+      "identity": true,
+      "contentId": true,
+      "cell": true,
+      "name": true,
+      "envelope": true
+    }
+  }
+}
