@@ -1,6 +1,6 @@
 ---
 name: kobalt-kernels
-description: Canon matemático y conceptual de Kobalt (Contrato, Cauce/Trayectoria, Fibra, proyecciones H/A/P, kernels Exacto, Minimal Flat y KOB2). Cárgala ANTES de diseñar, especificar, programar, revisar o testear cualquier parte del sistema Kobalt de inventario, POS o ecommerce, o cuando aparezcan stock, disponibilidad, solicitudes, asignaciones, productos, características, filtros, importación, sincronización, Google Drive, IndexedDB, Minimal, Exacto o KOB2. Define las leyes L1–L27 que todo código debe respetar y los supuestos «tradicionales» prohibidos.
+description: Canon matemático y conceptual de Kobalt (Contrato, Cauce/Trayectoria, Fibra, proyecciones H/A/P, kernels Exacto, Minimal Flat y KOB2). Cárgala ANTES de diseñar, especificar, programar, revisar o testear cualquier parte del sistema Kobalt de inventario, POS o ecommerce, o cuando aparezcan stock, disponibilidad, solicitudes, asignaciones, productos, características, filtros, importación, sincronización, Google Drive, IndexedDB, Minimal, Exacto o KOB2. Define las leyes L1–L30 que todo código debe respetar y los supuestos «tradicionales» prohibidos.
 ---
 
 # Kobalt — canon de kernels e ideas clave
@@ -29,6 +29,7 @@ Las leyes completas, numeradas y con su grado de certeza están en **`references
 - **L13 Unión, no mínimo.** Las solicitudes de varios nodos se unen por identidad; `min(D_B, D_C)` es incorrecto.
 - **L16 Autoridad previa.** El orden de llegada, una copia o una caché no dan autoridad.
 - **L17 Orientación ⟂ autoridad ⟂ materialidad.**
+- **L28–L30.** El ID emerge del orden de creación en `Γ_Cat`; los vectores se alinean implícitamente con `T`; todo «trabajo» (importar, sincronizar, adquirir) es una diferencia `Δ(objetivo, actualidad)`. Si vas a construir un generador de IDs, un sincronizador o una cola, detente: casi seguro ya emerge.
 
 ## 2. Glosario (usa estas palabras y sólo con este significado)
 
@@ -90,7 +91,8 @@ Detalle en `references/kernels.md`. Los originales están en `kobalt/kernels/`: 
 6. Si dependes de una decisión de `references/decisiones-abiertas.md`, **detente y pregunta**. No la decidas tú.
 
 ## 6. Fuentes
-- `references/leyes.md`: leyes L1–L27, objetos y demostraciones.
+- **`kobalt/CONSOLIDACION_Y_PLAN.md`**: documento rector. Contiene el núcleo irreducible, la tabla «mecanismo tradicional → qué lo hace emerger», el perfil v1 y las fases del plan. Léelo antes de diseñar cualquier fase.
+- `references/leyes.md`: leyes L1–L30, objetos y demostraciones.
 - `references/kernels.md`: qué aporta y qué no cada kernel.
 - `references/decisiones-abiertas.md`: decisiones del usuario y supuestos de Drive por verificar.
 - `kobalt/docs/…ATLAS_TECNICO_COMPLETO.md`: atlas exhaustivo de los tres kernels.

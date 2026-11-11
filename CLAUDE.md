@@ -8,9 +8,11 @@ Este repositorio contiene:
 **Primero claridad matemática, luego claridad conceptual, luego código.**
 Kobalt **no** es un inventario tradicional. Antes de diseñar, programar, revisar o probar cualquier cosa de Kobalt, carga la skill **`kobalt-kernels`**. Para escribir o revisar pruebas, carga también **`kobalt-verificar-leyes`**.
 
+**Documento rector:** `kobalt/CONSOLIDACION_Y_PLAN.md`. Contiene el núcleo irreducible, qué mecanismos emergen, el perfil v1 y las fases. Toda tarea se ubica en una de sus fases.
+
 ## Mapa
 ```
-.claude/skills/kobalt-kernels/          canon: glosario, leyes L1–L27, supuestos prohibidos, kernels
+.claude/skills/kobalt-kernels/          canon: glosario, leyes L1–L30, supuestos prohibidos, kernels
 .claude/skills/kobalt-verificar-leyes/  cómo convertir leyes en pruebas; ejemplo/ ejecutable (oráculo H/A/P)
 .claude/agents/                         kobalt-matematico · kobalt-verificador · kobalt-implementador · kobalt-revisor-conceptual
 kobalt/kernels/                         ORIGINALES de KOB2 9.0.1, Mechanisms 1.0.0, Minimal Flat 1.0.0, contrato Exacto (NO MODIFICAR)

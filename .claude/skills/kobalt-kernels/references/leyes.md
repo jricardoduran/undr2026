@@ -151,6 +151,16 @@ Si `Σ_d Q_d ≤ H − A` y cada dispositivo `d` admite ventas sólo con la guar
 
 ---
 
+## V‑bis. Coordenadas y diferencia (consolidación 2026‑11‑11, `kobalt/CONSOLIDACION_Y_PLAN.md`)
+
+**L28 [T] Coordenadas emergentes.** `slot(e) := 1 + |{variantes creadas antes que e en Γ_Cat}|`. Entonces `Γ ⪯ Γ' ⇒ T(Γ) ⪯ T(Γ')`, y ninguna posición se reutiliza (retirar es una acción nueva). No hay generador de IDs: `ID = (ámbito, slot)`. El SKU es un atributo y el slot es una coordenada. Los slots se codifican con el `varuint` canónico de Minimal, 1‑based, con `0` reservado.
+
+**L29 [T] Alineación implícita.** Un vector transversal `V = (TableIdentity, Values, Corte)` con valor por defecto por contrato para las posiciones `i ≤ |T|` sin valor explícito sigue siendo válido con cualquier extensión de `T`, sin reescribirse. El alta de una variante no requiere acciones en otros ámbitos. Un `T` que no extiende al anterior es un error de continuidad, nunca una reinterpretación.
+
+**L30 [T] Diferencia.** Importar, sincronizar, actualizar proyecciones, adquirir material y calcular faltantes son instancias de `Δ(objetivo, actualidad)`. Si el objetivo ya está reconocido, `Δ = ∅`. Reintentar es seguro si `Δ` se calcula contra la actualidad o se deduplica por identidad, nunca si se repite el delta a ciegas.
+
+---
+
 ## VI. Hechos de los kernels que condicionan el diseño ([V] el 10‑nov‑2026)
 
 - Minimal `varuint` canónico: 1 B hasta 127, 2 B hasta 16.383, 3 B hasta 2.097.151; rechaza formas no canónicas.

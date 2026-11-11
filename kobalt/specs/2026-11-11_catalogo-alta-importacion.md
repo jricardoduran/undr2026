@@ -3,6 +3,8 @@
 **Fecha:** 2026-11-11 · **Autor:** agente matemático de Kobalt · **Estado:** borrador para revisión del usuario (no aprobada).
 **Tipo:** especificación matemática. No contiene código de producción.
 
+> **Nota (2026‑11‑11, consolidación):** esta spec describe el **perfil general** (orientaciones `ω` repartidas entre varios ámbitos). La v1 usa el **perfil mínimo** de `kobalt/CONSOLIDACION_Y_PLAN.md` (Parte III): dos ámbitos `Cat_O`/`Inv_W`, coordenadas emergentes (L28), alineación implícita (L29) y diferencia (L30). Donde ambos documentos difieran para la v1, prevalece la consolidación.
+
 **Fuentes.** Conversación «Reconstruir Kernels Kobalt» (10‑nov‑2026), líneas 5084–6280 (diseño inicial y flujos) y 6280–6909 (**corrección decisiva**: dualidad entidad/parámetro; prevalece sobre lo anterior). Documento del usuario «Kobalt Minimal — Recuperar la geometría completa de entidades, parámetros y causalidad» (resumen transmitido por el agente que encargó esta spec). `references/leyes.md` (L1–L27), `references/kernels.md`, `references/decisiones-abiertas.md`, nota `kobalt/docs/2026-11-10_KOBALT_INVENTARIO_ANALISIS_KERNELS_Y_DRIVE_NOTA.md` y el atlas (§5.4 de Minimal: tablas y slots).
 
 **Specs previas.** `kobalt/specs/` estaba vacío: no hay specs aprobadas con las que esta pueda entrar en conflicto. [V: listado del directorio el 11‑nov‑2026]
