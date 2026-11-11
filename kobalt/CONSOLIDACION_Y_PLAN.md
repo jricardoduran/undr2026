@@ -20,14 +20,19 @@ AppendIfHead(Γ_s, (n,h_n), u, a)  ⟺  cabeza intacta ∧ a ∈ O_κ(u) ∧ Adm
 S_n = Fold_s(S_0, Γ_n)            Respuesta(q) = Π_q(S_{n_1}, …, S_{n_m})
 ```
 
-En la primera versión hay exactamente **dos ámbitos** `s` (dos fronteras de autoridad, L20):
+**Entidades fundamentales (actualización 11‑nov, `docs/2026-11-11_ANALISIS_PRODUCTO_Y_TRAYECTORIA.md`):**
+- el **Producto**, que es forma más identidad y nace una vez;
+- la **Trayectoria** `Γ`, que contiene todas las acciones comprometidas.
 
-| Ámbito | Constituye | Constituyente |
-|---|---|---|
-| `Cat_O` (catálogo del propietario `O`) | productos, variantes, atributos descriptivos, relaciones, retiro | propietario |
-| `Inv_W` (inventario de la bodega `W` de `O`) | existencias y sus movimientos | propietario (todo); cajero (solo ventas y devoluciones) |
+Todo lo demás es Actualidad y proyecciones.
 
-Precios de terceros, solicitudes remotas, ofertas y pedidos multiproveedor son ámbitos **posteriores**: se añaden sin tocar estos dos (coproducto, L25).
+En la v1 hay **una sola Trayectoria local** (decisión del usuario en la interacción 3: *la trayectoria constituye; la ficha expresa*). Contiene altas, cambios de atributos y movimientos de existencias. Es el bloque más grueso del retículo de particiones válidas (L20). Separarla en `Cat_O` / `Inv_W` (o por producto, que es el «modelo A», o por bodega) es **configuración** (L31), para cuando las autoridades difieran. El núcleo admite cualquier partición sin cambios.
+
+| Constituye | Constituyente (capacidades, §13) |
+|---|---|
+| Productos, variantes, características, retiro, existencias y sus movimientos | Propietario (todo); cajero (ventas, devoluciones y lectura) |
+
+Precios de terceros, solicitudes remotas, ofertas y pedidos multiproveedor son ámbitos **posteriores**: se añaden por coproducto sin tocar esta Trayectoria (L25).
 
 ### 2. Teorema de coordenadas emergentes [T]
 
@@ -234,17 +239,17 @@ Tecnología: módulos ES nativos, sin dependencias; `node --test` para el núcle
 |---|---|---|---|
 | **0. Consolidación** *(este documento)* | Leyes fijas y espacio de configuración con valores iniciales (Parte III) | L31 | Hecho: no bloquea; la configuración se ajusta en cualquier momento |
 | **1. Núcleo general** | `kobalt/src/nucleo/`: `secuencia` (Γ, `AppendIfHead`, cadena de hashes, verificación de sufijo), `contrato` (capacidades + guardas + T), `proyeccion` (checkpoint: reutilizar, actualizar o reconstruir), `diferencia` | L3, L4, L8, L9, L22, L27 | Sin una sola palabra de dominio: el núcleo no sabe qué es un producto |
-| **2a. Catálogo** (paralelo a 2b) | `dominio/catalogo`: acciones `Cat`, `T` emergente, catálogo consolidado, secciones, columnas, fibras bitset | Teoremas 2 y 3, L1, L2, L17, L26 | Unicidad de SKU; slot estable bajo retiro; filtros = oráculo de conjuntos |
-| **2b. Inventario** (paralelo a 2a) | `dominio/inventario`: acciones `Inv`, Flat alineado, disponibilidad y descuadre | L6, L7, L11, L13, Teorema 3 | Alta sin tocar inventario; descuadre representable; `sid` sin doble efecto |
-| **3. Alta e importación** | `flujos/alta`, `flujos/importar`: formulario o CSV → hechos → `Δ` → solicitudes por ámbito; faltantes | §5, L16, L24, Teorema 7.5 de la spec | Importar dos veces = 0 compromisos; reanudar equivale a no interrumpir; mismas solicitudes desde la ficha y desde la tabla |
-| **4. Materialidad local** | Adapter IndexedDB (Γ, snapshots, checkpoints); imágenes por `Q` con `Want − Local` | L22, L23, L27 | Probeta en navegador real: recargar, reconstruir y verificar la cadena |
-| **5. Proyecciones de interfaz** | HTML: alta, listado, ficha, tabla transversal editable y POS de cajero | L16, L17 | El POS y el panel son la misma realidad con capacidades distintas |
-| **6. Probeta 0 · Drive** | Irradiación de `Γ` por Drive (ver `decisiones-abiertas.md`) | L8, L22 | Los cinco supuestos de Drive verificados o refutados |
-| **7+. Comercio cooperativo** | Solicitudes remotas (H/A/P), ofertas de terceros, cuotas, pedidos multiproveedor, migración de orientación, integración con KOB2 | L11–L15, L18, L19, L21 | Fases posteriores, sin tocar el núcleo |
+| **2. Álgebra de preguntas** | `kobalt/src/preguntas/` (genérico, sin dominio, **sobre** el núcleo): pregunta = `(φ, f, M, obs, ventana)`; filtros componibles; ventanas por prefijos (grupos) o segmentos (monoides); producto de preguntas en una pasada (`docs/2026-11-11_ALGEBRA_DE_PREGUNTAS.md`) | L32–L34, L9, L10 | Las familias de §6 de ese documento (flujos, extremos, frecuencias, conjuntos, últimos, secuencias) con reglas de juguete; ventana por prefijos = recorrido directo |
+| **3. Producto y clases de característica** | `kobalt/src/dominio/`: la Forma del Producto (`CrearProducto`, `DefinirCaracterística`, slots L28) y los **cinco monoides de clase** (asignación, cantidad `{+q}∪{=h}`, conjunto, ciclo, referencia) como reglas sobre la **única** `Γ`; `T`, catálogo consolidado y Flat (L29) | L1, L2, L7, L17, L26, L28, L29, L33 | Característica nueva = dato; ficha y tabla emiten la misma acción; las preguntas tradicionales de §7 se responden como puntos del espacio de preguntas |
+| **4. Alta e importación** | Formulario o CSV → hechos → `Δ` → acciones en `Γ`; faltantes | L16, L24, L30 | Importar dos veces = 0 compromisos; reanudar equivale a no interrumpir |
+| **5. Materialidad local** | Adapter IndexedDB (Γ, snapshots, checkpoints); imágenes por `Q` con `Want − Local` | L22, L23, L27 | Probeta en navegador real: recargar, reconstruir y verificar la cadena |
+| **6. Proyecciones de interfaz** | HTML: alta, listado, ficha, tabla transversal editable, POS de cajero y **explorador de preguntas** (cualquier corte o ventana) | L16, L17, L32 | El POS, el panel y los reportes son la misma realidad con capacidades y preguntas distintas |
+| **7. Probeta 0 · Drive** | Irradiación de `Γ` por Drive (ver `decisiones-abiertas.md`) | L8, L22 | Los cinco supuestos de Drive verificados o refutados |
+| **8+. Comercio cooperativo** | Partición de `Γ` por autoridad, solicitudes remotas (H/A/P), ofertas de terceros, cuotas, pedidos multiproveedor, integración con KOB2 | L11–L15, L18–L21 | Fases posteriores, sin tocar el núcleo |
 
-**Paralelismo real:** 2a y 2b se reparten entre dos implementadores (ámbitos distintos, unidos solo por una lectura estable). Dentro de la fase 1 no conviene repartir: el núcleo es pequeño y debe tener una sola voz.
+**Paralelismo real:** las fases 2 (preguntas, genérica) y 3 (dominio) se pueden implementar en paralelo, porque ambas dependen solo del núcleo. Dentro de la fase 3, cada monoide de clase es independiente. El núcleo no se reparte: es pequeño y debe tener una sola voz.
 
-**Métrica de éxito global:** que el núcleo de la fase 1 **no cambie** en las fases 2 a 7. Si una fase obliga a tocarlo, o falta una propiedad (y hay que demostrarlo) o se ha colado un mecanismo tradicional.
+**Métrica de éxito global:** que el núcleo de la fase 1 **no cambie** en las fases 2 a 8, y que ninguna funcionalidad requiera algo distinto de una pregunta `(φ, f, M, obs, ventana)`, una acción o una característica. Si una fase obliga a tocarlo, o falta una propiedad (y hay que demostrarlo) o se ha colado un mecanismo tradicional.
 
 ---
 

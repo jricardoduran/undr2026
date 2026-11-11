@@ -162,6 +162,15 @@ Si `Σ_d Q_d ≤ H − A` y cada dispositivo `d` admite ventas sólo con la guar
 
 **L31 [D] Fijar frente a abrir.** La matemática fija leyes (no configurables) y abre posibilidades. Las posibilidades abiertas son **parámetros del contrato** con un valor inicial, elegidos por configuración manual mínima; nunca se codifican como decisión. La representación debe admitir todo el espacio abierto (la generalidad fija la representación). Cambiar la configuración es una acción comprometida en la trayectoria del contrato y abre una época nueva (sin mecanismo de configuración aparte).
 
+
+## V‑ter. Álgebra de preguntas (`kobalt/docs/2026-11-11_ALGEBRA_DE_PREGUNTAS.md`)
+
+**L32 [T] Una pregunta es un homomorfismo.** `Γ ∈ A*` es el monoide libre. Para todo monoide `M` y todo `f : A → M` existe un único `f* : A* → M`. Una funcionalidad es una pregunta `(φ, f, M, obs, ventana)` con `Respuesta = obs(f*(φ(Γ_{i:j})))`. Basta decir qué aporta **una** acción; las contribuciones que dependen del estado se levantan a `End(S) × M`. La Actualidad es el caso `M = End(S)`. No se preestablecen reportes, índices ni archivos.
+
+**L33 [T][V] Clase de característica = monoide.** Asignación («último gana»), cantidad (`{+q}∪{=h}`), conjunto (añadidos y quitados), ciclo (transformaciones de un autómata), referencia. Si `M` es conmutativo, la pregunta es distribuible en cualquier orden (en cantidades, los `+q` conmutan entre sí pero no con `=h`: L19 exacto). Si `M` es grupo, cualquier ventana sale en O(1) por diferencia de prefijos. Si no, por segmentos en O(log n).
+
+**L34 [T] Materializar = guardar el cociente de Nerode de la pregunta.** El archivo de optimización de `q` es `f*(Γ_{0:n})` (o su cociente mínimo) con checkpoint. Se materializa solo cuando el tiempo de respuesta lo exige. Si el cociente no es pequeño (la mediana), se recalcula o se guarda el multiconjunto: lo dice la pregunta, no el diseño previo.
+
 ---
 
 ## VI. Hechos de los kernels que condicionan el diseño ([V] el 10‑nov‑2026)

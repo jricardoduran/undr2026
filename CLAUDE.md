@@ -12,7 +12,7 @@ Kobalt **no** es un inventario tradicional. Antes de diseñar, programar, revisa
 
 ## Mapa
 ```
-.claude/skills/kobalt-kernels/          canon: glosario, leyes L1–L31, supuestos prohibidos, kernels
+.claude/skills/kobalt-kernels/          canon: glosario, leyes L1–L34, supuestos prohibidos, kernels
 .claude/skills/kobalt-verificar-leyes/  cómo convertir leyes en pruebas; ejemplo/ ejecutable (oráculo H/A/P)
 .claude/agents/                         kobalt-matematico · kobalt-verificador · kobalt-implementador · kobalt-revisor-conceptual
 kobalt/kernels/                         ORIGINALES de KOB2 9.0.1, Mechanisms 1.0.0, Minimal Flat 1.0.0, contrato Exacto (NO MODIFICAR)
