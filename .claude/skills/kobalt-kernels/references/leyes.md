@@ -171,6 +171,11 @@ Si `Σ_d Q_d ≤ H − A` y cada dispositivo `d` admite ventas sólo con la guar
 
 **L34 [T] Materializar = guardar el cociente de Nerode de la pregunta.** El archivo de optimización de `q` es `f*(Γ_{0:n})` (o su cociente mínimo) con checkpoint. Se materializa solo cuando el tiempo de respuesta lo exige. Si el cociente no es pequeño (la mediana), se recalcula o se guarda el multiconjunto: lo dice la pregunta, no el diseño previo.
 
+
+**L35 [T][V] Flujo conservativo (red de depósitos).** Toda cantidad (unidades, dinero, cuotas) es el **marcado** `m ∈ ℤ^L` de una red `(L, T, W)` declarada como **dato**. Las acciones de dominio (`Vender`, `Asignar`, `Despachar`, `Devolver`, `Cobrar`…) son **transiciones con nombre** que mueven fichas entre depósitos: `m' = m + W(t)`. La única guarda de cantidad es `m' ≥ 0` en los depósitos **restringidos** (qué depósitos lo están es configuración, L31). `Contar` mueve la diferencia al depósito `descuadre` (no es un reinicio), así que la masa total se conserva. Consecuencias: el doble descuento es imposible por construcción; las invariantes de lugar son auditoría gratuita; multi‑bodega, tránsito y cuotas son depósitos. [V] Equivale a las ~12 validaciones a mano de la v2: 0 discrepancias en 23.182 acciones (`kobalt/docs/2026-11-11_ANALISIS_INVENTARIO_V2.md`).
+
+**Identidad por nacimiento (generaliza L28).** El identificador de toda entidad (producto, venta, cliente, devolución…) es la posición `n` de su compromiso de nacimiento en `Γ`. Solo las variantes llevan además un slot denso para los Flat. No hay contadores por tipo.
+
 ---
 
 ## VI. Hechos de los kernels que condicionan el diseño ([V] el 10‑nov‑2026)

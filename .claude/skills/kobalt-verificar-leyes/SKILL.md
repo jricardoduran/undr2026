@@ -1,6 +1,6 @@
 ---
 name: kobalt-verificar-leyes
-description: Convierte las leyes de Kobalt (L1–L34 de la skill kobalt-kernels) en pruebas de propiedades ejecutables con un modelo de referencia (oráculo Fold), generadores de trayectorias, reducción por prefijo, pruebas de congruencia y pruebas de mutación. Úsala al escribir o revisar tests de cualquier módulo Kobalt (inventario, disponibilidad, proyecciones, fibras, importación, réplicas), al comprobar que una proyección incremental coincide con la reconstrucción, o antes de declarar verificada una propiedad.
+description: Convierte las leyes de Kobalt (L1–L35 de la skill kobalt-kernels) en pruebas de propiedades ejecutables con un modelo de referencia (oráculo Fold), generadores de trayectorias, reducción por prefijo, pruebas de congruencia y pruebas de mutación. Úsala al escribir o revisar tests de cualquier módulo Kobalt (inventario, disponibilidad, proyecciones, fibras, importación, réplicas), al comprobar que una proyección incremental coincide con la reconstrucción, o antes de declarar verificada una propiedad.
 ---
 
 # Verificar leyes de Kobalt

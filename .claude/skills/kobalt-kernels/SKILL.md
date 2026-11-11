@@ -1,6 +1,6 @@
 ---
 name: kobalt-kernels
-description: Canon matemático y conceptual de Kobalt (Contrato, Cauce/Trayectoria, Fibra, proyecciones H/A/P, kernels Exacto, Minimal Flat y KOB2). Cárgala ANTES de diseñar, especificar, programar, revisar o testear cualquier parte del sistema Kobalt de inventario, POS o ecommerce, o cuando aparezcan stock, disponibilidad, solicitudes, asignaciones, productos, características, filtros, importación, sincronización, Google Drive, IndexedDB, Minimal, Exacto o KOB2. Define las leyes L1–L34 que todo código debe respetar y los supuestos «tradicionales» prohibidos.
+description: Canon matemático y conceptual de Kobalt (Contrato, Cauce/Trayectoria, Fibra, proyecciones H/A/P, kernels Exacto, Minimal Flat y KOB2). Cárgala ANTES de diseñar, especificar, programar, revisar o testear cualquier parte del sistema Kobalt de inventario, POS o ecommerce, o cuando aparezcan stock, disponibilidad, solicitudes, asignaciones, productos, características, filtros, importación, sincronización, Google Drive, IndexedDB, Minimal, Exacto o KOB2. Define las leyes L1–L35 que todo código debe respetar y los supuestos «tradicionales» prohibidos.
 ---
 
 # Kobalt — canon de kernels e ideas clave
@@ -30,6 +30,7 @@ Las leyes completas, numeradas y con su grado de certeza están en **`references
 - **L16 Autoridad previa.** El orden de llegada, una copia o una caché no dan autoridad.
 - **L17 Orientación ⟂ autoridad ⟂ materialidad.**
 - **L32–L34 (preguntar a la arquitectura).** Las dos entidades fundamentales son el Producto (forma + identidad) y la Trayectoria `Γ`. Toda funcionalidad es una pregunta `(φ, f, M, obs, ventana)` sobre `Γ`. Su monoide decide si es incremental, distribuible y apta para ventanas, y qué hay que guardar. Antes de diseñar un reporte, índice o archivo, escribe la pregunta y deja que la arquitectura conteste.
+- **L35 (flujo conservativo).** Cantidades y dinero son fichas en depósitos; las acciones de dominio son transiciones declaradas como dato; la única guarda de cantidad es «ningún depósito restringido < 0». No escribas validaciones de cantidad a mano: declara la red.
 - **L28–L30.** El ID emerge del orden de creación en `Γ_Cat`; los vectores se alinean implícitamente con `T`; todo «trabajo» (importar, sincronizar, adquirir) es una diferencia `Δ(objetivo, actualidad)`. Si vas a construir un generador de IDs, un sincronizador o una cola, detente: casi seguro ya emerge.
 
 ## 2. Glosario (usa estas palabras y sólo con este significado)
@@ -94,7 +95,7 @@ Detalle en `references/kernels.md`. Los originales están en `kobalt/kernels/`: 
 ## 6. Fuentes
 - `kobalt/docs/2026-11-11_ANALISIS_PRODUCTO_Y_TRAYECTORIA.md` y **`kobalt/docs/2026-11-11_ALGEBRA_DE_PREGUNTAS.md`**: entidades fundamentales, clases de característica como monoides y espacio de preguntas.
 - **`kobalt/CONSOLIDACION_Y_PLAN.md`**: documento rector. Contiene el núcleo irreducible, la tabla «mecanismo tradicional → qué lo hace emerger», el perfil v1 y las fases del plan. Léelo antes de diseñar cualquier fase.
-- `references/leyes.md`: leyes L1–L34, objetos y demostraciones.
+- `references/leyes.md`: leyes L1–L35, objetos y demostraciones.
 - `references/kernels.md`: qué aporta y qué no cada kernel.
 - `references/decisiones-abiertas.md`: decisiones del usuario y supuestos de Drive por verificar.
 - `kobalt/docs/…ATLAS_TECNICO_COMPLETO.md`: atlas exhaustivo de los tres kernels.
