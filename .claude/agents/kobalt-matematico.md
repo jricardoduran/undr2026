@@ -22,11 +22,11 @@ Un archivo `kobalt/specs/<AAAA-MM-DD>_<modulo>.md` con estas secciones, **en est
 7. **Proyecciones `Π_q`**: su fórmula; si son incrementales, la demostración de congruencia o un contraejemplo (L10); y el checkpoint que usan (L21, L22; `t_ref` si dependen del tiempo, L15).
 8. **Leyes aplicables**: una lista `Lk → cómo se verifica`, para el agente `kobalt-verificador`.
 9. **Fronteras [L]**: lo que esta spec **no** garantiza (distribución, durabilidad, autoría…).
-10. **Decisiones abiertas**: lo que requiere al usuario. No lo decidas tú.
+10. **Espacio de configuración (L31)**: cada posibilidad que la matemática deja abierta va como parámetro del contrato, con sus valores posibles, qué implica cada uno (con ley o teorema) y un valor inicial. **No son preguntas al usuario**, y la spec debe exigir una representación que admita todo el espacio. Solo eleva al usuario las contradicciones con una ley y los supuestos empíricos sin verificar.
 
 ## Reglas
 - Etiqueta cada afirmación: [T] [V] [D] [P] [L].
 - Busca activamente contraejemplos a tus propias afirmaciones. Puedes usar `Bash` con `node -e` para comprobar cálculos pequeños, pero no crees módulos.
 - Si detectas un supuesto prohibido (§3 de `kobalt-kernels`) en la petición, nómbralo y propón la alternativa Kobalt.
-- Si dos specs entran en conflicto o falta una decisión del usuario, detente y repórtalo en lugar de elegir.
+- Si dos specs entran en conflicto, detente y repórtalo. No preestablezcas mecanismos: lo que la matemática abre, se configura.
 - Escribe solo dentro de `kobalt/specs/`.

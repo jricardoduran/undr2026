@@ -1,14 +1,16 @@
-# Decisiones abiertas y supuestos por verificar
+# Configuración y supuestos empíricos por verificar
 
-Un agente **no** resuelve estas decisiones por su cuenta: si su tarea depende de una, se detiene y la deja como pregunta para el usuario. Puede proponer opciones con sus consecuencias, pero la decisión es del usuario.
+Según L31, las antiguas «decisiones del usuario» son **parámetros del contrato** con un valor inicial (ver `kobalt/CONSOLIDACION_Y_PLAN.md`, Parte III §13). No bloquean el desarrollo: el código cubre todas las posibilidades y la configuración elige.
 
-## Decisiones del usuario
-1. **Privacidad frente a Google:** ¿cifrado Minimal con gestión de claves, o solo control de acceso de Drive?
-2. **Cajeros:** ¿tienen cuenta Google propia (autoridad aplicable por Drive) o usan el dispositivo del dueño (autoridad solo dentro de la app)?
-3. **Partición de ámbitos de stock** (por dueño o por bodega) según L20. Transferencias entre bodegas: ¿ámbito común o protocolo en dos pasos con estado «en tránsito»?
-4. **Ventas sin conexión:** si se permiten, cuotas delegadas por dispositivo (L19).
-5. **Canónico de persistencia:** (A) trayectoria canónica con estado derivado y snapshots [preferida para el inventario], o (B) estado canónico con evidencia. Lo que no se permite es que ambos evolucionen por separado.
-6. **Una trayectoria o dos** para solicitudes y decisiones. Candidata actual: una trayectoria canónica de la matriz más una bandeja local de solicitudes en cada tienda.
+| Parámetro (antes «decisión») | Posibilidades | Valor inicial |
+|---|---|---|
+| Privacidad frente al almacenamiento | Material en claro bajo ACL / sellado con Minimal (AES‑GCM, +28 B) | En claro bajo ACL |
+| Identidad de los cajeros | Cuenta propia (autoridad aplicable por el almacenamiento) / dispositivo del dueño (autoridad solo en la app) | Dispositivo del dueño |
+| Partición de existencias | Cualquier conjunto de ámbitos `{W_i}` (L20); traslado en dos pasos o ámbito común | `{W_1}` |
+| Ventas sin conexión | Sin cuotas / cuotas delegadas `Σ Q_d ≤ H − A` (L19) | Sin cuotas |
+| Solicitudes y decisiones | Una trayectoria / bandeja local + trayectoria de la matriz | Una trayectoria |
+
+Lo único que **sí** detiene el trabajo son los supuestos empíricos sin verificar (abajo) y cualquier contradicción con una ley.
 
 ## Google Drive como almacenamiento (estado de cada supuesto)
 | Supuesto | Estado |

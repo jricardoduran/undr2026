@@ -153,48 +153,72 @@ Si color y categoría se constituyen **ambos** en `Cat`, la pregunta «¿se cons
 
 ---
 
-## Parte III — Perfil v1: decisiones que este documento propone cerrar
+## Parte III — Lo que la matemática fija y lo que abre
 
-Cada fila resuelve una decisión abierta de la spec anterior. **Requieren tu confirmación** (✔ = recomendación).
+**Principio (L31).** La matemática hace dos cosas distintas:
+- **fija** leyes, que no se configuran;
+- **abre** un espacio de posibilidades.
 
-| # | Decisión | Propuesta v1 | Por qué |
+El código implementa el **mecanismo general que cubre todo el espacio abierto**. La **configuración** elige dentro de él de forma manual y mínima. Nada de lo abierto se convierte en una decisión preestablecida en el código, y por eso nada de lo abierto bloquea el desarrollo.
+
+### 10. Lo que la matemática fija (no configurable)
+Append‑only (L3). Coordenadas emergentes (L28). Alineación implícita (L29). Un sucesor por cabeza dentro del ámbito (L8). Actualidad = `Fold` y proyecciones derivadas, con la reconstrucción como oráculo (L4, L9). Toda tarea es una `Δ` (L30). Identidad ≠ coordenada ≠ material (L26). Autoridad previa (L16). Guardas ≠ invariantes (L7).
+
+### 11. La configuración también emerge: es el propio contrato
+La configuración no es un subsistema nuevo. Es el contrato `C_ε` de cada ámbito.
+- Cambiarla es una acción comprometida en la trayectoria del contrato, con autoridad del propietario, y abre la época `ε+1`.
+- Cada proyección registra en su checkpoint la época con la que se construyó.
+
+Así, cambiar la configuración tiene historia, autoridad y reconstrucción **sin un mecanismo de configuración aparte**.
+
+### 12. La generalidad fija la representación
+La representación debe admitir **todo** el espacio abierto, no solo el valor elegido. Ejemplo: como alguna configuración de guardas permite vender por debajo de cero, `Stock` es `int32` aunque hoy la guarda elegida lo impida. Como el valor por defecto puede ser «desconocido», las fibras llevan la máscara de conocidos.
+
+### 13. Espacio de configuración (con valor inicial editable)
+
+| Parámetro del contrato | Posibilidades que emergen | Qué implica cada una (matemática) | Valor inicial |
 |---|---|---|---|
-| D1 | Clave de reconocimiento en la importación | ✔ `SKU`, único entre las variantes de `Cat` (guarda de `Cat`); `(fuente, idExterno)` opcional como atributo | El reconocimiento es una consulta de fibra; la guarda vive en el ámbito que crea (condición C2) |
-| D3 | Cómo entran las existencias iniciales e importadas | ✔ `FijarExistencias(i, n)` absoluta, solo para el propietario; una variante nueva empieza en `0` reconocido | Es absoluta ⇒ importar es idempotente aunque se reexporte el archivo; evita `H = 48` |
-| D6 | Diff de la importación | ✔ a tres vías (contra la última importación de esa fuente) | El bidireccional revierte ediciones manuales |
-| D2/D7 | Duplicados y ambiguas; celdas vacías | ✔ `Incompatible` (se revisan a mano); celda vacía = ignorar | Condición C5; no se borra nada implícitamente |
-| D5/D4 | Partición | ✔ dos ámbitos `Cat_O` e `Inv_W`; una sola bodega en la v1 | Perfil mínimo (§8) |
-| D18 | Persistencia | ✔ trayectoria canónica + actualidad derivada + snapshots | Teorema 2 lo exige para el catálogo |
-| D‑POS | Venta presencial con existencias reconocidas `< q` | ✔ se admite y `H` queda **negativo = descuadre visible** que pide un conteo (`FijarExistencias`). El artículo estaba en la mano, así que lo que estaba mal era el registro. Los canales remotos sí exigen `H ≥ q`. Consecuencia: `H ≥ 0` **no** es invariante y el Flat es `int32` | Las guardas no pueden falsear la realidad (L7) |
-| D‑precio | Dónde vive el precio | ✔ atributo de `Cat` en la v1 (propietario único); pasa a `Of_B` cuando haya revendedores (migración, L18) | Mínimo ahora, extensible luego |
-| D14 | Capacidades | ✔ propietario: todo; cajero: `Vender`, `Devolver` y lectura | Depende de la decisión abierta 2 (cajeros con cuenta propia) |
+| Clave de reconocimiento `κ` | Cualquier característica o tupla cuya fibra `F_{κ,v}` tenga a lo sumo un elemento entre las activas | Reconocer = consultar la fibra; la unicidad es una guarda de `Cat` (condición C2) | `sku` |
+| Guarda de cada acción por capacidad y canal | `H ≥ q`, `verdadero`, `H−A−P ≥ q`… | **Teorema:** `H ≥ 0` es invariante ⟺ toda acción que reduce `H` lleva la guarda `H ≥ q`. Si no, el negativo es un descuadre visible | POS presencial: `verdadero`; remoto: `H ≥ q` |
+| Acción que emite la importación para las existencias | `FijarExistencias` (absoluta) / `Ingresar(sid)` (relativa) | Absoluta ⇒ `Δ = ∅` al reimportar cualquier archivo; relativa ⇒ solo con los mismos bytes (mismo `sid`) | `FijarExistencias` |
+| Base de la diferencia `Δ` | Actualidad (dos vías) / última importación de la fuente (tres vías) | Dos vías: el archivo prevalece y revierte las ediciones manuales; tres vías: las conserva | tres vías |
+| Celda vacía; filas duplicadas | Ignorar / declarar vacío; `Incompatible` / consolidar | Ignorar nunca borra; declarar vacío borra explícitamente | ignorar; `Incompatible` |
+| Orientación `ω(k)` | Cualquier ámbito constituyente de `k` | Mismo ámbito ⇒ solo cambia la forma de la acción; otro ámbito ⇒ otra autoridad; cambiarla = transición de época (L18) | descriptivo y precio en `Cat`; existencias en `Inv` |
+| Ámbitos de inventario | Cualquier conjunto `{W_1…W_n}` (coproducto) | `n` trayectorias independientes; el total es una proyección suma; trasladar = dos pasos o ámbito común | `{W_1}` |
+| Valor por defecto de cada característica | Valor reconocido / desconocido | L29: el alta no toca otros ámbitos; «desconocido» excluye de los complementos (L2) | existencias: `0` |
+| Disponibilidad mostrada por canal | `no_asignada` / `prudente` / ambas | L11: `prudente ≤ no_asignada`; es la pregunta, no otro inventario | `no_asignada` |
+| Capacidades `O_κ` por actor | Cualquier subconjunto de acciones | L16: solicitar ≠ constituir | propietario: todo; cajero: `Vender`, `Devolver`, leer |
+| Materialización de proyecciones | Bajo demanda / por notificación / anticipada | Mismo mecanismo `Δ`; solo cambia cuándo se invoca | bajo demanda |
+| Frecuencia de snapshots | Cada `N` compromisos / bajo demanda | L4: correctos por construcción con cualquier `N` | bajo demanda |
 
-Las demás decisiones (D8–D13, D15–D17 de la spec) no afectan a la v1.
+Los valores iniciales no se discuten antes de construir: se fijan, se usan y se cambian como cualquier otro hecho del contrato. Solo quedan por **verificar** (no por decidir) los supuestos empíricos de Drive (`decisiones-abiertas.md`).
 
 ### Acciones v1 (completas)
 
 `Cat_O`:
-- `CrearProducto(atributos, variantes[], imágenes Q[])`: acción compuesta y atómica en `Cat`; asigna slots consecutivos. Guardas: SKUs nuevos y no repetidos dentro de la acción.
+- `CrearProducto(atributos, variantes[], imágenes Q[])`: acción compuesta y atómica en `Cat`; asigna slots consecutivos. Guardas: unicidad de `κ`.
 - `FijarAtributo(i|p, k, v)` y `FijarColumna(k, {i ↦ v})`.
 - `RetirarVariante(i)` y `ReactivarVariante(i)`.
 - `DefinirCaracterística(k, tipo, univaluada|multivaluada, defecto)`.
 
 `Inv_W`:
-- `FijarExistencias(i, n)`: solo el propietario.
+- `FijarExistencias(i, n)`.
 - `Ingresar(i, q, sid)`.
-- `Vender(i, q, sid)`: el cajero; en POS se admite con déficit (D‑POS).
-- `Devolver(i, q, sid, venta)`: con límite por la venta referenciada.
+- `Vender(i, q, sid, canal)`.
+- `Devolver(i, q, sid, venta)`.
 
-Guarda común: `i ∈ T` (lectura estable de `Cat`, §4).
+Guardas y capacidades: las del contrato (§13). Guarda estructural común: `i ∈ T` (lectura estable de `Cat`, §4).
+
+`Contrato_s`: `FijarParámetro(p, v)` abre una época.
 
 Proyecciones v1:
 - `T`;
-- catálogo consolidado (JSON);
-- `Stock_W` Flat (`int32` alineado con `T`; negativo solo si D‑POS lo admite);
+- catálogo consolidado;
+- `Stock_W` Flat `int32` alineado con `T`;
 - ficha;
 - listado;
 - fibras y filtros (bitsets con máscaras de activos y de conocidos);
-- disponibilidad `max(0,H)` y descuadre `max(0,−H)`;
+- disponibilidad por canal y descuadre `max(0,−H)`;
 - faltantes del alta;
 - `Δ` de importación.
 
@@ -207,7 +231,7 @@ Tecnología: módulos ES nativos, sin dependencias; `node --test` para el núcle
 
 | Fase | Entregable | Specs y leyes | Salida (criterio de terminado) |
 |---|---|---|---|
-| **0. Consolidación** *(este documento)* | Decisiones de la Parte III confirmadas; la spec del catálogo reducida al perfil v1 | — | Tu confirmación |
+| **0. Consolidación** *(este documento)* | Leyes fijas y espacio de configuración con valores iniciales (Parte III) | L31 | Hecho: no bloquea; la configuración se ajusta en cualquier momento |
 | **1. Núcleo general** | `kobalt/src/nucleo/`: `secuencia` (Γ, `AppendIfHead`, cadena de hashes, verificación de sufijo), `contrato` (capacidades + guardas + T), `proyeccion` (checkpoint: reutilizar, actualizar o reconstruir), `diferencia` | L3, L4, L8, L9, L22, L27 | Sin una sola palabra de dominio: el núcleo no sabe qué es un producto |
 | **2a. Catálogo** (paralelo a 2b) | `dominio/catalogo`: acciones `Cat`, `T` emergente, catálogo consolidado, secciones, columnas, fibras bitset | Teoremas 2 y 3, L1, L2, L17, L26 | Unicidad de SKU; slot estable bajo retiro; filtros = oráculo de conjuntos |
 | **2b. Inventario** (paralelo a 2a) | `dominio/inventario`: acciones `Inv`, Flat alineado, disponibilidad y descuadre | L6, L7, L11, L13, Teorema 3 | Alta sin tocar inventario; descuadre representable; `sid` sin doble efecto |

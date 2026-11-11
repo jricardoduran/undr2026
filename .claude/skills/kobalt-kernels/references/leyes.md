@@ -159,6 +159,9 @@ Si `Σ_d Q_d ≤ H − A` y cada dispositivo `d` admite ventas sólo con la guar
 
 **L30 [T] Diferencia.** Importar, sincronizar, actualizar proyecciones, adquirir material y calcular faltantes son instancias de `Δ(objetivo, actualidad)`. Si el objetivo ya está reconocido, `Δ = ∅`. Reintentar es seguro si `Δ` se calcula contra la actualidad o se deduplica por identidad, nunca si se repite el delta a ciegas.
 
+
+**L31 [D] Fijar frente a abrir.** La matemática fija leyes (no configurables) y abre posibilidades. Las posibilidades abiertas son **parámetros del contrato** con un valor inicial, elegidos por configuración manual mínima; nunca se codifican como decisión. La representación debe admitir todo el espacio abierto (la generalidad fija la representación). Cambiar la configuración es una acción comprometida en la trayectoria del contrato y abre una época nueva (sin mecanismo de configuración aparte).
+
 ---
 
 ## VI. Hechos de los kernels que condicionan el diseño ([V] el 10‑nov‑2026)

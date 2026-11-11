@@ -1,6 +1,6 @@
 ---
 name: kobalt-kernels
-description: Canon matemático y conceptual de Kobalt (Contrato, Cauce/Trayectoria, Fibra, proyecciones H/A/P, kernels Exacto, Minimal Flat y KOB2). Cárgala ANTES de diseñar, especificar, programar, revisar o testear cualquier parte del sistema Kobalt de inventario, POS o ecommerce, o cuando aparezcan stock, disponibilidad, solicitudes, asignaciones, productos, características, filtros, importación, sincronización, Google Drive, IndexedDB, Minimal, Exacto o KOB2. Define las leyes L1–L30 que todo código debe respetar y los supuestos «tradicionales» prohibidos.
+description: Canon matemático y conceptual de Kobalt (Contrato, Cauce/Trayectoria, Fibra, proyecciones H/A/P, kernels Exacto, Minimal Flat y KOB2). Cárgala ANTES de diseñar, especificar, programar, revisar o testear cualquier parte del sistema Kobalt de inventario, POS o ecommerce, o cuando aparezcan stock, disponibilidad, solicitudes, asignaciones, productos, características, filtros, importación, sincronización, Google Drive, IndexedDB, Minimal, Exacto o KOB2. Define las leyes L1–L31 que todo código debe respetar y los supuestos «tradicionales» prohibidos.
 ---
 
 # Kobalt — canon de kernels e ideas clave
@@ -88,11 +88,11 @@ Detalle en `references/kernels.md`. Los originales están en `kobalt/kernels/`: 
 3. **Enumera las leyes aplicables** por número y cómo se verificará cada una (ver la skill `kobalt-verificar-leyes`).
 4. Solo entonces escribe el diseño conceptual y, al final, el código.
 5. Etiqueta cada afirmación con su certeza: **[T] [V] [D] [P] [L]**. Nunca presentes como garantizado algo [P] o [L].
-6. Si dependes de una decisión de `references/decisiones-abiertas.md`, **detente y pregunta**. No la decidas tú.
+6. **No conviertas posibilidades en preguntas (L31).** Si la matemática admite varias opciones, implementa el mecanismo general que las cubre todas, exponlas como parámetro del contrato con un valor inicial y sigue adelante. La configuración se cambia después, sin tocar código. Solo se detiene el trabajo ante (a) una contradicción con una ley o (b) un supuesto **empírico** sin verificar (por ejemplo, el comportamiento de Drive). Preguntar «¿qué prefieres, A o B?» cuando A y B emergen de la misma matemática es pensamiento tradicional.
 
 ## 6. Fuentes
 - **`kobalt/CONSOLIDACION_Y_PLAN.md`**: documento rector. Contiene el núcleo irreducible, la tabla «mecanismo tradicional → qué lo hace emerger», el perfil v1 y las fases del plan. Léelo antes de diseñar cualquier fase.
-- `references/leyes.md`: leyes L1–L30, objetos y demostraciones.
+- `references/leyes.md`: leyes L1–L31, objetos y demostraciones.
 - `references/kernels.md`: qué aporta y qué no cada kernel.
 - `references/decisiones-abiertas.md`: decisiones del usuario y supuestos de Drive por verificar.
 - `kobalt/docs/…ATLAS_TECNICO_COMPLETO.md`: atlas exhaustivo de los tres kernels.
