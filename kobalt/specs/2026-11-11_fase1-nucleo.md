@@ -676,3 +676,13 @@ Precisiones de lectura del plan, que esta spec fija y que el revisor debe conoce
 2. «versiónRegla» del checkpoint = la versión de la **proyección**. La regla de `T` queda fijada por `h_n`. La «época» del checkpoint es redundante y comprobable.
 3. La fórmula `AppendIfHead(Γ, (n,h_n), u, a)` del plan §1 se amplía con `sid`, `deps` y `ε` registrada. Es una extensión, no un cambio.
 4. Para la fase 3: la configuración inicial «Δ a tres vías» necesita conservar la **base** (la última importación de cada fuente). El núcleo la admite: es el material `Q_L` más un `rec_val` que la consulta. Pero ni `Cat` ni `Inv` de la v1 tienen hoy un hecho «última importación de la fuente F». La spec de la fase 3 debe ubicarlo (por ejemplo, como una acción de registro en el ámbito que constituye la importación, o en `Nodo_d`), aplicando L20.
+
+---
+
+## Anexo · Precisiones fijadas por el verificador (2026‑11‑11)
+Son precisiones de contrato que la spec no determinaba. No contradicen ninguna ley. Las fuerzan las pruebas en `kobalt/tests/leyes/nucleo.*`.
+1. **Orden de guardas:** G0 → G5 (forma) → G1 → G2 → G3 → G4 → la guarda de la acción. Las pruebas comparan también el tipo de rechazo con el del oráculo.
+2. **`DISCONTINUIDAD(i)`:** con solo `(m, h_m)`, la posición exacta de una manipulación no es identificable. Si la cadena falla, `i = n_local + 1`; si la cadena cuadra, `i` es exacta para fallos de forma, época o re‑admisión. Lo que se exige es `i ≤` posición alterada y no aplicar nada. Esto corrige el «`i` exacta» de §8.
+3. **`Incorporar` es atómico.** En `READMISIÓN_PENDIENTE` la cadena sí se incorpora.
+4. **Congruencia (L10)** se comprueba sobre el par `(π(S), C_ε)`: `g` recibe el contrato vigente antes de la entrada.
+5. **Nombres** de los parámetros del nodo (`nodo.*`), de los motivos de rechazo de `FijarParámetro` y de las formas de los resultados: los del encabezado de `nucleo.impl.test.mjs`.
