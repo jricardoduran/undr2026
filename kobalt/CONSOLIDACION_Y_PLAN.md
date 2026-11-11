@@ -166,7 +166,8 @@ Append‑only (L3). Coordenadas emergentes (L28). Alineación implícita (L29). 
 
 ### 11. La configuración también emerge: es el propio contrato
 La configuración no es un subsistema nuevo. Es el contrato `C_ε` de cada ámbito.
-- Cambiarla es una acción comprometida en la trayectoria del contrato, con autoridad del propietario, y abre la época `ε+1`.
+- Cambiarla es una acción comprometida **en la misma trayectoria `Γ_s` del ámbito** (por L20: las guardas leen los parámetros atómicamente, así que una revocación es inmediata), con autoridad del propietario, y abre la época `ε+1` (spec de la fase 1, Corolario 2.2).
+- Lo que no cambia ninguna respuesta (snapshots, cuándo se materializa, cuánto se verifica) es configuración **del nodo**, en su propia trayectoria local.
 - Cada proyección registra en su checkpoint la época con la que se construyó.
 
 Así, cambiar la configuración tiene historia, autoridad y reconstrucción **sin un mecanismo de configuración aparte**.
