@@ -13,9 +13,13 @@
 | Núcleo general (fase 1 + enmienda E1–E8) | `kobalt/src/nucleo/` | **Integrado** (PASS + CONFORME) | `2e8d0d3` |
 | Preguntas (fase 2) | `kobalt/src/preguntas/` | **Integrado** (PASS + CONFORME, tras 1 objeción y 1 VETO corregidos) | `ff96a40` |
 | Forma y red de flujo (fase 3) | `kobalt/src/dominio/` | **Se rehace** según el anexo C de su spec. La versión `94726c7` tuvo PASS y OBJECIONES (4). En curso: el verificador ajusta modelo y pruebas al anexo C | spec `…fase3-forma-y-flujo.md`, anexo C |
-| Fase 4 (alta e importación), 5 (materialidad IndexedDB), 6 (interfaz), 7 (Drive), 8+ (comercio) | — | Pendientes | `CONSOLIDACION_Y_PLAN.md`, parte IV |
+| Fase 6a: puerta (preguntar/proponer) y páginas específicas sobre Kobalt UI 2.2.1 | `kobalt/specs/2026-11-12_fase6a-puerta-y-paginas.md` | **Spec en curso** (matemático). Análisis hecho: `docs/2026-11-12_REVISION_UI_Y_POS_V3.md` | `f0354dc` |
+| Fase 4 (alta e importación), 5 (materialidad IndexedDB), 6b (páginas), 7 (Drive), 8+ (comercio) | — | Pendientes | `CONSOLIDACION_Y_PLAN.md`, parte IV |
 
-**Siguiente paso concreto:**
+**Siguiente paso concreto (actualizado 12‑nov, tarde):**
+0. El matemático escribe (a) la spec de la puerta y las páginas y (b) el **Anexo D** de la fase 3 (entidad `pedido` + modalidades de venta como plantillas). Cuando termine, pasar al verificador de la fase 3 (`a60d140…`) la lista de cambios del Anexo D **antes** de que entregue, para que el dominio se rehaga una sola vez.
+
+**Pasos que siguen (sin cambios):**
 1. Cuando el verificador de la fase 3 entregue el modelo y las pruebas del anexo C: commit, y el implementador de la fase 3 rehace `kobalt/src/dominio/` sobre la rama con la fase 2 integrada (reutiliza `evaluar`, `validarExpr`, `registrarLector` y `monoide` de `kobalt/src/preguntas/`; añade el monoide `nacimientos`).
 2. Dos puertas: verificador (PASS/VETO) + revisor conceptual (CONFORME/OBJECIONES). Integrar solo con ambas.
 3. Luego, la fase 4 y el camino a v4 (`docs/2026-11-12_V3_MODULAR_Y_CAMINO_V4.md`).
@@ -52,6 +56,17 @@
 ---
 
 ## 3. Cronología de decisiones y su porqué (más reciente arriba)
+
+### 2026‑11‑12 (tarde) · Revisión de Kobalt UI 2.2.1 y del POS V3 → páginas específicas con nuestra lógica
+- **Qué llegó:** (1) un `.txt` unificado con la librería visual **Kobalt UI 2.2.1** (`kobalt.css`, `kobalt.js`, contratos, Studio, 8 apps de demo); (2) un zip del **POS V3 «venta por acciones»** (páginas `operar/*.html`, `tienda/*.html`, controladores, doc 07, `AGENTS.md`). Petición: usar nuestra lógica en páginas HTML específicas que luzcan como el demo.
+- **Hallazgo técnico:** el `.txt` **perdió las etiquetas de los `.html`** (index, estructura*, thema-lab). CSS y JS íntegros. El shell hay que reconstruirlo desde los selectores `data-k-*` de `kobalt.js` o pedir el zip original. **Viabilidad visual comprobada** en Chromium (que aquí sí funciona): `body.k-body` + `kobalt.css` + `kobalt.js` reproduce tarjetas, panel de propuesta y botón del demo.
+- **Idea clave de la librería:** `L → Π_L → 𝒪 → Visual`. `kobalt.js` solo admite un «mundo» ya calculado y no contiene lógica de negocio. Ese es el punto de unión: **observables hacia arriba (preguntas), propuestas hacia abajo (plantillas δ)**. Su doctrina (`λ_req ∈ Λ_C`, `λ_eff = Admit(…)`, customizar = elegir un punto admisible) **es L31 aplicada a lo visual**.
+- **Divergencias que NO se importan** (la librería lleva dominio tradicional): `stockState(stock, target)` con el 0.3 incrustado; `order.status` como etiqueta única escrita (nosotros: `obs` sobre el marcado de depósitos); `facts` primarios y `demo.data.patch.js` que edita datos (nosotros: proyecciones; editar es proponer); carrito por producto (nosotros: por variante con precio pactado). Regla: **se conserva la realización visual, se descarta su semántica y su mundo**.
+- **Del POS V3 se adopta:** venta = **referencia + acciones** (la atomicidad corta por acción, no por carrito); la propuesta vive en la página y su rechazo no es un hecho (L14); la vista previa corre sobre una copia; y la **pregunta de coherencia** de `AGENTS.md` (ya en `CLAUDE.md`).
+- **Teoremas del análisis:** (2) la atomicidad del carrito es **configuración** (`porAccion` | `todoONada`); (3) el reintento es `Δ` con `sid_i = 𝔇(ρ, i)`; (4) la vista previa de una secuencia es un plegado de admisiones, y su diferencia con la confirmación es L8, no un error.
+- **Decisión de diseño (solo datos):** la referencia de venta es una entidad **`pedido`** que nace en el mismo compromiso que su primera línea (`Lote{Nacer:pedido, Nacer:venta}`). Descarta una restricción entre entidades. La Red no cambia. Es la demostración de L35 con un caso real. Alternativa descartada: atributo `referencia` + restricción de contexto.
+- **Publicación:** la librería y el POS V3 son material del usuario **no publicado**. Las páginas las referencian por `kobalt/app/ui/` (ignorada por git) con un script que las extrae del zip. El repo público contiene nuestras páginas y controladores, no su librería.
+- **Pendiente para el usuario (no es una decisión, es material):** reenviar el **zip original** de Kobalt UI para recuperar el shell (`index.html`) con su marcado.
 
 ### 2026‑11‑12 · Fase 2 integrada; fase 3 se rehace; bitácora
 - **Fase 2 · VETO del verificador:** `materializar` se saltaba la regla L34 (devolvía «OK» con una materialización vacía para derivadas inválidas). Arreglo de 2 líneas propuesto y probado por el verificador (15/15); el implementador lo aplicó (`ff96a40`). Comprobé que el diff es exactamente ese arreglo y que pasan 179/179 con 3 semillas, e integré por avance rápido. *Por qué no volví a lanzar al verificador:* ya había probado exactamente ese cambio y la proporcionalidad lo permite en dominio y preguntas.
@@ -140,4 +155,5 @@
 | Verbo único, exhaustividad, v3 | `kobalt/docs/2026-11-12_AMPLIACION_V3_Y_REVISION.md` |
 | Interfaz | `kobalt/docs/2026-11-12_INTERFAZ_V3_Y_MEJORA.md` |
 | Camino a v4 | `kobalt/docs/2026-11-12_V3_MODULAR_Y_CAMINO_V4.md` |
+| Kobalt UI 2.2.1, POS V3 y páginas específicas | `kobalt/docs/2026-11-12_REVISION_UI_Y_POS_V3.md` |
 | Specs | `kobalt/specs/` (fase 1 + enmienda, fase 2, fase 3 con anexos A–C) |
