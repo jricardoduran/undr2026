@@ -34,7 +34,8 @@
 //     L34 ESTÁTICA (objeción conceptual del 12‑nov): {derivada, de: q} es PREGUNTA_INVÁLIDA si q contiene 'secuencia'
 //     (sola, en una tupla o en una etiqueta de mapa) o si q es, o contiene en una tupla, otra derivada. Por tanto
 //     compilar/responder de esas derivadas ⇒ PREGUNTA_INVÁLIDA; materializar de una derivada (o de una tupla con una)
-//     ⇒ PREGUNTA_INVÁLIDA (nunca {resultado:'OK'} con una materialización vacía); ventana sobre una pregunta con
+//     ⇒ PREGUNTA_INVÁLIDA (nunca {resultado:'OK'} con una materialización vacía; orden en materializar: NO_MATERIALIZABLE,
+//     PREGUNTA_INVÁLIDA de la derivada, NO_GRUPO); ventana sobre una pregunta con
 //     'secuencia' ⇒ MATERIALIZACIÓN_INVÁLIDA (no existe materialización legítima).
 //     Claves exactas ('φ' es la letra griega). Toda clave fuera de esa lista ⇒ PREGUNTA_INVÁLIDA.
 //   Aporte ::= expr | {clave: expr, valor: expr [, etiqueta: expr]}; la segunda forma ≡ {op:'mapa', de:[{v:'clave'}, clave,

@@ -525,8 +525,9 @@ export function materializar(q, Γ, j, o = {}) {
   if (o.tipo !== 'prefijos' && o.tipo !== 'segmentos') throw new Error('materializar: tipo ∈ {prefijos, segmentos}');
   const L = leyes(c.analisis.M);
   if (!L.materializable) return { resultado: 'NO_MATERIALIZABLE' };
-  if (o.tipo === 'prefijos' && L.ventana !== 'prefijos') return { resultado: 'NO_GRUPO' };
   const qd = { derivada: o.tipo, de: q };
+  const cd = compilar(qd, o); if (cd.resultado !== 'COMPILADA') return invalida(cd); // q es (o contiene) una derivada: L34 estática
+  if (o.tipo === 'prefijos' && L.ventana !== 'prefijos') return { resultado: 'NO_GRUPO' };
   const g = o.guardado ? { acum: o.guardado.acum, checkpoint: o.guardado.checkpoint } : null;
   const r = responder(qd, Γ, { ...o, i: 0, j, guardado: g });
   if (r.resultado !== 'OK') return r; // p. ej. q ya es (o contiene) una derivada: L34 estática
