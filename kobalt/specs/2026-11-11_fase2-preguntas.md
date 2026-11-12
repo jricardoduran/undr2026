@@ -335,3 +335,22 @@ Ninguno de estos parámetros cambia una respuesta: solo cuándo y cómo se calcu
 Fuente: `kobalt/docs/2026-11-12_AMPLIACION_V3_Y_REVISION.md`, §1 y §2.
 1. **Toda pregunta determinista es un homomorfismo** (a `End(S)`, o al producto en corona si depende del estado). Lo que se clasifica no es «monoidal o no», sino el **tamaño** del monoide mínimo (cociente de Nerode). Ese tamaño decide la materialización, las ventanas por prefijos (grupo) y la distribución (conmutatividad). El conteo absoluto vive en el monoide pequeño `{+q}∪{=h}`, no en `(ℤ,+)`.
 2. **Las guardas no intervienen en la lectura.** Actúan solo al admitir; una pregunta se evalúa sobre `Γ` ya comprometida y es la evaluación pura de un homomorfismo.
+
+---
+
+## Anexo B · Precisiones fijadas por el verificador (2026‑11‑12)
+Las fuerzan `kobalt/tests/leyes/preguntas.*`.
+1. **Conflicto de vocabulario:** el grep de la spec prohíbe la subcadena `producto`, pero §5 y §7.3 la usan para el monoide y la operación. Pasan a llamarse **`tupla`**.
+2. **[V] Corrección a la tabla §7.3:** `mapa(etiquetas)` **nunca** es grupo, aunque lo sean todas sus etiquetas. Sin normalizar no hay inverso; normalizando se rompe la asociatividad.
+3. **[V] Cocientes menores que los de §7.5:** para `componente(c)` basta `m[c]`; para `aplicar`, `(s, min(0,e))`.
+4. **Ratificadas:**
+   - los parámetros de `obs` son expresiones;
+   - se añade la observación libre `valor{de}` (P7, `tRef` en L15);
+   - `{x:'tRef'}` es inválido fuera de `obs`;
+   - orden en `distribuir`: `NO_CONMUTATIVO` → `DEPENDE_DEL_ESTADO` → comprobaciones del núcleo;
+   - la tabla de prefijos guarda `[P₁…P_j]` con `P₀` implícito;
+   - `null` representa ±∞ y una contribución mal formada cuenta como la unidad;
+   - las claves son texto;
+   - `cociente` devuelve una fracción reducida;
+   - `máximoPor` desempata por `hex(CV(v))`.
+5. §7.8 escribe `a.k`; la regla de juguete `contador@1` usa `q`/`v`. Prevalecen las pruebas.
