@@ -670,3 +670,160 @@ Veredicto de la revisión sobre `94726c7`: **OBJECIONES (4)**. Esto queda fijado
 6. **Desbordamiento:** `INTERPRETE.m` y las sumas usan las operaciones con frontera de ℤ del catálogo. Un desbordamiento es un error visible.
 7. **Hueco de la spec (verificador):** `G^par` solo compara la aridad de `índices`, así que una Red que **reordena** los tipos de índice de una familia con marcado se admitía, y después sus claves cambiaban de significado. Ahora `G^par` exige **los mismos `índices`, en el mismo orden**, para toda familia con marcado distinto de cero.
 8. **Ajustes al oráculo (no bloqueantes):** el modelo debe usar `Object.hasOwn` en las búsquedas por nombre (`Disparar:__proto__` lanzaba en el modelo) y tratar `−0` como `0`, igual que CV.
+
+---
+
+## Anexo D · La entidad `pedido` y las modalidades de venta como plantillas (2026‑11‑12)
+**Fuente:** `kobalt/docs/2026-11-12_REVISION_UI_Y_POS_V3.md` §2 y §7, y la spec `2026-11-12_fase6a-puerta-y-paginas.md`. Este anexo **añade**; no reescribe nada de §1–§10 ni de los anexos A–C. Donde corrige una frase anterior, lo dice (D.8).
+**Etiquetas.** [T] teorema con demostración aquí · [V] comprobado con `node` sobre el **modelo de referencia ya existente** (`kobalt/tests/modelos/dominio.modelo.mjs`, sin modificarlo) y el núcleo real; scripts `e1.mjs`…`e6.mjs` en el scratchpad de la sesión, fuera del repositorio · [D] doctrina · [P] propuesta · [L] límite.
+
+**Resumen.**
+1. Nuevo tipo `pedido` (contexto de una venta: `cliente`, `canal`, `actor`). `venta` pasa a tener a `pedido` por **padre**, y `canal` y `cliente` salen de `venta` y pasan a `pedido` como características **heredables**.
+2. Es un cambio **solo de datos** en `FORMA_INICIAL` (y en las plantillas de capacidades y alcance). La Red `𝒩` no cambia: ni familias, ni transiciones, ni expresiones. `canal(args) = carac(s, canal)` sigue valiendo porque `carac` es la sección **efectiva**, que hereda del padre. [V]
+3. Las cuatro modalidades de venta (entregar ahora, apartar, pedido, registrar) son **plantillas de `Lote`**. No hay un campo «modalidad»: es la forma de las acciones comprometidas.
+4. Aparecen VF11–VF13. Ninguna exige una restricción entre entidades (D.6).
+
+### D.1 La Forma: `pedido` y el nuevo `venta` (cambio solo de datos)
+
+Diferencias respecto del Anexo A (`R` requerida, `I` inmutable, `H` heredable):
+
+| Tipo | Características | `padre` / `κ` / `alNacer` / `actividad` |
+|---|---|---|
+| **`pedido`** (nuevo) | `canal` (asig., texto 1–80, **R, I, H**) · `cliente` (referencia‑uno → `cliente`, **I, H**, opcional) · `actor` (asig., texto 1–200, **I, H**, opcional) · familia `*:*` (asig., simple, máximo 60: pasa aquí lo que antes iba en la `*:*` de la venta, p. ej. `canal:ref`) | sin `padre`, sin `κ`, sin `alNacer` (no hay control `abierta[pedido]`), sin `actividad` (un tipo sin `estado` cuenta como activo, Anexo B.9) |
+| **`venta`** (cambia) | `pedido` (referencia‑uno → `pedido`, **R, I**; es el `padre`) · `variante` (R, I, `admite.fijar` igual) · `bodega` (R, I) · `precio` (R, I) · `*:*` | `padre: pedido`; `alNacer = Abrir` (igual). **Se eliminan `canal` y `cliente`** de `venta` |
+
+Lo que cambia y lo que no:
+- **`Red` sin cambios [V].** Con `liberaciones = [{Asignar, Despachar, canal: "POS", familias: [libre, H]}]`, `H = 0` y `entregarAhora` desde un pedido de canal `POS`: se admite y queda `H = −1`. El mismo con canal `Web` ⇒ `INADMISIBLE(negativo:libre[…])`. El canal se leyó del `pedido` por herencia (`e6.mjs`).
+- **`venta.pedido` es el `padre`** (§5.2: referencia‑uno, inmutable y requerida). Por eso: (a) la herencia sale de la definición de `efectiva`; (b) una `venta` no puede declarar `canal` propio: `Nacer:venta{…, canal}` ⇒ `INADMISIBLE('característicaDesconocida')` [V]. El canal de una venta **no se puede almacenar dos veces**.
+- **`cliente` es de clase *referencia*, no *asignación*.** El documento de revisión lo llamó «asignación» en sentido amplio. Ambas son «último gana» e inmutables aquí; la clase referencia añade la guarda de existencia (`cliente` debe ser un `ID` nacido del tipo `cliente`). Precisión P‑F.
+- **`actor` es una atribución declarada**, no una autoridad (L16, L23): quién solicitó ya está en `ent.creador`. `actor` sirve para «vendido a nombre de»; se omite cuando coincide con el creador y la pregunta lo resuelve como `actor ?? creador`. Es opcional y se puede añadir o quitar de la Forma inicial (§10: es una extensión permitida por `G^par`).
+- **`pedido` no es `denso`:** su ID es `(i, j)` como el de todo tipo no denso. No tiene slot ni entra en `q_T`.
+- **`ID` dentro de un lote.** Si el lote incluye `Nacer:pedido`, ese nacimiento es `@0` y la primera venta es `@1` (`ID = (i, 1)`). Si no lo incluye, la primera venta es `@0` (`ID = (i, 0)`). **`{nacido: j}` cuenta nacimientos, no acciones** [V: el primer intento de un lote de dos líneas con índices por acción fue rechazado con `referenciaInexistente`].
+
+**Compatibilidad de épocas [V].** Añadir **solo** el tipo `pedido` a una `Γ` con ventas es admitido por `G^par`. Cambiar `venta` (añadirle `padre`) en una `Γ` que ya tiene ventas es `INADMISIBLE('formaCambiaPadre')`: las ventas históricas no tienen pedido y no se reinterpretan (L3, §3). Consecuencia [L]: el Anexo D rige para toda `Γ` **creada** con la Forma nueva. Una `Γ` creada con el Anexo A sigue válida con su Forma, y para ella `pedido` puede añadirse como tipo **sin** que `venta` lo cite: es un camino de migración posible, pero entonces el canal sigue en la venta y habría que mantener dos orígenes (no recomendado, §10).
+
+### D.2 Guardas que se aplican (nada nuevo en el lenguaje de guardas)
+
+| Guarda | `Nacer:pedido` | `Nacer:venta` (con `pedido`) |
+|---|---|---|
+| G1 capacidad (E3) | patrón `Nacer:pedido` o `Nacer:*` | patrón `Nacer:venta` |
+| G1 en el `Lote` (E4) | `tiposInternos` incluye `Nacer:pedido`: **cada** acción interna debe estar autorizada | ídem |
+| (2) valores | `canal` requerida; valor del tipo; `cliente` existente | `pedido`, `variante`, `bodega`, `precio` requeridas |
+| (3) referencias | `cliente` ∈ `ent` (tipo `cliente`) | `pedido` ∈ `ent` del tipo `pedido`, nacido **antes** o `@j` anterior del mismo lote (VF3); `variante` con su `admite.fijar` (igual) |
+| (4) padre | no tiene | exigido: `valores.pedido` debe ser un `ID` |
+| `alcancePropio` | **falla cerrada** si el actor lo tiene en su alcance (no hay padre ni objetivo, como B.6): `INADMISIBLE('ajeno')` [V] | `dueño(pedido) = u`: si el pedido es de otro ⇒ `INADMISIBLE('ajeno')` [V] |
+
+- **`dueño(venta) = creador(raíz(venta)) = creador(pedido)`** [V] (§3: `raíz` sigue la cadena `padre`). Cambia respecto del Anexo A, donde era el creador de la propia venta. Efecto: el propietario puede añadir una línea al pedido de un cajero y **el dueño de esa línea sigue siendo el cajero**, que podrá operarla (`Despachar`, `Cobrar`…) bajo su `alcancePropio`. Es coherente con «el contexto vive en el pedido».
+- **Un solicitante sin `Nacer:pedido` no puede abrir un pedido** (`NO_AUTORIZADO`) [V]. Por tanto las plantillas de §3 cambian (valor inicial; son datos):
+
+| Plantilla | Capacidades (añade) | `alcancePropio` (añade) |
+|---|---|---|
+| Cajero | `Nacer:pedido` | `Nacer:venta` |
+| Vendedor | `Nacer:pedido` | `Nacer:venta` |
+
+- **`Nacer:pedido` va en capacidades y no en el alcance.** Un tipo sin padre no tiene «objetivo» sobre el que medir el dueño, así que meterlo en `alcancePropio` lo inutiliza para ese actor. Es la misma regla de B.6.
+- **E4 (`tiposInternos`).** El lote de venta tiene la forma `[Nacer:pedido?, Nacer:venta, Disparar:…]`. Cada una de esas cadenas debe estar en las capacidades del solicitante. La modalidad `registrar` exige `Disparar:Vender.registro` (B.1), que las plantillas de cajero y vendedor ya incluyen.
+- **`dominio.lote.máximo`** cuenta **acciones** (`loteTamaño`). Un lote de un pedido con `n` líneas de modalidad `m` tiene `1 + n·(1 + |m|)` acciones; con `entregarAhora` (`|m| = 3`) caben **12 líneas** (49 acciones) y 13 son `INADMISIBLE('loteTamaño')` [V]. Es un parámetro (§10).
+
+### D.3 Las cuatro modalidades como plantillas
+
+Una **plantilla** es un dato `(parámetros) ↦ solicitud`: una función pura de sus argumentos y del estado de la cabeza (§ «Un solo verbo»: sigue siendo un `δ` del monoide producto). No añade ninguna acción de dominio, ninguna transición y ningún campo de estado.
+
+**Plantilla de línea** `venta.línea(contexto, línea, pedido)`, con `contexto = {canal, cliente?, actor?}` y `línea = {variante, bodega, precio, cantidad, modalidad}`:
+- Si `pedido = null` (todavía no ha nacido el pedido de esa propuesta) es la rama **primera**: `Lote[ Nacer:pedido{canal, cliente?, actor?}, Nacer:venta{pedido: @0, variante, bodega, precio}, Disparar:⟨hechos de la modalidad⟩{s: @1, q} … ]`.
+- Si `pedido = ρ` (ya existe) es la rama **siguiente**: `Lote[ Nacer:venta{pedido: ρ, variante, bodega, precio}, Disparar:⟨hechos⟩{s: @0, q} … ]`. `canal`, `cliente` y `actor` **no** se repiten: viven en el pedido.
+- Quién decide `primera` o `siguiente` es la **puerta**, leyendo la cabeza (spec de la puerta, T‑P8). El dominio solo ve un `Lote`.
+
+| Modalidad (nombre del POS) | Hechos comprometidos | Efecto por `q` unidades | `D_prudente` | `D_no_asignada` |
+|---|---|---|---|---|
+| **`entregarAhora`** (entregar ahora) | `Vender · Asignar · Despachar` | `H −q`, `libre −q`, `desp +q` (`A` y `P` quedan igual) | −q | −q |
+| **`apartar`** (apartar) | `Vender · Asignar` | `libre −q`, `A +q` | −q | −q |
+| **`pedido`** (pedido) | `Vender` | `P +q` | −q | 0 |
+| **`registrar`** (registrar) | `Vender.registro` | `pend⁰ +q` (no elegible, L15) | 0 | 0 |
+
+- Las filas reproducen L12 compuesta y la tabla `PLANT` de las pruebas ya escritas por el verificador. `registrar` frente a `pedido` es un **hecho de elegibilidad** (L15); las tres lecturas de disponibilidad son preguntas, no eventos (Anexo «Reducción a un solo verbo»).
+- **Botón principal del POS.** La modalidad que ofrece el botón principal es un parámetro de la puerta (valor inicial `entregarAhora`, que es «Registrar venta (descuenta stock)» de los principios del usuario). El texto del botón se **deriva de los hechos** de la plantilla (nombres de hechos como dato), no se escribe a mano. Las otras tres quedan como acciones secundarias. Los nombres de modalidad (`registrar` = solo anotar, sin tocar existencias) y el texto «Registrar venta» (= `entregarAhora`) pueden confundirse: la etiqueta visible de `registrar` es «Anotar venta (sin tocar stock)» (spec de la puerta §10).
+- **Plantillas derivadas** (no son modalidades, mismo mecanismo): `pedido.cancelar(ρ)` = `Lote[Disparar:Cancelar{s} …]` para cada línea `s` en la fibra `venta.pedido = ρ` leída en la cabeza. Depende del estado de la cabeza, pero se compromete con `AppendIfHead` sobre esa misma cabeza (L8), así que la lectura y la admisión coinciden.
+
+### D.4 La proyección del pedido y su total
+
+**`hijos(ρ, τ, k, F)`** es una pregunta **genérica** (sin nombres de dominio en el código; los nombres entran como parámetros) que la fase 3 añade a su repertorio:
+
+```
+M    = producto( q_cat , sumaPorClave(movimientos) )                      grupo conmutativo ⇒ cualquier ventana en O(1) (fase 2, T7.2)
+obs  = { sección: efectiva(ρ),
+         hijos: F_{k,ρ} ∩ {x : tipo(x) = τ}  (fibra de q_cat, en orden de nacimiento),
+         m: x ↦ { f ↦ m(f[x]) : f ∈ F }     para cada hijo x,
+         suma: f ↦ Σ_x m(f[x]) }
+```
+- **El pedido** es `hijos(ρ, venta, pedido, F_venta)`, con `F_venta = {pend, pend⁰, asig, desp, cancel, porCobrar, cobrado, reembolsado, anulado}`. **La línea** `s` añade `hijos(s, devolución, venta, {sol, recibido})` para las devoluciones de `s`.
+- Es `Section(pedido) + fibra(venta.pedido = ρ)` de la revisión, más el marcado de cada línea. No guarda nada nuevo: `q_cat` y el marcado ya son los materializados (L34).
+- `obs` se calcula al leer con el estado `S_j`; no necesita ser congruente (E1.3). Los hijos de `ρ` no cambian de padre (VF4), así que leer `padre` en `S_j` es exacto para cualquier ventana.
+
+**Total del pedido [T][V].** `total(ρ) = Σ_{s ∈ F_{pedido,ρ}} (porCobrar + cobrado + reembolsado + anulado)[s]`. Es **una pregunta de suma en ℤ** (grupo): su ventana `(i, j]` es la suma de los `Δ` de esas cuatro familias, y todas las demás transiciones se compensan dentro de las cuatro, de modo que **la ventana es el flujo de `Vender`** en el período (ventas por período). Las familias que suman son un parámetro de la pregunta (L31): `{porCobrar}` da lo pendiente de cobro; `{cobrado, reembolsado}`, lo cobrado.
+*Demostración de que coincide con `Σ q·p`:* por VF13 (D.5), `p(s)·Q(s) = Σ$(s)`, donde `Q(s)` son todas las unidades vendidas de la línea. Sumando sobre las líneas: `total(ρ) = Σ_s p(s)·Q(s)`. ∎
+[V] 30 trayectorias aleatorias (1.025 acciones admitidas, 925 rechazadas, 126 pedidos, canales POS/Web, liberación activada o no, todas las modalidades, devoluciones, cobros, cancelaciones): tras **cada** acción, `q_aud` vacía, `p·Q = Σ$` en cada línea y `total(ρ)` igual a la suma de `q·p` de las acciones `Vender` admitidas del pedido (`e2.mjs`). Con `fibra`: `fibra('pedido', ρ, 'venta')` devuelve exactamente las líneas de `ρ` (`e5.mjs`).
+
+### D.5 Invariantes nuevas
+
+Todas por L6: valen en `D_0` y se conservan por cada verbo admitido.
+
+| Id | Invariante | Demostración |
+|---|---|---|
+| **VF11** Línea con pedido | `∀ s ∈ ent, tipo(s) = venta ⇒ padre(s) ∈ ent`, `tipo(padre(s)) = pedido`, y el pedido nació antes que `s` o en su mismo lote | Guardas (3) y (4) de `Nacer`; `pedido` es R e I (`Fijar` lo rechaza); `G^par` impide cambiar el `padre` con ventas existentes (`formaCambiaPadre`) |
+| **VF12** Contexto único | `∀ s: venta`, la sección **propia** de `s` no contiene `canal` ni `cliente`; por tanto `canal(s) = canal(padre(s))` | `venta` no declara esas características (`característicaDesconocida`); `efectiva` hereda del padre (§5.2); `canal` es inmutable en el pedido |
+| **VF13** Valor del pedido | `p(s)·(pend + pend⁰ + asig + desp + cancel + Σ_{d: s(d)=s}(sol + recibido))[s] = (porCobrar + cobrado + reembolsado + anulado)[s]` | VF8 más `p(s)·cancel[s] = anulado[s]`. Esta última se prueba por inducción: solo `Cancelar` toca ambas familias y las mueve en `X` y `p·X` (con `X = pend + pend⁰ + asig` en ese instante); ambas valen 0 en `D_0` y `p` es inmutable (VF4) |
+
+- **VF13 como dato [P].** Se comprueba en `q_aud` añadiendo una forma lineal a `𝒩.auditoría` (como VF6–VF9). Es opcional y de coste cero: no cambia familias ni transiciones. Valor inicial: incluida.
+- **Corolario [T].** Ninguna familia de la Red tiene índice de tipo `pedido`, así que **el pedido no interviene en ninguna guarda de cantidad** (la Red opera por línea, como decía la revisión). El pedido solo aporta contexto y agrupación.
+
+**Lo que NO es invariante (L7) [V]:**
+
+| No invariante | Contraejemplo |
+|---|---|
+| «Todo pedido tiene al menos una línea» | `Nacer:pedido` solo, por un actor con la capacidad, se compromete. Es una **convención de la plantilla** (el `Lote` es atómico), no de `T` |
+| «Todas las líneas de un pedido tienen el mismo creador» | El propietario añade una línea al pedido de un cajero (`creador(venta) = propietario`, `dueño(venta) = cajero`) |
+| «Todas las líneas de un pedido tienen la misma modalidad» | Cada línea es otro `Lote` con sus hechos |
+
+### D.6 Por qué NO hace falta una restricción entre entidades
+
+Una restricción entre entidades sería una guarda que lee **a la vez** secciones de varias entidades del mismo tipo (por ejemplo, de todas las líneas de una referencia). El único mecanismo así del dominio es `κ` (§5.2), y solo acopla por una clave. Hay cuatro propiedades que alguien podría querer imponer entre entidades; ninguna lo exige:
+
+1. **Coherencia del contexto entre líneas** («todas las líneas de una venta tienen el mismo canal y cliente»). Se cumple **por construcción** (VF12): el contexto se guarda **una sola vez**, en el pedido, y las líneas lo heredan. No hay dos valores que mantener iguales. La alternativa (un atributo `referencia` repetido en cada línea más «`ref(s) = ref(s') ⇒ canal(s) = canal(s')`») cuantifica sobre **pares de entidades**: acoplaría todas las líneas de una referencia en una guarda de lectura amplia (L20), y las guardas de la Forma solo leen la sección del objetivo y la de su padre. [T]
+2. **Existencia del contexto** («una línea cita un pedido que existe»). Es la guarda de referencia (3), ya presente y estable (`ent` solo crece).
+3. **Pedido no vacío.** No es invariante (D.5). Un pedido sin líneas es un hecho inocuo: no mueve ningún depósito (VF5–VF9 siguen valiendo), no aparece en las preguntas que parten de las líneas, y quién puede crearlo lo dice la capacidad `Nacer:pedido` (L16). La plantilla lo evita al nacer en el mismo `Lote` que su primera línea.
+4. **Quién puede añadir líneas a un pedido.** Es `alcancePropio` sobre `Nacer:venta` con `padre = pedido` (D.2). Es una guarda de admisión de una sola entidad más su padre.
+
+**Prohibido 10 y L20 [T].** `Lote[Nacer:pedido, Nacer:venta, …]` vive en **un** ámbito (§2, Teorema 2.1). Si la Γ se partiera en `{Cat, Inv_w}` (§10), la línea de venta (que mueve el marcado de `Inv`) y el pedido (que es contexto comercial) seguirían en el ámbito que constituye las ventas; el pedido no exige un ámbito aparte.
+
+### D.7 Lo que debe incorporar el verificador de la fase 3
+
+1. **Modelo** (`kobalt/tests/modelos/dominio.modelo.mjs`):
+   - `FORMA_INICIAL` según D.1: tipo `pedido`; `venta.padre = 'pedido'`, característica `venta.pedido`; quitar `venta.canal` y `venta.cliente`.
+   - `CAPACIDADES.cajero` y `.vendedor` añaden `Nacer:pedido`; `ALCANCE.cajero` y `.vendedor` añaden `Nacer:venta` (D.2). `Nacer:pedido` **no** entra en ningún alcance.
+   - `PLANTILLAS` y `plantillaVenta(nombre, valores, q)` pasan a `plantillaLínea(contexto, línea, pedido)` con la rama `primera` (`Nacer:pedido` en `@0`, venta en `@1`) y la rama `siguiente` (venta en `@0`, cita `pedido`). Los `{nacido: j}` cuentan nacimientos.
+   - Añadir `hijos(ρ, τ, k, F)` (D.4) al repertorio de `PROYECCIONES`.
+   - La Red `RED_INICIAL` **no cambia**. Opcional: VF13 como entrada de `auditoría` (forma lineal con coeficientes `p(s)` y `p(s(d))`, como VF8).
+2. **Generador** (`dominio.comun.mjs`): en `proponerAleatoria` los valores de `Nacer:venta` ya no llevan `canal`; se elige el `contexto = {canal}` y, con probabilidad ~0,4, un pedido existente (`siguiente`). Los actores `caja` y `U1` necesitan las plantillas nuevas en `genesisActores`.
+3. **Pruebas de leyes** (`dominio.leyes.test.mjs`): VF11, VF12 y VF13 comprobadas en **cada** estado intermedio, con `q_aud` vacía; la tabla de D.3 contra L12; `total(ρ)` = suma de `q·p` de los `Vender` admitidos del pedido; `fibra('pedido', ρ, 'venta')` = líneas de `ρ`.
+4. **Pruebas dirigidas** (casos [V] de este anexo):
+   - sin `Nacer:pedido` ⇒ `NO_AUTORIZADO`;
+   - `Nacer:pedido` en el alcance del actor ⇒ `INADMISIBLE('ajeno')`;
+   - `U1` añade una línea al pedido de `caja` ⇒ `ajeno`; el propietario sí puede y `dueño(línea) = caja`;
+   - `Nacer:venta{…, canal}` ⇒ `característicaDesconocida`;
+   - `Nacer:pedido` solo se compromete (pedido vacío);
+   - lote de 12 líneas `entregarAhora` admitido y de 13 ⇒ `loteTamaño`;
+   - liberación POS por el canal heredado del pedido (`H` baja a −1 en `POS`, `negativo:libre` en `Web`);
+   - `G^par`: Forma con `venta.padre` sobre una `Γ` con ventas ⇒ `formaCambiaPadre`; añadir solo el tipo `pedido` ⇒ admitido.
+5. **Oráculo de aceptación** (`dominio.aceptacion.mjs`): reescribir los escenarios del Anexo B que crean ventas (#13, #14, #15, #17, #21, #24, #26, #27, #32, F4–F7) con el lote `[Nacer:pedido{canal}, Nacer:venta{pedido: @0, …}, …]`; el `ID` de la venta pasa de `(i, 0)` a `(i, 1)` y las acciones citan `@1`. Efectos esperados idénticos. Añadir escenarios de segunda línea (`siguiente`) y de las cuatro modalidades.
+6. **Mutantes** (`dominio.mutantes.mjs`): `dueño` que ignora el `padre`; `canal` sin `heredable` en `pedido`; alcance de `Nacer:venta` que ignora el `padre`; plantilla `siguiente` que repite `Nacer:pedido` (dos pedidos); `Nacer:pedido` aceptado bajo alcance (falla abierta).
+7. **Revisión estática «dato, no código»:** el nombre `pedido` solo aparece en `inicial.mjs`; `hijos` recibe `τ`, `k` y `F` como parámetros.
+
+### D.8 Precisiones a documentos previos (ninguna contradice una ley)
+
+| Id | Documento | Precisión |
+|---|---|---|
+| P‑F | `REVISION_UI_Y_POS_V3.md` §7 («`cliente`, `canal` y `actor` como características de asignación»; «la Red no cambia») | `cliente` es referencia‑uno. «La Red no cambia» es cierto **si** `canal` y `cliente` se heredan por `padre`; con un atributo propio en cada línea, las expresiones `canal(args)` de la Red habrían tenido que leer el padre |
+| P‑G | Anexo A (`venta`) | `venta` pierde `canal` y `cliente` y gana `pedido`; el `dueño` de una venta es el creador de su pedido |
+| P‑H | Anexo B escenarios #13, #21, #26, #32, F4, F5, F7 | Se reescriben con `Nacer:pedido` y con los `ID` desplazados; los efectos esperados no cambian |
+| P‑I | `REVISION_UI_Y_POS_V3.md` §2, Teorema 3 («`sid_i = 𝔇(ρ, i)` con `ρ` el `ID` del `pedido`») | El `ID` del pedido no se conoce antes del primer compromiso (es la posición de esa entrada, que depende de la cabeza). Los `sid` se derivan de una **referencia de propuesta** `ρ_p` distinta del `ID` del pedido (spec de la puerta, T‑P3) |
