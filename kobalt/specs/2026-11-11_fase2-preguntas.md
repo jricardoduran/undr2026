@@ -11,7 +11,7 @@
 **Etiquetas.** [T] teorema con demostración aquí · [V] comprobado con `node` (scripts `f2.mjs` y `f2b.mjs` en el scratchpad de la sesión, fuera del repositorio) · [D] doctrina o decisión de diseño · [P] propuesta · [L] límite.
 
 **Regla de vocabulario [D].** `kobalt/src/preguntas/` no contiene palabras de dominio. Revisión estática:
-`grep -niE 'producto|variante|stock|sku|bodega|precio|inventario|catálogo|venta|cliente|depósito' kobalt/src/preguntas/` debe salir vacío.
+`grep -niP 'producto|variante|stock|sku|bodega|precio|inventario|catálogo|venta(?!na)|cliente|depósito' kobalt/src/preguntas/` debe salir vacío.
 Las palabras de dominio de esta spec aparecen solo en ejemplos marcados como tales.
 
 **Supuestos prohibidos vigilados.**
