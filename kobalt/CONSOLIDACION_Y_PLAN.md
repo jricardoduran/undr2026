@@ -274,6 +274,8 @@ Tecnología: módulos ES nativos, sin dependencias; `node --test` para el núcle
 3. **Los módulos solo se habían probado en Node.** El empaquetado debe probarse en **Chromium real**: sin `node:`, sin `Buffer`, sin APIs de servidor. (El núcleo calcula SHA‑256 en JS puro, así que no exige contexto seguro; aun así se recomienda HTTPS.)
 4. **Sin dependencias ni pasos de compilación** en el servidor.
 
+> **Actualización (12‑nov, noche):** el usuario autorizó publicar todo de forma permanente. La librería Kobalt UI se **versiona sin modificar** en `kobalt/app/ui/` con sus hashes, y **ambos paquetes** pueden publicarse. La decisión «¿va también el paquete con la librería a GitHub?» queda **resuelta: sí**. El resto de esta parte sigue vigente.
+
 **Dos paquetes, según de quién es cada pieza:**
 
 | Paquete | Contiene | Destino |
@@ -281,7 +283,7 @@ Tecnología: módulos ES nativos, sin dependencias; `node --test` para el núcle
 | `kobalt-app-con-ui.zip` | Nuestras páginas y módulos **más** la librería Kobalt UI (tuya, no publicada) | Para ti: subir a GoDaddy y probar. Se te entrega directamente |
 | `kobalt-app-sin-ui.zip` | Lo mismo **sin** la librería, con el instalador | Apto para GitHub (repositorio público) |
 
-**Decisión que es tuya (se pregunta al entregar, con el paquete ya probado):** si el paquete **con** la librería también debe subirse a GitHub. El repositorio es público: lo que se sube puede copiarse e indexarse aunque después se borre. Hasta que lo autorices, solo se publica el paquete sin librería.
+**(Resuelta por el usuario: sí, se publica.)** Texto original: si el paquete **con** la librería también debe subirse a GitHub. El repositorio es público: lo que se sube puede copiarse e indexarse aunque después se borre. Hasta que lo autorices, solo se publica el paquete sin librería.
 
 **Cómo se entrega:** un script `kobalt/app/empaquetar.mjs` (sin dependencias) genera ambos `.zip` en `dist/`, con un `LEEME-GODADDY.md` (subir el zip al Administrador de archivos de cPanel, extraer en `public_html/`, abrir la URL; qué esperar: datos locales por navegador, exportar respaldo; HTTPS recomendado). El `.zip` sin librería se versiona en `dist/` y se enlaza por su URL `raw` de GitHub; el completo se te envía como archivo.
 

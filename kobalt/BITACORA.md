@@ -61,6 +61,12 @@
 
 ## 3. Cronología de decisiones y su porqué (más reciente arriba)
 
+### 2026‑11‑12 (noche) · Autorización permanente de publicar
+- **Dicho por el usuario:** «puedes publicar lo que quieras siempre». Es una autorización **durable** (queda en `CLAUDE.md`, sección «Publicación»), no un permiso puntual.
+- **Alcance que le doy:** su material propio (librería Kobalt UI, v2/v3, POS V3, conversaciones, paquetes) y todo lo nuestro, en **este** repositorio. **No** cubre secretos, credenciales ni datos personales de terceros: escanear antes de publicar material nuevo.
+- **Efectos:** (1) la librería Kobalt UI se **versiona sin modificar** en `kobalt/app/ui/` con sus hashes (la prueba estática pasa de «no existe» a «coincide byte a byte con `SHA256SUMS_2_2_1.txt`»); (2) **ambos** zips pueden ir a GitHub; (3) el material de referencia del usuario se conserva en `kobalt/referencias/` para **persistencia entre sesiones** (hasta ahora vivía en el scratchpad, que se pierde al reciclar el contenedor).
+- **Sigue vigente la frontera técnica:** un sistema de permisos del entorno puede bloquear una acción concreta aunque el usuario la autorice; si ocurre, se informa en vez de rodearlo.
+
 ### 2026‑11‑12 (noche) · Requisito de entrega: un `.zip` para probar en GoDaddy y en GitHub
 - **Pedido del usuario:** «cuando finalices, un `.zip` que también esté en GitHub, para probarlo en GoDaddy».
 - **Consecuencias de diseño (ya en `CONSOLIDACION_Y_PLAN.md`, Parte VI):** (1) rutas **relativas**, que funcione en una subcarpeta; (2) Apache puede servir `.mjs` como `octet-stream` y el navegador rechaza el módulo → el empaquetado emite `.js` y un `.htaccess`, y se verifica con un servidor que sirve `.mjs` mal a propósito; (3) **los módulos solo se habían probado en Node**: la primera prueba en Chromium real será la del paquete; (4) sin dependencias ni compilación en el servidor.

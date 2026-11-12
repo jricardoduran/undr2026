@@ -51,6 +51,9 @@ node kobalt/kernels/Verificacion/2026-11-10_2043_RUN_KOB2_TESTS.js
 (cd kobalt/kernels && sha256sum -c SHA256SUMS.txt)
 ```
 
+## Publicación (autorización permanente del usuario, 2026‑11‑12)
+El usuario autorizó **publicar siempre lo que se quiera en este repositorio**, incluido su material propio no publicado (librería Kobalt UI, POS/inventario v2 y v3, conversaciones y paquetes). Esa autorización **no cubre** secretos, credenciales, claves ni datos personales de terceros: antes de publicar material nuevo, escanéalo en busca de ellos. Se sigue registrando en `kobalt/BITACORA.md` qué se publica y por qué.
+
 ## Reglas duras
 - Los kernels de `kobalt/kernels/` no se editan nunca.
 - No se debilitan, borran ni se marcan como `skip` las pruebas de leyes para hacerlas pasar.
