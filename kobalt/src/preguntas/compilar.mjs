@@ -16,12 +16,13 @@
 // Leyes: L32 (pregunta = dato CV con identidad Exacta; ver = id(q), así que cambiar un byte de q no reutiliza nada
 // guardado con otra pregunta, L22), E1 (f no recibe tRef ⇒ {x:'tRef'} fuera de obs es PREGUNTA_INVÁLIDA; L15),
 // E1.4a (sensibleAEpoca = false siempre: cada f(e_k) usa el contrato de su propia entrada), L34 (escaneo y segmentos
-// son materializaciones, no monoides de pregunta), P6 (la composición de filtros es la expresión y/o/no).
+// son materializaciones, no monoides de pregunta; una derivada de algo que contiene 'secuencia', o de otra derivada, es
+// PREGUNTA_INVÁLIDA), P6 (la composición de filtros es la expresión y/o/no).
 
 import { cv, derivar } from '../nucleo/index.mjs';
 import { esMapa, esCV } from './valores.mjs';
 import { validarExpr, evaluar, LECTORES_VACIO } from './expresiones.mjs';
-import { monoide, tuplaDeMonoides, monoideDerivado } from './monoides.mjs';
+import { monoide, tuplaDeMonoides, monoideDerivado, leyes } from './monoides.mjs';
 import { validarObs, funcionObs } from './observaciones.mjs';
 
 export const ETIQUETA = 'kobalt:preguntas:q:1';
@@ -68,6 +69,10 @@ function analizar(q, lectores) {
   if (Object.hasOwn(q, 'derivada')) {
     if (Object.keys(q).length !== 2 || !Object.hasOwn(q, 'de') || (q.derivada !== 'prefijos' && q.derivada !== 'segmentos')) invalida('pregunta derivada inválida');
     const c = analizar(q.de, lectores);
+    // L34 como regla ESTÁTICA de la pregunta: una materialización no se materializa otra vez, y lo que contiene
+    // 'secuencia' no se materializa nunca (su cociente de Nerode es la propia Γ filtrada).
+    if (contieneDerivada(c)) invalida('una pregunta derivada no puede derivarse otra vez (L34)');
+    if (!leyes(c.M).materializable) invalida('secuencia no se materializa nunca (L34)');
     const M = monoideDerivado(q.derivada === 'prefijos' ? 'escaneo' : 'segmentos', c.M);
     return { tipo: 'derivada', derivada: q.derivada, c, M, leeEstado: c.leeEstado, usaTRef: false };
   }
@@ -90,6 +95,9 @@ function analizar(q, lectores) {
   if (rφ.usaTRef || ra.usaTRef || rs.usaTRef) invalida('tRef solo puede aparecer en obs (E1: f no recibe tRef; L15)');
   return { tipo: 'simple', q, M, ap, leeEstado: rφ.leeEstado || ra.leeEstado || rs.leeEstado || ro.leeEstado, usaTRef: ro.usaTRef };
 }
+
+/** ¿El análisis A es, o contiene en una tupla, una pregunta derivada? */
+const contieneDerivada = A => A.tipo === 'derivada' || (A.tipo === 'tupla' && A.cs.some(contieneDerivada));
 
 /** f(e, ctx), ctx = {k, parametros: C_{ε_{k−1}} [, S: S_{k−1}]} (lo construye N.aportes). */
 function contribucion(A, lectores) {

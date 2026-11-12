@@ -15,8 +15,9 @@
 //
 // Leyes: L32/L9/V10 (responder = reconstrucción desde Γ, desde cualquier checkpoint: lo garantiza el núcleo), L22
 // (una materialización cuyo checkpoint no casa con Γ ⇒ MATERIALIZACIÓN_INVÁLIDA; no se usa a ciegas), L34 (secuencia ⇒
-// NO_MATERIALIZABLE), P3 (P_i⁻¹ ⊗ P_j), L21 (distribuir solo sobre cortes cerrados; lo juzga el núcleo), L13/P4
-// (no conmutativo ⇒ NO_CONMUTATIVO; dependiente del estado ⇒ DEPENDE_DEL_ESTADO: el orden importa a través de S),
+// NO_MATERIALIZABLE en materializar, MATERIALIZACIÓN_INVÁLIDA en el intervalo, materializable: false en responder;
+// la derivada es PREGUNTA_INVÁLIDA en compilar), P3 (P_i⁻¹ ⊗ P_j), L21 (distribuir solo sobre cortes cerrados; lo
+// juzga el núcleo), L13/P4 (no conmutativo ⇒ NO_CONMUTATIVO; dependiente del estado ⇒ DEPENDE_DEL_ESTADO: el orden importa a través de S),
 // L15 (tRef solo llega a obs; el checkpoint no lo lleva), L16 (una respuesta no confiere autoridad).
 
 import { resolverProyeccion, aportes, proyectarCorte, fold, estadoInicial, restaurarSnapshot } from '../nucleo/index.mjs';
@@ -50,7 +51,8 @@ export function responder(q, Γ, o = {}) {
     proy: c.proy, guardado: o.guardado ?? null, trayectoria: Γ, i: o.i ?? 0, m: o.j ?? Γ.entradas.length,
     registro: o.registro, snapshots: o.snapshots ?? [], tRef: o.tRef,
   });
-  return { resultado: 'OK', ...r };
+  // L34: el registro de una pregunta que contiene 'secuencia' se marca como no materializable (es Γ filtrada).
+  return { resultado: 'OK', ...r, ...(leyes(c.M).materializable ? {} : { materializable: false }) };
 }
 
 /**
@@ -80,6 +82,8 @@ export function ventana(q, Γ, i, j, mat, o = {}) {
   const n = Γ.entradas.length;
   if (!ent(i) || !ent(j) || i < 0 || i > j || j > n) throw new Error('intervalo fuera de la trayectoria local');
   const INVALIDA = { resultado: 'MATERIALIZACIÓN_INVÁLIDA' };
+  const L = leyes(c.M);
+  if (!L.materializable) return INVALIDA; // L34: no existe materialización legítima de una secuencia
   const cp = mat?.checkpoint;
   if (!mat || !TIPOS_MATERIALIZACION.includes(mat.tipo) || !cp) return INVALIDA;
   if (cp.ver !== identidad({ derivada: mat.tipo, de: q }) || cp.streamId !== Γ.streamId || (cp.i ?? 0) !== 0) return INVALIDA;
@@ -87,7 +91,6 @@ export function ventana(q, Γ, i, j, mat, o = {}) {
   const Sj = estadoEn(Γ, j, o.registro, o.snapshots);
   const Sn = cp.n === j ? Sj : estadoEn(Γ, cp.n, o.registro, o.snapshots);
   if (cp.epoca !== Sn.epoca) return INVALIDA;
-  const L = leyes(c.M);
   if (mat.tipo === 'prefijos' && L.ventana !== 'prefijos') return INVALIDA;
   const r = mat.tipo === 'prefijos'
     ? ventanaPrefijos(c.M.grupo ? c.M : c.M.envolvente, mat.acum[0], i, j)
@@ -140,8 +143,9 @@ export function filtroTiempo(q, t1, t2) {
 
 /**
  * distribuir(q, σ, trayectorias, o) → {resultado:'OK', acum, Y} | NO_CONMUTATIVO | DEPENDE_DEL_ESTADO | NO_CERRADO
- * (en ese orden) | PREGUNTA_INVÁLIDA. acum = N.proyectarCorte(σ, trayectorias, registro, proy).valor; obs sin C_ε propio
- * (cada trayectoria tiene el suyo): Y = obs(acum, {parametros: {}, tRef}).
+ * (en ese orden) | PREGUNTA_INVÁLIDA. acum = N.proyectarCorte(σ, trayectorias, registro, proy).valor.
+ * [L] obs se evalúa con parametros: {} (y sin S): entre trayectorias no hay un C_ε común, cada una tiene el suyo.
+ * Una obs cuyos parámetros lean {p: …} da en distribuir el valor de «parámetro ausente» (null).
  */
 export function distribuir(q, σ, trayectorias, o = {}) {
   const c = compilarConMonoide(q, o);

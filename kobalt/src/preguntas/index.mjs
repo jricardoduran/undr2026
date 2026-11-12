@@ -31,7 +31,9 @@
 // L22, L27, P3–P6, Teoremas 7.1–7.4 (detalle en cada archivo).
 // Límites [L]: spec §9 (sin control de lectura, sellos declarados y no verificados, preguntas no conmutativas o
 // dependientes del estado no se distribuyen, obs se recalcula al leer, escaneo/segmentos ocupan O(n)); además el ⊗ de
-// escaneo/segmentos es puro y copia, así que reconstruir una materialización cuesta O(n²) en tiempo.
+// escaneo/segmentos es puro y copia, así que reconstruir una materialización cuesta O(n²) en tiempo; y distribuir
+// evalúa obs con parametros: {} y sin S, porque entre trayectorias no hay un C_ε común (cada una tiene el suyo).
+// L34 es estática: {derivada, de: q} con q que contiene 'secuencia', o con q ya derivada, es PREGUNTA_INVÁLIDA.
 
 export { ETIQUETA, identidad, tupla, compilar } from './compilar.mjs';
 export { CAMPOS, OPERADORES, LECTORES_VACIO, registrarLector, validarExpr, evaluar } from './expresiones.mjs';
