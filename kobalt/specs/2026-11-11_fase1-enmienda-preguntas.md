@@ -277,3 +277,15 @@ La enmienda no abre parámetros de contrato nuevos. Precisa uno ya existente y u
 - y G5/G1 con las nuevas reglas de juguete.
 
 El modelo de referencia `kobalt/tests/modelos/nucleo.modelo.mjs` debe implementar E1–E8 **antes** que la implementación (fase 1 del verificador).
+
+---
+
+## Anexo B · Precisiones fijadas por el verificador (2026‑11‑12)
+Las fuerzan las pruebas `kobalt/tests/leyes/nucleo.*`.
+1. **Corrección del ejemplo de E1.1:** `(sumar(1), sumar(−1))` frente a `ε` **no** llega al mismo `S`: difieren `n`, `Sids` y `D.orden`. El teorema vale con este contraejemplo: `(fijar(a,1), sumar(a,1))` frente a `(fijar(a,2), fijar(a,2))`, con los mismos `sid`.
+2. `NO_CONMUTATIVO` se juzga **antes** que el cierre del corte.
+3. En `proyectarCorte` monoidal, `valor = ⊗ acum` **sin** `obs`, porque `C_ε` difiere entre trayectorias.
+4. Un checkpoint con `c.n < i` es `DISCONTINUIDAD`. `desde` vale `i` al reconstruir y `c.n` al reutilizar o actualizar. La forma clásica exige `i = 0`.
+5. `STREAM_DUPLICADO` se comprueba antes que los conflictos y devuelve el primer StreamID repetido.
+6. Si `tiposInternos` no devuelve una lista de textos, el resultado es `NO_AUTORIZADO`.
+7. `conflictos` y `exceso` devuelven identidades, en orden de primera aparición.

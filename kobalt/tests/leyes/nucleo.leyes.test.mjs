@@ -1,5 +1,6 @@
 // Kobalt — leyes del NÚCLEO GENERAL (fase 1) como pruebas de propiedades sobre el MODELO de referencia.
-// Spec: kobalt/specs/2026-11-11_fase1-nucleo.md (§8). Modelo: kobalt/tests/modelos/nucleo.modelo.mjs.
+// Specs: kobalt/specs/2026-11-11_fase1-nucleo.md (§8) y kobalt/specs/2026-11-11_fase1-enmienda-preguntas.md (§8, E1–E8:
+// pruebas al final del archivo). Modelo: kobalt/tests/modelos/nucleo.modelo.mjs.
 //
 // Ejecutar:  node --test 'kobalt/tests/leyes/*.test.mjs'
 // Variables: KOBALT_SEED (semilla, por defecto 20261111), KOBALT_CASOS (por defecto 150),
@@ -986,4 +987,244 @@ test('generador: produce compromisos, los rechazos exigidos por §8, épocas, ca
   for (const k of ['COMPROMETIDO', 'NO_AUTORIZADO', 'INADMISIBLE', 'YA_COMPROMETIDO', 'ÉPOCA_CAMBIADA', 'CABEZA_CAMBIADA', 'NO_CONSTITUYENTE', 'DEPENDENCIA_NO_VERIFICABLE', 'SELLADO'])
     assert.ok((tot[k] ?? 0) >= 10, `${k}: ${tot[k] ?? 0} — ${JSON.stringify(tot)}`);
   assert.ok(epocas > 50 && migr > 3 && deps > 20 && sellos > 0, JSON.stringify({ epocas, migr, deps, sellos }));
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+// ENMIENDA E1–E8 (kobalt/specs/2026-11-11_fase1-enmienda-preguntas.md, §8)
+// ═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+const MONO = M.JUGUETE_MONO;
+// Referencia independiente de aportes(): contribuciones con los S_{k−1} de Fold (Γ.estados los produce Fold; L4 lo verifica).
+const ctxF = (proy, Γ, k) => (proy.leeEstado ? { k, parametros: Γ.estados[k - 1].parametros, S: Γ.estados[k - 1] } : { k, parametros: Γ.estados[k - 1].parametros });
+const acumRef = (proy, Γ, i, j) => { let a = structuredClone(proy.monoide.unidad); for (let k = i + 1; k <= j; k++) a = proy.monoide.op(a, proy.f(Γ.entradas[k - 1], ctxF(proy, Γ, k))); return a; };
+const obsRef = (proy, Γ, j, acum, tRef) => proy.obs(structuredClone(acum), proy.leeEstado ? { parametros: Γ.estados[j].parametros, S: Γ.estados[j], tRef } : { parametros: Γ.estados[j].parametros, tRef });
+const cpMono = (proy, Γ, i, n) => ({ streamId: Γ.streamId, n, h: Γ.hashes[n], ver: proy.ver, epoca: Γ.estados[n].epoca, ...(i > 0 ? { i, hI: Γ.hashes[i] } : {}) });
+const falsificar = Γ => ({ ...Γ, estados: Γ.estados.map(S => ({ ...S, D: { orden: ['zz'], v: { zz: 99 }, miembros: { zz: true }, nd: 99, nacidos: [], hechos: [] },
+  parametros: { ...S.parametros, 'nucleo.capacidades': { nadie: [] }, 'límite': '≥0' }, sids: {}, sellado: !S.sellado, epoca: S.epoca + 7 })) });
+
+paraTodoEscenario('L9 V10 E1.3 resolverProyeccion monoidal = obs(⊗ aportes) en toda ventana (i,j] desde todo checkpoint (válido, adelantado, de otra i, manipulado)', (run, esc) => {
+  const Γ = run.ΓX, L = Γ.entradas.length, r = prng(esc.propX.length * 17 + L + 3);
+  const snaps = [M.crearSnapshot(Γ.estados[entero(r, 0, L)], null, R)].map(s => ({ ...s, h: Γ.hashes[s.n] }));
+  // snapshots inválidos con S alterado (Q roto; h ajeno): E5 exige ignorarlos
+  for (const [k, campo] of [[entero(r, 0, L), 'Q'], [entero(r, 0, L), 'h']]) {
+    const malo = structuredClone(Γ.estados[k]); malo.D = { orden: ['zz'], v: { zz: 99, a: 99 }, miembros: {}, ops: 0 };
+    snaps.push({ ...M.crearSnapshot(Γ.estados[k], Γ.hashes[k], R), S: malo, [campo]: C.HASH_FALSO });
+  }
+  for (const proy of Object.values(MONO)) for (let rep = 0; rep < 6; rep++) {
+    const i = entero(r, 0, L), j = entero(r, i, L), n = entero(r, i, L), tRef = entero(r, -1, 3);
+    const ap = M.aportes(proy, Γ, i, j, R, r() < 0.5 ? snaps : []);
+    if (ap.length !== j - i || !igual(M.plegar(proy.monoide, ap), acumRef(proy, Γ, i, j))) return false;
+    const base = cpMono(proy, Γ, i, n);
+    const variantes = [[base, n === j ? 'REUTILIZAR' : n > j ? 'RECONSTRUIR' : 'ACTUALIZAR'], [{ ...base, h: C.HASH_FALSO }, 'DISCONTINUIDAD'],
+      [{ ...base, epoca: base.epoca + 1 }, 'DISCONTINUIDAD'], [{ ...base, ver: proy.ver + 1 }, 'RECONSTRUIR'], [{ ...base, streamId: STREAM_Z }, 'DISCONTINUIDAD'],
+      [{ ...base, i: i + 1, hI: Γ.hashes[i + 1] ?? C.HASH_FALSO }, 'RECONSTRUIR'], [{ ...base, n: L + 1 }, 'DISCONTINUIDAD'], [null, 'RECONSTRUIR'],
+      ...(i > 0 ? [[{ ...base, hI: C.HASH_FALSO }, 'RECONSTRUIR'], [{ ...base, i: undefined, hI: undefined }, 'RECONSTRUIR']] : [])];
+    const acum = acumRef(proy, Γ, i, j), Y = obsRef(proy, Γ, j, acum, tRef);
+    for (const [cp, accion] of variantes) {
+      const guardado = cp && { acum: acumRef(proy, Γ, i, n), checkpoint: cp };
+      const res = M.resolverProyeccion({ proy, guardado, trayectoria: Γ, i, m: j, registro: R, snapshots: snaps, tRef });
+      if (res.accion !== accion || !igual(res.acum, acum) || !igual(res.Y, Y) || !igual(res.checkpoint, cpMono(proy, Γ, i, j))) return false;
+      if (res.desde !== (accion === 'REUTILIZAR' || accion === 'ACTUALIZAR' ? n : i)) return false;
+    }
+  }
+  return true;
+}, 60);
+test('E1.1 una pregunta sobre Γ no es función de S: dos Γ distintas con el MISMO S_n dan conteos distintos', () => {
+  // Nota para el matemático: el contraejemplo literal de la enmienda (sumar(1), sumar(−1)) frente a ε NO llega al mismo S
+  // (n y Sids difieren; en contador@1 también D.orden). Este par sí comparte S_n completo.
+  const base = nuevaX();
+  const Γ1 = comprometerTodas(base, [{ u: 'dueño', sid: 'e101', tipo: 'fijar', args: { clave: 'a', v: 1 } }, { u: 'dueño', sid: 'e102', tipo: 'sumar', args: { clave: 'a', q: 1 } }]);
+  const Γ2 = comprometerTodas(base, [{ u: 'dueño', sid: 'e101', tipo: 'fijar', args: { clave: 'a', v: 2 } }, { u: 'dueño', sid: 'e102', tipo: 'fijar', args: { clave: 'a', v: 2 } }]);
+  assert.deepEqual(M.fold(M.estadoInicial(Γ1.g, R), Γ1.entradas, R), M.fold(M.estadoInicial(Γ2.g, R), Γ2.entradas, R), 'mismo S_n');
+  const q = Γ => M.resolverProyeccion({ proy: MONO.conteo, guardado: null, trayectoria: Γ, m: 2, registro: R }).Y;
+  assert.deepEqual(q(Γ1), { fijar: 1, sumar: 1 }); assert.deepEqual(q(Γ2), { fijar: 2 });
+  // y el contraejemplo de la enmienda, tal cual, no comparte S (se documenta, no se usa)
+  const Γ3 = comprometerTodas(base, [sumar('a', 1), sumar('a', -1)]);
+  assert.notDeepEqual(Γ3.estados.at(-1), base.estados[0]);
+});
+test('E1.2 con leeEstado la contribución de la MISMA entrada depende del estado previo (merma 4 desde 5, 1 desde 2)', () => {
+  const desde = v => comprometerTodas(nuevaX(), [fijar('a', v), { u: 'dueño', sid: 'e201', tipo: 'fijar', args: { clave: 'a', v: 1 } }]);
+  const Γ5 = desde(5), Γ2 = desde(2);
+  assert.equal(hex(Γ5.bloques[1]), hex(Γ2.bloques[1]), 'la misma entrada (mismos bytes) en las dos trayectorias');
+  assert.deepEqual(M.aportes(MONO.merma, Γ5, 1, 2, R), [4]); assert.deepEqual(M.aportes(MONO.merma, Γ2, 1, 2, R), [1]);
+  assert.deepEqual(M.resolverProyeccion({ proy: MONO.merma, guardado: null, trayectoria: Γ5, m: 2, registro: R }).Y, { merma: 9, n: 2 });
+});
+test('L10 E1.3 la forma monoidal no necesita g: obs = max(0,·) no es congruente pero se recalcula; el mutante «obs antes de guardar» falla', () => {
+  const Γ = comprometerTodas(nuevaX({ 'límite': 'ninguno' }), [sumar('a', -2), sumar('a', 3)]);
+  const p = MONO.sumaMinPref;
+  const r1 = M.resolverProyeccion({ proy: p, guardado: null, trayectoria: Γ, m: 1, registro: R });
+  assert.equal(r1.Y.positivo, 0); assert.deepEqual(r1.acum, [-2, -2]);
+  const r2 = M.resolverProyeccion({ proy: p, guardado: { acum: r1.acum, checkpoint: r1.checkpoint }, trayectoria: Γ, m: 2, registro: R });
+  assert.equal(r2.accion, 'ACTUALIZAR'); assert.equal(r2.Y.positivo, 1); assert.deepEqual(r2.acum, [1, -2]);
+  const mutante = Math.max(0, r1.Y.positivo + 3); // guardar obs y actualizar sobre obs
+  assert.notEqual(mutante, r2.Y.positivo, 'el mutante debe fallar en el contraejemplo de L10');
+  // π = max(0, s) no es congruente: s = −2 y s = 0 dan 0; tras sumar 3, 1 y 3
+  assert.equal(Math.max(0, -2), Math.max(0, 0)); assert.notEqual(Math.max(0, -2 + 3), Math.max(0, 0 + 3));
+  assert.equal(p.g, undefined, 'la forma monoidal no declara g');
+});
+test('L15 E1.4b monoidal: el checkpoint no lleva tRef; el mismo acum responde a dos tRef; f nunca recibe tRef', () => {
+  const Γ = comprometerTodas(nuevaX(), [fijar('a', 1), sumar('a', 1), sumar('b', 3), sumar('a', 1)]);
+  const p = MONO.umbral;
+  const r1 = M.resolverProyeccion({ proy: p, guardado: null, trayectoria: Γ, m: 3, registro: R, tRef: 2 });
+  assert.equal(Object.hasOwn(r1.checkpoint, 'tRef'), false); assert.deepEqual(r1.Y, ['b']);
+  const r2 = M.resolverProyeccion({ proy: p, guardado: { acum: r1.acum, checkpoint: r1.checkpoint }, trayectoria: Γ, m: 3, registro: R, tRef: 1 });
+  assert.equal(r2.accion, 'REUTILIZAR'); assert.deepEqual(r2.Y, ['a', 'b']); assert.deepEqual(r2.acum, r1.acum);
+  const claves = new Set();
+  const espia = { ...p, id: 'mono.espia', f: (e, ctx) => { Object.keys(ctx).forEach(k => claves.add(k)); return p.f(e, ctx); } };
+  const a1 = M.resolverProyeccion({ proy: espia, guardado: null, trayectoria: Γ, m: 2, registro: R, tRef: 0 });
+  const a2 = M.resolverProyeccion({ proy: espia, guardado: { acum: a1.acum, checkpoint: a1.checkpoint }, trayectoria: Γ, m: 4, registro: R, tRef: 5 });
+  assert.equal(a2.accion, 'ACTUALIZAR'); assert.deepEqual(a2.acum, M.resolverProyeccion({ proy: espia, guardado: null, trayectoria: Γ, m: 4, registro: R, tRef: 99 }).acum);
+  assert.deepEqual([...claves].sort(), ['k', 'parametros']);
+});
+test('L21 L25 E1.5 proyectarCorte monoidal: conmutativo = ⊗ por trayectoria en cualquier orden; no conmutativo ⇒ NO_CONMUTATIVO; con solape la suma falla', () => {
+  let vistos = 0;
+  for (let c = 0; c < Math.min(CASOS, 60); c++) {
+    const { run } = escenario(c); const r = prng(SEMILLA + 19 * c);
+    const tray = { [STREAM_X]: run.ΓX, [STREAM_Y]: run.ΓY };
+    const σ = M.cerrarCorte({ [STREAM_X]: entero(r, 0, run.ΓX.entradas.length), [STREAM_Y]: entero(r, 0, run.ΓY.entradas.length) }, tray).σ;
+    for (const p of [MONO.conteo, MONO.porEpoca, MONO.merma]) {
+      const ax = acumRef(p, run.ΓX, 0, σ[STREAM_X]), ay = acumRef(p, run.ΓY, 0, σ[STREAM_Y]);
+      const res = M.proyectarCorte(σ, tray, R, p);
+      assert.equal(res.resultado, 'OK');
+      assert.deepEqual(res.valor, p.monoide.op(ax, ay)); assert.deepEqual(res.valor, p.monoide.op(ay, ax));
+      vistos++;
+    }
+    for (const p of [MONO.sumaMinPref, MONO.ultimo]) {
+      assert.deepEqual(M.proyectarCorte(σ, tray, R, p), { resultado: 'NO_CONMUTATIVO' });
+      assert.deepEqual(M.proyectarCorte({ ...σ, [STREAM_Y]: -5 }, tray, R, p), { resultado: 'NO_CONMUTATIVO' }, 'precisión: la conmutatividad se juzga antes que el corte');
+    }
+    const n = run.ΓX.entradas.length;
+    if (n > 0) { // solape: la misma Γ dos veces cuenta dos veces (por eso componer rechaza StreamID duplicados, E8)
+      const a = acumRef(MONO.conteo, run.ΓX, 0, n);
+      assert.notDeepEqual(MONO.conteo.monoide.op(a, a), a);
+    }
+  }
+  assert.ok(vistos > 0);
+  // corte no cerrado con monoide conmutativo ⇒ NO_CERRADO
+  let ΓY = comprometerTodas(M.trayectoriaNueva(C.genesisY(), R).Γ, [fijar('k', 1)]);
+  const ΓX = comprometerTodas(nuevaX(), [{ ...sumar('a', 1), args: { clave: 'a', q: 1, requiere: { stream: STREAM_Y, clave: 'k' } }, deps: [{ stream: STREAM_Y, k: 1, h: ΓY.hashes[1] }] }], { [STREAM_Y]: ΓY });
+  assert.deepEqual(M.proyectarCorte({ [STREAM_X]: 1, [STREAM_Y]: 0 }, { [STREAM_X]: ΓX, [STREAM_Y]: ΓY }, R, MONO.conteo), { resultado: 'NO_CERRADO' });
+});
+function trayectoriaE2() { // s₀ en la posición 1 (retención ilimitada), ventana(1) en la 2, otra acción en la 3
+  return comprometerTodas(M.trayectoriaNueva(C.genesisY(), R).Γ, [{ u: 'dueño', sid: 'a0a0', tipo: 'fijar', args: { clave: 'k', v: 1 } },
+    fijarP({ 'nucleo.retenciónSids': { ventana: 1 } }), fijar('z', 2)]);
+}
+test('L3 E2 nucleo.sid se define sobre la trayectoria (Teorema E2.1): verdadero en k=3 aunque s₀ ∉ Sids_3; estable en todo k ≥ 1', () => {
+  const ΓY = trayectoriaE2();
+  assert.equal(Object.hasOwn(ΓY.estados[3].sids, 'a0a0'), false, '«sid ∈ Sids» no es estable (contraejemplo de 7.7c)');
+  const intento = (k, sid) => M.comprometer(nuevaX(), M.cabezaDe(nuevaX()), 'dueño', { u: 'dueño', sid: nuevoSid(), tipo: 'sumar', args: { clave: 'a', q: 1, requiereSid: { stream: STREAM_Y, sid } },
+    deps: [{ stream: STREAM_Y, k, h: ΓY.hashes[k] }] }, { registro: R, conocidas: { [STREAM_Y]: ΓY } });
+  for (let k = 1; k <= 3; k++) assert.equal(intento(k, 'a0a0').resultado, 'COMPROMETIDO', `k=${k}`);
+  assert.deepEqual(intento(0, 'a0a0'), { resultado: 'INADMISIBLE', motivo: 'requisitoSid' }, 'antes de comprometerse no vale');
+  assert.deepEqual(intento(3, 'b0b0'), { resultado: 'INADMISIBLE', motivo: 'requisitoSid' });
+});
+const gComp = (caps = {}) => ({ streamId: STREAM_Z, predecesor: null, C0: { 'nucleo.regla': 'compuesto@1', 'nucleo.constituyente': 'dueño',
+  'nucleo.capacidades': { 'dueño': ['*'], cajero: ['lote', 'a'], cajero2: ['lote', 'a', 'b'], hacedor: ['hacer:*'], ...caps } } });
+const entradaDe = (S, u, tipo, args, sid = nuevoSid()) => ({ epoca: S.epoca, u, sid, deps: [], clase: M.claseDe(tipo), tipo, args });
+test('E3 tipos patrón: exacta antes que patrón, el prefijo más largo gana, el validador recibe el tipo; ningún patrón captura FijarParámetro ni Sellar', () => {
+  const S = M.estadoInicial(gComp(), R);
+  const adm = (tipo, args, u = 'dueño') => { const r = M.admitir(S, entradaDe(S, u, tipo, args), { registro: R }); return r.ok ? 'ok' : `${r.rechazo}${r.motivo ? ':' + r.motivo : ''}`; };
+  assert.equal(adm('hacer:x', { x: '1' }), 'ok');
+  assert.equal(adm('hacer:', { x: '1' }), 'INADMISIBLE:forma', 'el validador recibe el tipo');
+  assert.equal(adm('hacer:largoX', { x: '1' }), 'INADMISIBLE:forma', "gana 'hacer:largo*' (más largo)");
+  assert.equal(adm('hacer:largoX', { x: '1', largo: true }), 'ok');
+  assert.equal(adm('hacer:exacto', {}), 'ok'); assert.equal(adm('hacer:exacto', { x: '1' }), 'INADMISIBLE:forma', 'la clave exacta gana al patrón');
+  assert.equal(adm('deshacer', { x: '1' }), 'INADMISIBLE:forma');
+  assert.equal(adm('hacer:y', { x: '1' }, 'hacedor'), 'ok'); assert.equal(adm('hacer:y', { x: '1' }, 'cajero'), 'NO_AUTORIZADO');
+  const gT = { streamId: STREAM_Z, predecesor: null, C0: { 'nucleo.regla': 'todo@1', 'nucleo.constituyente': 'dueño' } };
+  const ST = M.estadoInicial(gT, R);
+  const admT = (tipo, args) => { const r = M.admitir(ST, entradaDe(ST, 'dueño', tipo, args), { registro: R }); return r.ok ? 'ok' : `${r.rechazo}${r.motivo ? ':' + r.motivo : ''}`; };
+  assert.equal(admT('cualquiera', null), 'ok'); assert.equal(admT('cualquiera', 1), 'INADMISIBLE:forma');
+  assert.equal(admT('FijarParámetro', {}), 'INADMISIBLE:forma'); assert.equal(admT('FijarParámetro', null), 'INADMISIBLE:forma');
+  assert.equal(admT('FijarParámetro', { x: 1 }), 'INADMISIBLE:parametroDesconocido');
+  assert.equal(M.validadorDe(M.TODO_1.tipos, 'FijarParámetro'), null); assert.equal(M.validadorDe(M.TODO_1.tipos, 'Sellar'), null);
+});
+test('L16 E4 un lote con una acción interna sin capacidad ⇒ NO_AUTORIZADO; con todas las capacidades ⇒ admitido', () => {
+  const Γ = M.trayectoriaNueva(gComp(), R).Γ;
+  const intento = (u, acciones) => M.comprometer(Γ, M.cabezaDe(Γ), 'dueño', { u, sid: nuevoSid(), tipo: 'lote', args: { acciones }, deps: [] }, { registro: R }).resultado;
+  assert.equal(intento('cajero', ['a', 'b']), 'NO_AUTORIZADO', 'b no está en las capacidades del cajero');
+  assert.equal(intento('cajero', ['a']), 'COMPROMETIDO');
+  assert.equal(intento('cajero2', ['a', 'b']), 'COMPROMETIDO');
+  assert.equal(intento('hacedor', ['a']), 'NO_AUTORIZADO', 'sin capacidad para el tipo externo');
+  assert.equal(intento('cajero', ['lote']), 'INADMISIBLE', 'G5 antes que G1: tiposInternos solo se evalúa sobre entradas bien formadas');
+  // G1 con tiposInternos que no devuelve una lista de textos ⇒ falla cerrada
+  const R2 = { ...R, 'compuesto@1': { ...M.COMPUESTO_1, tiposInternos: () => null } };
+  const S = M.estadoInicial(gComp(), R2);
+  assert.equal(M.admitir(S, entradaDe(S, 'cajero2', 'lote', { acciones: ['a'] }), { registro: R2 }).rechazo, 'NO_AUTORIZADO');
+});
+paraTodoEscenario('L27 E5 Γ.estados falsos (proyección sin checkpoint) no influyen: admisión, Lect, AppendIfHead, Incorporar, aportes, resolverProyeccion y proyectarCorte', (run, esc) => {
+  const ΓX = run.ΓX, ΓY = run.ΓY, fX = falsificar(ΓX), fY = falsificar(ΓY), L = ΓX.entradas.length;
+  const sinΓ = r => { const { Γ, ...x } = r; return x; };
+  for (const p of esc.propX.slice(0, 25)) {
+    const a = M.comprometer(ΓX, M.cabezaDe(ΓX), p.mecanismo, p.sol, { registro: R, conocidas: { [STREAM_Y]: ΓY } });
+    const b = M.comprometer(fX, M.cabezaDe(fX), p.mecanismo, p.sol, { registro: R, conocidas: { [STREAM_Y]: fY } });
+    if (!igual(sinΓ(a), sinΓ(b))) return false;
+  }
+  for (let i = 1; i <= L; i++) { // re‑admisión de cada entrada con conocidas falsificadas
+    const e = ΓX.entradas[i - 1];
+    if (!igual(M.admitir(ΓX.estados[i - 1], e, { registro: R, conocidas: { [STREAM_Y]: fY } }), M.admitir(ΓX.estados[i - 1], e, { registro: R, conocidas: { [STREAM_Y]: ΓY } }))) return false;
+  }
+  const rep = M.trayectoriaNueva(ΓX.g, R).Γ;
+  const i1 = M.incorporarEn(falsificar(rep), M.cabezaDe(rep), ΓX.bloques, M.cabezaDe(ΓX), { registro: R, conocidas: { [STREAM_Y]: fY } });
+  if (i1.resultado !== 'INCORPORADO' || (L > 0 && !igual(i1.Γ.estados.at(-1), ΓX.estados.at(-1)))) return false;
+  for (const proy of [...Object.values(MONO), M.JUGUETE_PROY.coord, M.PROYECCIONES.epoca]) {
+    const args = { proy, guardado: null, trayectoria: ΓX, m: L, registro: R, tRef: 1 };
+    if (!igual(M.resolverProyeccion(args), M.resolverProyeccion({ ...args, trayectoria: fX }))) return false;
+    if (M.esMonoidal(proy) && !igual(M.aportes(proy, fX, 0, L, R), M.aportes(proy, ΓX, 0, L, R))) return false;
+  }
+  const σ = { [STREAM_X]: L, [STREAM_Y]: ΓY.entradas.length };
+  return igual(M.proyectarCorte(σ, { [STREAM_X]: fX, [STREAM_Y]: fY }, R, MONO.conteo), M.proyectarCorte(σ, { [STREAM_X]: ΓX, [STREAM_Y]: ΓY }, R, MONO.conteo))
+    && igual(M.proyectarCorte(σ, { [STREAM_X]: fX, [STREAM_Y]: fY }, R, est => est[STREAM_X].D), M.proyectarCorte(σ, { [STREAM_X]: ΓX, [STREAM_Y]: ΓY }, R, est => est[STREAM_X].D));
+}, 40);
+function forjadaE6() {
+  const Γ = comprometerTodas(nuevaX(), [sumar('a', 1)]);
+  const forjada = { epoca: 0, u: 'cajero', sid: 'f6f6', deps: [], clase: 'contrato', tipo: 'FijarParámetro', args: { 'límite': 'ninguno' } };
+  const b2 = M.encEntrada(forjada); return { Γ, bloques: [Γ.bloques[0], b2], fin: { n: 2, h: M.hashPaso(Γ.hashes[1], b2) } };
+}
+test('L31 E6 incorporar toma readmitir de nodo.verificarAlIncorporar (o explícito); sin ctx.nodo, el inicial de REGLA_NODO', () => {
+  const { Γ, bloques, fin } = forjadaE6(); const rep = M.trayectoriaNueva(Γ.g, R).Γ;
+  const res = ctx => M.incorporarEn(rep, M.cabezaDe(rep), bloques, fin, { registro: R, ...ctx }).resultado;
+  const nodo = v => ({ parametros: { ...M.estadoInicial({ streamId: '0d'.repeat(16), predecesor: null, C0: { 'nucleo.regla': 'nucleo.nodo@1', 'nucleo.constituyente': 'nodo' } }, R).parametros, 'nodo.verificarAlIncorporar': v } });
+  assert.equal(res({}), 'DISCONTINUIDAD', 'inicial = cadena+readmisión');
+  assert.equal(res({ nodo: nodo('cadena') }), 'INCORPORADO');
+  assert.equal(res({ nodo: nodo('cadena+readmisión') }), 'DISCONTINUIDAD');
+  assert.equal(res({ nodo: nodo('cadena+readmisión'), readmitir: false }), 'INCORPORADO', 'el explícito sustituye al del nodo');
+  assert.equal(res({ nodo: nodo('cadena'), readmitir: true }), 'DISCONTINUIDAD');
+  const alm = M.crearAlmacenMemoria(); M.crear(alm, Γ.g, R);
+  assert.equal(M.incorporar(alm, STREAM_X, { n: 0, h: Γ.hashes[0] }, bloques, fin, { registro: R, nodo: nodo('cadena') }).resultado, 'INCORPORADO');
+  assert.equal(M.REGLA_NODO.sigma['nodo.verificarAlIncorporar'].inicial, 'cadena+readmisión');
+});
+test('L13 E7 identidades compuestas: [a, 1] repetida en dos objetos distintos es UNA identidad; con contenido distinto ⇒ Conflictos; una id no CV lanza', () => {
+  const inst = { id: o => o.id, rec: (o, A) => A.some(x => igual(x, o.id)), reconocidos: A => A };
+  const O = [{ id: ['a', 1], q: 1 }, { id: ['a', 1], q: 1 }, { id: ['b', 2], q: 5 }];
+  const d = M.diferencia(O, [], inst);
+  assert.equal(d.delta.length, 2); assert.deepEqual(d.conflictos, []);
+  assert.deepEqual(M.diferencia(O, [['a', 1]], inst).delta, [{ id: ['b', 2], q: 5 }]);
+  const c = M.diferencia([...O, { id: ['a', 1], q: 2 }], [], inst);
+  assert.deepEqual(c.conflictos, [['a', 1]]); assert.deepEqual(c.delta, [{ id: ['b', 2], q: 5 }]);
+  assert.deepEqual(M.diferencia(O, [['a', 1], ['z', 0]], inst).exceso, [['z', 0]]);
+  for (const malo of [undefined, 1.5, new Map(), () => 1]) assert.throws(() => M.diferencia([{ id: malo }], [], inst), undefined, String(malo));
+  assert.deepEqual(M.diferencia([{ id: 'x' }, { id: 'x' }], [], { id: o => o.id, rec: () => false }).delta, [{ id: 'x' }], 'ids de texto: igual que en la fase 1');
+});
+test('L25 E8 componer: dos aportes con el mismo StreamID ⇒ STREAM_DUPLICADO; la clave «__proto__» es un hecho (H5)', () => {
+  assert.deepEqual(M.componer([{ streamId: STREAM_X, hechos: { a: 1 } }, { streamId: STREAM_X, hechos: { b: 2 } }]), { resultado: 'STREAM_DUPLICADO', streamId: STREAM_X });
+  assert.deepEqual(M.componer([{ streamId: STREAM_X, hechos: {} }, { streamId: STREAM_Y, hechos: {} }, { streamId: STREAM_X, hechos: {} }]), { resultado: 'STREAM_DUPLICADO', streamId: STREAM_X });
+  const p = [{ streamId: STREAM_X, hechos: JSON.parse('{"__proto__": 1}') }, { streamId: STREAM_Y, hechos: JSON.parse('{"__proto__": 2}') }];
+  assert.deepEqual(M.componer(p), { resultado: 'CONFLICTO', clave: '__proto__', streams: [STREAM_X, STREAM_Y] });
+  const uno = M.componer([p[0]]);
+  assert.equal(Object.hasOwn(uno.hechos, '__proto__'), true); assert.deepEqual(uno.hechos.__proto__, { streamId: STREAM_X, valor: 1 });
+});
+test('Posición: T calcula i = nd + e.ε + 1 sin recibirla, con entradas de contrato intercaladas (enmienda, «Lo que NO cambia»)', () => {
+  const r = prng(SEMILLA ^ 0x7070); let nacidos = 0;
+  for (let c = 0; c < CASOS; c++) {
+    let Γ = M.trayectoriaNueva(gComp(), R).Γ; let modo = 'uno';
+    for (let t = entero(r, 0, 30); t > 0; t--) {
+      const x = r(); let sol;
+      if (x < 0.25) { modo = elegir(r, ['uno', 'dos', 'tres'].filter(m => m !== modo)); sol = fijarP({ modo }); } else sol = { u: 'dueño', sid: nuevoSid(), tipo: x < 0.7 ? 'nacer' : 'a', args: {} };
+      Γ = comprometerTodas(Γ, [sol]);
+    }
+    const reales = Γ.entradas.map((e, j) => (e.tipo === 'nacer' ? j + 1 : 0)).filter(Boolean);
+    assert.deepEqual(Γ.estados.at(-1).D.nacidos, reales, `semilla ${SEMILLA} caso ${c}`);
+    assert.equal(new Set(reales).size, reales.length); nacidos += reales.length;
+  }
+  assert.ok(nacidos > 100);
 });
