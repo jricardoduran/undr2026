@@ -17,7 +17,8 @@
 | Fase 4 (alta e importación), 5 (materialidad IndexedDB), 6b (páginas), 7 (Drive), 8+ (comercio) | — | Pendientes | `CONSOLIDACION_Y_PLAN.md`, parte IV |
 
 **Siguiente paso concreto (actualizado 12‑nov, tarde):**
-0. (Actualización) El verificador de la fase 3 **ya entregó** sin el Anexo D. Como el `pedido` es solo un cambio de datos en `FORMA_INICIAL` (la Red no cambia), se incorpora como **incremento pequeño** del modelo y las pruebas cuando el matemático termine, y **antes** de lanzar al implementador. Dos requisitos que ya conoce el implementador: añadir el monoide `nacimientos` a `kobalt/src/preguntas/monoides.mjs` (con sus leyes) y reutilizar el lenguaje y el catálogo de la fase 2.
+0. **(Última actualización, noche)** El matemático **ya entregó** el Anexo D. Se lo paso al verificador de la fase 3 como incremento (lista D.7 en su informe: Forma con `pedido`, plantillas `plantillaLínea`, `hijos`, generador, VF11–VF13, casos dirigidos, aceptación reescrita, mutantes). Después: implementador de la fase 3 (con `nacimientos` y el `pedido`). La fase 6a (puerta) queda como spec y espera a la fase 3 y al adaptador (fase 5).
+   (Nota anterior) El verificador de la fase 3 **ya entregó** sin el Anexo D. Como el `pedido` es solo un cambio de datos en `FORMA_INICIAL` (la Red no cambia), se incorpora como **incremento pequeño** del modelo y las pruebas cuando el matemático termine, y **antes** de lanzar al implementador. Dos requisitos que ya conoce el implementador: añadir el monoide `nacimientos` a `kobalt/src/preguntas/monoides.mjs` (con sus leyes) y reutilizar el lenguaje y el catálogo de la fase 2.
    El matemático escribe (a) la spec de la puerta y las páginas y (b) el **Anexo D** de la fase 3 (entidad `pedido` + modalidades de venta como plantillas). Cuando termine, pasar al verificador de la fase 3 (`a60d140…`) la lista de cambios del Anexo D **antes** de que entregue, para que el dominio se rehaga una sola vez.
 
 **Pasos que siguen (sin cambios):**
@@ -57,6 +58,14 @@
 ---
 
 ## 3. Cronología de decisiones y su porqué (más reciente arriba)
+
+### 2026‑11‑12 (noche) · El matemático entrega la puerta (fase 6a) y el Anexo D (`pedido`)
+- **Entregado:** `kobalt/specs/2026-11-12_fase6a-puerta-y-paginas.md` (puerta con 4 verbos, teoremas T‑P1…T‑P11, perfiles, adaptador, 6 páginas, Lk → verificación, 18 parámetros con valor inicial) y el **Anexo D** de la fase 3 (tipo `pedido`, modalidades de venta como plantillas, VF11–VF13).
+- **Error mío corregido por el matemático (lección):** mi Teorema 3 del doc de revisión era **circular** (`sid_i = 𝔇(ρ, i)` con `ρ` = ID del pedido, que no existe antes del primer compromiso). Correcto: dos referencias, `ρ_p` (token de intención en la página, del que se derivan los `sid`) y `ρ_ped` (ID del pedido); y `ρ_p` no puede derivarse del contenido. **Segundo error mío que el procedimiento atrapa** tras `P_j·P_i⁻¹`. Lección: un teorema con una identidad que se usa antes de existir es sospechoso; comprobar siempre el orden de existencia.
+- **Decisiones del matemático (todas datos o parámetros):** el modo de carrito es una **partición en bloques** (`Lote`): `porAccion` (inicial) y `todoONada` son los extremos de una familia (tope `dominio.lote.máximo`); `pedido` hereda `canal` y `cliente` por `padre` a las líneas (la Red no cambia; **solo si se heredan por `padre`**); `Nacer:pedido` va en capacidades y no en el alcance; etiqueta visible de la modalidad sin efecto: «Anotar venta (sin tocar stock)» para no confundirla con «Registrar venta» (= entregar ahora). `G^par` rechaza `venta.padre` sobre una `Γ` con ventas: el anexo rige para `Γ` nuevas.
+- **Cambios pequeños a otras fases:** núcleo debe **exportar** `autorizado` y `coincide` (sin cambio de semántica); fase 3 expone la expresión `admite.fijar` de `venta.variante`.
+- **Frontera honesta:** el perfil visitante filtra preguntas y campos pero **no es control de lectura** (L23).
+- **Hecho:** la pregunta de coherencia de `AGENTS.md` ya está en `CLAUDE.md` (el matemático creyó que faltaba).
 
 ### 2026‑11‑12 (tarde) · Revisión de Kobalt UI 2.2.1 y del POS V3 → páginas específicas con nuestra lógica
 - **Qué llegó:** (1) un `.txt` unificado con la librería visual **Kobalt UI 2.2.1** (`kobalt.css`, `kobalt.js`, contratos, Studio, 8 apps de demo); (2) un zip del **POS V3 «venta por acciones»** (páginas `operar/*.html`, `tienda/*.html`, controladores, doc 07, `AGENTS.md`). Petición: usar nuestra lógica en páginas HTML específicas que luzcan como el demo.
