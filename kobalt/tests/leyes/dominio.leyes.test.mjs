@@ -153,8 +153,8 @@ paraTodo('VF3 referencias bien fundadas (destino declarado, existencia, cadena p
       }
       if (d.inmutable) {
         const [i] = x.id;
-        const nacim = M.contribuciones(Γ.entradas[i - 1], i, Γ.estados[i - 1].parametros)[`${M.kid(x.id)}|${c}`];
-        assert.deepEqual(v, nacim?.último, `VF4: ${M.kid(x.id)}.${c} cambió desde el nacimiento`);
+        const nacim = M.contribuciones(Γ.entradas[i - 1], i, Γ.estados[i - 1].parametros)[`${M.kid(x.id)}|${c}`]; // ['último', [{v}]]
+        assert.deepEqual(v, nacim?.[1]?.[0]?.v, `VF4: ${M.kid(x.id)}.${c} cambió desde el nacimiento`);
       }
     }
     let p = x.padre, pasos = 0;
@@ -469,7 +469,7 @@ test('L33 clases = monoides: asociatividad y unidad de PRODUCTO por clase; aplic
       const [e1, e2] = [Γ.entradas[k], Γ.entradas[k + 1]];
       if (e1.clase !== 'dominio' || e2.clase !== 'dominio') continue;
       const S0 = Γ.estados[k];
-      const d1 = M.compilar(S0.D, e1, S0.parametros).δ, d2 = M.compilar(Γ.estados[k + 1].D, e2, S0.parametros).δ;
+      const d1 = M.efecto(S0.D, e1, S0.parametros), d2 = M.efecto(Γ.estados[k + 1].D, e2, Γ.estados[k + 1].parametros);
       const un = M.aplicar(M.aplicar(S0.D, d1), d2), dos = M.aplicar(S0.D, M.componer(d1, d2));
       assert.deepEqual({ ...dos, nd: 0 }, { ...un, nd: 0 });
       assert.deepEqual({ ...dos, nd: 0 }, { ...Γ.estados[k + 2].D, nd: 0 });
@@ -692,6 +692,167 @@ test('P‑C disparo nulo: Contar confirmatorio se admite; Cancelar sin nada pend
   ok(Γ, disparar('dueño', 'Ingresar', { w: W, v, q: 1 }));
   const s = venta(Γ, 'venta.inmediata', W, v, 1);
   assert.deepEqual(proponer(Γ, disparar('dueño', 'Cancelar', { s })), { resultado: 'INADMISIBLE', motivo: 'sinEfecto' });
+});
+
+// ═════════════════════════ Anexo C · resolución de la revisión conceptual ═════════════════════════
+const P = await import('../../src/preguntas/index.mjs');
+const MAXS = Number.MAX_SAFE_INTEGER;
+paraTodo('C.1 L7 Teorema 2: leer no se rompe aunque una guarda se endurezca (Fold, movimientos y preguntas siguen; q_readmisión informa)', g => {
+  const Γ = g.Γ;
+  const endurecida = (D, a) => (a.tipo === 'Disparar:Ingresar' || a.tipo === 'Nacer:cliente' ? 'endurecida' : null);
+  const R2 = { [M.ID_REGLA]: M.crearRegla({ guardaAdicional: endurecida }) };
+  const S2 = N.fold(N.estadoInicial(Γ.g, R2), Γ.entradas, R2);
+  assert.deepEqual(S2.D, S(Γ).D, 'el Fold con la guarda endurecida cambia el estado (T depende de la guarda)');
+  Γ.entradas.forEach((e, k) => { M.movimientos(Γ.estados[k].D, Γ.estados[k].parametros, e); });
+  const Γ2 = { ...Γ, registro: R2 };
+  for (const proy of [M.PROYECCIONES.catalogo, M.PROYECCIONES.marcado, M.PROYECCIONES.T, M.PROYECCIONES.auditoria]) assert.deepEqual(C.consultar(Γ2, proy), C.consultar(Γ, proy), proy.id);
+  const afectadas = Γ.entradas.flatMap((e, k) => (M.accionesDe(e).some(a => a.tipo === 'Disparar:Ingresar' || a.tipo === 'Nacer:cliente') && e.clase === 'dominio' ? [k + 1] : []));
+  const rep = C.consultar(Γ2, M.PROYECCIONES.readmision(R2[M.ID_REGLA]));
+  assert.deepEqual(rep.map(([k]) => k).sort((a, b) => a - b), afectadas, 'q_readmisión debe listar exactamente las entradas que la guarda nueva ya no admitiría');
+  assert.ok(rep.every(([, m]) => m === 'endurecida'));
+  assert.deepEqual(C.consultar(Γ, M.PROYECCIONES.readmision()), [], 'con la regla vigente toda entrada comprometida es readmisible');
+  return true;
+});
+test('C.1 la guarda endurecida sí rechaza solicitudes NUEVAS (la guarda admite; el efecto interpreta)', () => {
+  const g = C.genesisActores(M, { 'dominio.liberaciones': [] });
+  const Γ = C.cauce({ [M.ID_REGLA]: M.crearRegla({ guardaAdicional: (D, a) => (a.tipo === 'Disparar:Ingresar' ? 'endurecida' : null) }) }, g);
+  ok(Γ, nacer('dueño', 'bodega', { nombre: 'W' }));
+  ok(Γ, lote('dueño', nacer('dueño', 'producto', { nombre: 'P', público: true }), nacer('dueño', 'variante', { producto: { nacido: 0 }, sku: 'S' })));
+  assert.deepEqual(proponer(Γ, disparar('dueño', 'Ingresar', { w: [1, 0], v: [2, 1], q: 1 })), { resultado: 'INADMISIBLE', motivo: 'endurecida' });
+  ok(Γ, disparar('dueño', 'Contar', { w: [1, 0], v: [2, 1], h: 1 }));
+});
+test('C.2 actividad = dato de Φ: añadir un ciclo «estado» a usuario NO cambia quién está activo ni rompe κ; declarar actividad sí, y G^par lo vigila', () => {
+  const { Γ, P: P1 } = base();
+  ok(Γ, nacer('dueño', 'usuario', { nombre: 'A', principal: 'p1' }));
+  const Φ1 = structuredClone(S(Γ).parametros['dominio.forma']);
+  Φ1.tipos.usuario.características.estado = { clase: 'ciclo', valor: { enum: ['inactivo', 'activo'] }, ciclo: { estados: ['inactivo', 'activo'], inicial: 'inactivo', transiciones: [['inactivo', 'activo'], ['activo', 'inactivo']] } };
+  ok(Γ, fijarParametro('dueño', { 'dominio.forma': Φ1 }), 'característica nueva = dato');
+  const u1 = M.entidades(S(Γ).D).find(x => x.tipo === 'usuario').id;
+  assert.equal(M.carac(S(Γ).D, S(Γ).parametros, u1, 'estado'), 'inactivo');
+  assert.equal(M.activa(S(Γ).D, S(Γ).parametros, u1), true, 'sin `actividad` declarada el usuario sigue activo');
+  assert.deepEqual(proponer(Γ, nacer('dueño', 'usuario', { nombre: 'B', principal: 'p1' })), { resultado: 'INADMISIBLE', motivo: 'κDuplicada' }, 'κ sigue vigente');
+  const Φ2 = structuredClone(Φ1); Φ2.tipos.usuario.actividad = { característica: 'estado', valores: ['activo'] };
+  ok(Γ, fijarParametro('dueño', { 'dominio.forma': Φ2 }), 'declarar actividad (solo reduce las activas) abre época');
+  assert.equal(M.activa(S(Γ).D, S(Γ).parametros, u1), false);
+  ok(Γ, nacer('dueño', 'usuario', { nombre: 'B', principal: 'p1' }), 'κ solo entre activas: el nuevo es «inactivo»');
+  // ampliar la actividad hasta que dos activas compartan κ ⇒ G^par: κNoÚnica
+  const Φ3 = structuredClone(Φ2); Φ3.tipos.usuario.actividad = { característica: 'estado', valores: ['activo', 'inactivo'] };
+  assert.deepEqual(proponer(Γ, fijarParametro('dueño', { 'dominio.forma': Φ3 })), { resultado: 'INADMISIBLE', motivo: 'κNoÚnica' });
+  const Φ4 = structuredClone(Φ2); delete Φ4.tipos.usuario.actividad;
+  assert.deepEqual(proponer(Γ, fijarParametro('dueño', { 'dominio.forma': Φ4 })), { resultado: 'INADMISIBLE', motivo: 'κNoÚnica' });
+  // variante: retirada con el mismo SKU que una activa; quitar su actividad rompería κ
+  ok(Γ, fijar('dueño', 'variante', 'estado', [2, 1], 'retirado'));
+  ok(Γ, nacer('dueño', 'variante', { producto: P1, sku: 'S1' }));
+  const Φ5 = structuredClone(S(Γ).parametros['dominio.forma']); delete Φ5.tipos.variante.actividad;
+  assert.deepEqual(proponer(Γ, fijarParametro('dueño', { 'dominio.forma': Φ5 })), { resultado: 'INADMISIBLE', motivo: 'κNoÚnica' });
+  // la característica de actividad es dato: otra característica y otros valores
+  const Φ6 = structuredClone(S(Γ).parametros['dominio.forma']);
+  Φ6.tipos.cliente.características.situación = { clase: 'ciclo', valor: { enum: ['vigente', 'baja'] }, ciclo: { estados: ['vigente', 'baja'], inicial: 'vigente', transiciones: [['vigente', 'baja']] } };
+  Φ6.tipos.cliente.actividad = { característica: 'situación', valores: ['vigente'] };
+  ok(Γ, fijarParametro('dueño', { 'dominio.forma': Φ6 }));
+  const c = [ok(Γ, nacer('dueño', 'cliente', { nombre: 'C' })), 0];
+  assert.equal(M.activa(S(Γ).D, S(Γ).parametros, c), true);
+  ok(Γ, fijar('dueño', 'cliente', 'situación', c, 'baja'));
+  assert.equal(M.activa(S(Γ).D, S(Γ).parametros, c), false);
+});
+test('C.3 la configuración de lectura son parámetros de la pregunta: agregación Σ_w max(0,·) frente a max(0, Σ_w ·), familias y regla de visibilidad', () => {
+  const { Γ, W, P: P1, v } = base();
+  const W2 = [ok(Γ, nacer('dueño', 'bodega', { nombre: 'W2' })), 0];
+  ok(Γ, disparar('dueño', 'Ingresar', { w: W, v, q: 5 }));
+  ok(Γ, disparar('dueño', 'Ingresar', { w: W2, v, q: 3 }));
+  const s = [ok(Γ, { u: 'dueño', ...M.plantillaVenta('venta.firme', { variante: v, bodega: W2, precio: 100, canal: 'POS' }, 3) }), 0];
+  ok(Γ, disparar('dueño', 'Contar', { w: W2, v, h: 0 })); // libre(W2) = −3
+  assert.ok(s);
+  const St = S(Γ), par = St.parametros;
+  const Σmax = M.disponibilidad(St.D, par, null, v), maxΣ = M.disponibilidad(St.D, par, null, v, { ...M.DISPONIBILIDAD_INICIAL, agregación: 'máximoDeSuma' });
+  assert.deepEqual([Σmax.libre, Σmax.noAsignada, Σmax.déficit], [2, 5, 3]);
+  assert.deepEqual([maxΣ.libre, maxΣ.noAsignada, maxΣ.déficit], [2, 2, 0]);
+  assert.deepEqual(C.consultar(Γ, M.PROYECCIONES.disponibilidad(null, v, { ...M.DISPONIBILIDAD_INICIAL, agregación: 'máximoDeSuma' })), maxΣ);
+  const φ = a => ({ op: '=', de: [{ lee: 'disp.libre@1', con: [{ x: 'e' }, ...(a ? [{ v: a }] : [])] }, { v: a === 'máximoDeSuma' ? 2 : 5 }] });
+  assert.deepEqual(M.filtrar(St.D, par, 'variante', φ(null)), [v]);
+  assert.deepEqual(M.filtrar(St.D, par, 'variante', φ('máximoDeSuma')), [v]);
+  const cfgP0 = { ...M.DISPONIBILIDAD_INICIAL, familias: { ...M.DISPONIBILIDAD_INICIAL.familias, pendiente: 'pend⁰' } };
+  ok(Γ, { u: 'dueño', ...M.plantillaVenta('venta.registro', { variante: v, bodega: W, precio: 100, canal: 'POS' }, 2) });
+  assert.deepEqual([M.disponibilidad(S(Γ).D, par, W, v).P, M.disponibilidad(S(Γ).D, par, W, v, cfgP0).P], [0, 2], 'qué familia es «pendiente» es parámetro');
+  // visibilidad: la regla vive en la declaración de la galería en Φ; se puede pasar otra a la pregunta
+  const x = { Q: C.qHex(9), creador: 'dueño', propósito: 'página', audiencia: 'creador', permitidos: [] };
+  ok(Γ, añadir('dueño', 'producto', 'galería', P1, x));
+  assert.equal(M.visible(S(Γ).D, S(Γ).parametros, 'U1', P1, x), false);
+  assert.equal(M.visible(S(Γ).D, S(Γ).parametros, 'U1', P1, x, { v: true }), true, 'regla pasada como parámetro de la pregunta');
+  const Φ = structuredClone(S(Γ).parametros['dominio.forma']); Φ.tipos.producto.características.galería.visibilidad = { v: true };
+  ok(Γ, fijarParametro('dueño', { 'dominio.forma': Φ }));
+  assert.equal(M.visible(S(Γ).D, S(Γ).parametros, 'U1', P1, x), true, 'la regla por defecto sale de Φ (dato)');
+});
+test('C.4 un solo lenguaje: las expresiones de la Red se evalúan con la fase 2 (−x unario, resultado exacto, desbordamiento ⇒ «cantidad»); lectores no registrados ⇒ fueraDeDominio', () => {
+  const { Γ, W, v } = base();
+  const red = structuredClone(S(Γ).parametros['dominio.red']);
+  const w = { a: ['w'] }, vv = { a: ['v'] }, q = { a: ['q'] };
+  const t = (cantidad, extra = {}) => ({ args: { w: { ref: 'bodega' }, v: { ref: 'variante' }, q: { entero: [1, 100] } }, nulo: 'rechazar', restricción: 'todas', ...extra,
+    movimientos: [{ desde: ['ext.U'], hacia: ['H', w, vv], cantidad }, { desde: ['ext.L'], hacia: ['libre', w, vv], cantidad }] });
+  red.transiciones.Sacar = t({ op: '−', de: [q] });                                     // −q: invierte el sentido (fase 2: aridad [1,2])
+  red.transiciones.Enorme = t({ op: '×', de: [q, { v: 2 ** 52 }] }, { restricción: 'ninguna' }); // desborda con q ≥ 2
+  red.transiciones.Exacta = t({ op: '+', de: [{ v: MAXS }, { op: '−', de: [q] }, { v: 1 }] }); // MAX − q + 1: exacto aunque la suma parcial desborde
+  ok(Γ, fijarParametro('dueño', { 'dominio.red': red }));
+  ok(Γ, disparar('dueño', 'Ingresar', { w: W, v, q: 5 }));
+  ok(Γ, disparar('dueño', 'Sacar', { w: W, v, q: 2 }));
+  assert.equal(disp(Γ, W, v).H, 3);
+  assert.match(proponer(Γ, disparar('dueño', 'Sacar', { w: W, v, q: 4 })).motivo, /^negativo:H\[/);
+  assert.equal(P.evaluar({ op: '×', de: [{ v: 4 }, { v: 2 ** 52 }] }, {}), null, 'la fase 2 da null');
+  assert.deepEqual(proponer(Γ, disparar('dueño', 'Enorme', { w: W, v, q: 4 })), { resultado: 'INADMISIBLE', motivo: 'cantidad' });
+  assert.deepEqual(proponer(Γ, disparar('dueño', 'Exacta', { w: W, v, q: 3 })), { resultado: 'INADMISIBLE', motivo: 'cantidad' }, 'H + (MAX−2) desborda: error visible al admitir');
+  const red2 = structuredClone(S(Γ).parametros['dominio.red']);
+  red2.transiciones.Rara = t({ lee: 'inventado@1', con: [] });
+  assert.deepEqual(proponer(Γ, fijarParametro('dueño', { 'dominio.red': red2 })), { resultado: 'INADMISIBLE', motivo: 'fueraDeDominio' }, 'validarExpr de la fase 2');
+  assert.ok(P.validarExpr({ lee: 'carac@1', con: [{ v: [1, 0] }, { v: 'nombre' }] }, M.LECTORES).ok);
+});
+test('C.4 los lectores de dominio (nombre@versión) sirven a las preguntas de la fase 2 sobre esta Γ (entrada y estado)', () => {
+  const g = generado(1), Γ = g.Γ, o = { registro: R, lectores: M.LECTORES };
+  const qT = { φ: { v: true }, aporte: { lee: 'nacimientos@1', con: [{ v: 'variante' }] }, M: { nombre: 'unión' }, obs: { nombre: 'identidad' } };
+  const r1 = P.responder(qT, C.trayectoria(Γ), o);
+  assert.equal(r1.resultado, 'OK', JSON.stringify(r1));
+  assert.deepEqual(r1.Y.map(M.kid).sort(), M.coordenadas(S(Γ).D, S(Γ).parametros).map(M.kid).sort());
+  const qH = { φ: { op: '=', de: [{ e: 'tipo' }, { v: 'Disparar:Ingresar' }] }, aporte: { lee: 'marcado@1', con: [{ v: 'H' }, { a: ['w'] }, { a: ['v'] }] }, M: { nombre: 'suma' }, obs: { nombre: 'identidad' } };
+  const r2 = P.responder(qH, C.trayectoria(Γ), o);
+  const esperado = Γ.entradas.reduce((t, e, k) => (e.tipo === 'Disparar:Ingresar' ? t + M.valorLugar(Γ.estados[k].D, 'H', [e.args.w, e.args.v]) : t), 0);
+  assert.equal(r2.resultado, 'OK', JSON.stringify(r2));
+  assert.equal(r2.Y, esperado, 'el lector de estado ve S_{k−1}');
+});
+test('C.5 monoide `nacimientos`: asociativo, con unidad, no conmutativo; materializable (no es secuencia); Π_T lo usa', () => {
+  const Mn = M.monoideCatalogo({ nombre: 'nacimientos' });
+  const r = C.prng(SEMILLA ^ 0xbeef);
+  const lista = () => Array.from({ length: C.entero(r, 0, 3) }, () => [C.entero(r, 1, 9), C.entero(r, 0, 2)]);
+  for (let i = 0; i < 500; i++) {
+    const [a, b, c] = [lista(), lista(), lista()];
+    assert.deepEqual(Mn.op(Mn.op(a, b), c), Mn.op(a, Mn.op(b, c)));
+    assert.deepEqual(Mn.op(Mn.unidad, a), a); assert.deepEqual(Mn.op(a, Mn.unidad), a);
+  }
+  assert.notDeepEqual(Mn.op([[1, 0]], [[2, 0]]), Mn.op([[2, 0]], [[1, 0]]));
+  assert.deepEqual(P.leyes(Mn), { conmutativo: false, idempotente: false, grupo: false, envolvente: false, ventana: 'segmentos', distribucion: 'no', materializable: true });
+  assert.equal(M.PROYECCIONES.T.monoide, Mn);
+});
+test('C.6 desbordamiento visible: el intérprete de depósitos y las sumas usan ℤ con frontera (error, nunca truncamiento)', () => {
+  const D = { ...M.D0, m: { 'H[1.0,2.1]': MAXS } };
+  assert.throws(() => M.aplicar(D, { 'm|H[1.0,2.1]': { '+': 1 } }), RangeError);
+  assert.throws(() => M.componer({ 'm|H[1.0,2.1]': { '+': MAXS } }, { 'm|H[1.0,2.1]': { '+': 1 } }), RangeError);
+  assert.throws(() => P.monoide({ nombre: 'sumaPorClave' }).op({ a: MAXS }, { a: 1 }), RangeError, 'catálogo de la fase 2');
+});
+test('C.7 G^par: reordenar los índices de una familia con marcado se rechaza (redCambiaÍndices); sin marcado se admite', () => {
+  const { Γ, W, v } = base();
+  const reord = f => { const r = structuredClone(S(Γ).parametros['dominio.red']); r.familias[f].índices = [...r.familias[f].índices].reverse(); return r; };
+  ok(Γ, fijarParametro('dueño', { 'dominio.red': reord('noApto') }), 'noApto sin marcado: se admite');
+  ok(Γ, disparar('dueño', 'Ingresar', { w: W, v, q: 2 }));
+  assert.deepEqual(proponer(Γ, fijarParametro('dueño', { 'dominio.red': reord('H') })), { resultado: 'INADMISIBLE', motivo: 'redCambiaÍndices' });
+});
+test('C.8 búsquedas por nombre con Object.hasOwn (__proto__, toString) y −0 = 0', () => {
+  const { Γ, W, v } = base();
+  assert.deepEqual(proponer(Γ, disparar('dueño', '__proto__', {})), { resultado: 'INADMISIBLE', motivo: 'transiciónDesconocida' });
+  assert.deepEqual(proponer(Γ, disparar('dueño', 'toString', {})), { resultado: 'INADMISIBLE', motivo: 'transiciónDesconocida' });
+  assert.deepEqual(proponer(Γ, nacer('dueño', '__proto__', {})), { resultado: 'INADMISIBLE', motivo: 'tipoDesconocido' });
+  assert.deepEqual(proponer(Γ, nacer('dueño', 'constructor', {})), { resultado: 'INADMISIBLE', motivo: 'tipoDesconocido' });
+  assert.deepEqual(proponer(Γ, fijar('dueño', 'bodega', '__proto__', W, 1)), { resultado: 'INADMISIBLE', motivo: 'característicaDesconocida' });
+  ok(Γ, disparar('dueño', 'Contar', { w: W, v, h: -0 }));
+  assert.ok(Object.is(disp(Γ, W, v).H, 0));
+  assert.ok(M.igual(-0, 0));
 });
 
 // ═════════════════════════ oráculo de aceptación v2/v3 (contra el modelo) ═════════════════════════

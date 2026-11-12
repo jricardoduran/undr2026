@@ -100,7 +100,7 @@ export function registrarAceptacion(test, obtener, etiqueta) {
     await paso('#11 Flat de dos slots: [15, 0]', () => { assert.deepEqual(C.consultar(Γ, Dom.PROYECCIONES.flat(W)).valores, [15, 0]); });
     await paso('#12 umbral y alerta: v1 ∈ «bajo umbral» (libre 15 < 16); v2 sin umbral no', () => {
       ok(Γ, fijar('dueño', 'variante', 'umbral', v1, 16));
-      const φ = { op: '<', de: [{ lee: 'disp.libre', con: [{ x: 'e' }] }, { lee: 'carac', con: [{ x: 'e' }, { v: 'umbral' }] }] };
+      const φ = { op: '<', de: [{ lee: 'disp.libre@1', con: [{ x: 'e' }] }, { lee: 'carac@1', con: [{ x: 'e' }, { v: 'umbral' }] }] };
       assert.deepEqual(Dom.filtrar(L().D, L().par, 'variante', φ), [v1]);
     });
     await paso('#13 venta sin salida física: H = 15, P = 3', () => {
