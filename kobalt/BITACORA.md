@@ -17,6 +17,7 @@
 | Fase 4 (alta e importación), 5 (materialidad IndexedDB), 6b (páginas), 7 (Drive), 8+ (comercio) | — | Pendientes | `CONSOLIDACION_Y_PLAN.md`, parte IV |
 
 **Siguiente paso concreto (actualizado 12‑nov, tarde):**
+000. **(Requisito de entrega)** Al final: `empaquetar.mjs` → `dist/kobalt-app-sin-ui.zip` (GitHub) y `kobalt-app-con-ui.zip` (se entrega al usuario), verificados bajo subruta y con `.mjs` mal servido. Preguntar al usuario, **solo al entregar**, si el paquete con la librería va también a GitHub.
 00. **(Más reciente)** Con el zip original: lanzar un implementador para el **andamiaje del shell** (`kobalt/app/`: `instalar-ui`, arranque propio, una app mínima registrada, páginas generadas, verificación en Chromium). Es independiente de la fase 3 y reduce el riesgo de la fase 6b. Las apps de negocio esperan a fase 3 + puerta.
 0. **(Última actualización, noche)** El matemático **ya entregó** el Anexo D. Se lo paso al verificador de la fase 3 como incremento (lista D.7 en su informe: Forma con `pedido`, plantillas `plantillaLínea`, `hijos`, generador, VF11–VF13, casos dirigidos, aceptación reescrita, mutantes). Después: implementador de la fase 3 (con `nacimientos` y el `pedido`). La fase 6a (puerta) queda como spec y espera a la fase 3 y al adaptador (fase 5).
    (Nota anterior) El verificador de la fase 3 **ya entregó** sin el Anexo D. Como el `pedido` es solo un cambio de datos en `FORMA_INICIAL` (la Red no cambia), se incorpora como **incremento pequeño** del modelo y las pruebas cuando el matemático termine, y **antes** de lanzar al implementador. Dos requisitos que ya conoce el implementador: añadir el monoide `nacimientos` a `kobalt/src/preguntas/monoides.mjs` (con sus leyes) y reutilizar el lenguaje y el catálogo de la fase 2.
@@ -59,6 +60,13 @@
 ---
 
 ## 3. Cronología de decisiones y su porqué (más reciente arriba)
+
+### 2026‑11‑12 (noche) · Requisito de entrega: un `.zip` para probar en GoDaddy y en GitHub
+- **Pedido del usuario:** «cuando finalices, un `.zip` que también esté en GitHub, para probarlo en GoDaddy».
+- **Consecuencias de diseño (ya en `CONSOLIDACION_Y_PLAN.md`, Parte VI):** (1) rutas **relativas**, que funcione en una subcarpeta; (2) Apache puede servir `.mjs` como `octet-stream` y el navegador rechaza el módulo → el empaquetado emite `.js` y un `.htaccess`, y se verifica con un servidor que sirve `.mjs` mal a propósito; (3) **los módulos solo se habían probado en Node**: la primera prueba en Chromium real será la del paquete; (4) sin dependencias ni compilación en el servidor.
+- **Dos paquetes:** `con-ui` (incluye la librería del usuario; se entrega **solo a él**) y `sin-ui` (apto para GitHub). **Decisión que es suya, se pregunta al entregar:** si el paquete con la librería también va al repositorio público. Hasta entonces solo se publica el `sin-ui`.
+- **Mecánica:** `kobalt/app/empaquetar.mjs` genera ambos en `dist/` con `LEEME-GODADDY.md`. GitHub: el `.zip` se versiona en `dist/` y se enlaza por URL `raw` (no hay herramienta de Releases en esta sesión). Entrega directa con `SendUserFile`.
+- **Recordar:** la app es local-first, **la base vive en el IndexedDB de cada navegador/origen**; probar en GoDaddy no comparte datos entre dispositivos. Eso no es un fallo: es la frontera [L] ya declarada (sin sincronización multiusuario hasta la fase 7).
 
 ### 2026‑11‑12 (noche, tarde) · Llega el zip original de Kobalt UI: el shell se puede reutilizar
 - **Verificado:** hashes de la release OK, el verificador propio de la librería da 66/66, y el `index.html` (shell) sí trae marcado (202 etiquetas). El `.txt` solo difería en un salto de línea final: el análisis previo vale. Demo real renderizado en Chromium (escritorio y móvil) sin errores.

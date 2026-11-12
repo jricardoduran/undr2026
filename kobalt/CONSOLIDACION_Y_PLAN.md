@@ -259,3 +259,30 @@ Tecnología: módulos ES nativos, sin dependencias; `node --test` para el núcle
 - `AppendIfHead` necesita una realización material (transacción IndexedDB local; en Drive está por verificar en la fase 6).
 - Ningún kernel trae firmas: la autoridad material la da hoy el control de acceso del almacenamiento.
 - La completitud offline es siempre relativa a una clausura, una versión y un ámbito; el navegador puede desalojar datos.
+
+---
+
+## Parte VI — Entrega desplegable (fase 6c): un `.zip` para probar en GoDaddy y publicado en GitHub
+
+**Requisito del usuario (12‑nov):** al terminar, un `.zip` descargable, también en GitHub, para probarlo en GoDaddy.
+
+**Qué significa técnicamente [D].** La aplicación es *local‑first*: todo el estado vive en IndexedDB del navegador y no hay servidor de aplicación. Un alojamiento estático basta (subir archivos a `public_html/`). Eso también implica que **cada navegador y cada origen tienen su propia base**; el respaldo exportable es la forma de moverla.
+
+**Restricciones de diseño que se aplican desde ya:**
+1. **Rutas relativas** en todas las páginas y scripts, para que funcione igual en la raíz de un dominio que en una subcarpeta (`https://dominio/kobalt/`). Comprobación obligatoria bajo subruta.
+2. **Tipo MIME de módulos.** Apache puede servir `.mjs` como `application/octet-stream`, y el navegador **rechaza** los módulos con ese tipo. El empaquetado emite los módulos con extensión **`.js`** (reescribiendo los `import`) **y** un `.htaccess` con `AddType text/javascript .js .mjs`. La verificación sirve el paquete con un servidor que devuelve `.mjs` mal a propósito, para demostrar que no depende de ello.
+3. **Los módulos solo se habían probado en Node.** El empaquetado debe probarse en **Chromium real**: sin `node:`, sin `Buffer`, sin APIs de servidor. (El núcleo calcula SHA‑256 en JS puro, así que no exige contexto seguro; aun así se recomienda HTTPS.)
+4. **Sin dependencias ni pasos de compilación** en el servidor.
+
+**Dos paquetes, según de quién es cada pieza:**
+
+| Paquete | Contiene | Destino |
+|---|---|---|
+| `kobalt-app-con-ui.zip` | Nuestras páginas y módulos **más** la librería Kobalt UI (tuya, no publicada) | Para ti: subir a GoDaddy y probar. Se te entrega directamente |
+| `kobalt-app-sin-ui.zip` | Lo mismo **sin** la librería, con el instalador | Apto para GitHub (repositorio público) |
+
+**Decisión que es tuya (se pregunta al entregar, con el paquete ya probado):** si el paquete **con** la librería también debe subirse a GitHub. El repositorio es público: lo que se sube puede copiarse e indexarse aunque después se borre. Hasta que lo autorices, solo se publica el paquete sin librería.
+
+**Cómo se entrega:** un script `kobalt/app/empaquetar.mjs` (sin dependencias) genera ambos `.zip` en `dist/`, con un `LEEME-GODADDY.md` (subir el zip al Administrador de archivos de cPanel, extraer en `public_html/`, abrir la URL; qué esperar: datos locales por navegador, exportar respaldo; HTTPS recomendado). El `.zip` sin librería se versiona en `dist/` y se enlaza por su URL `raw` de GitHub; el completo se te envía como archivo.
+
+**Criterio de terminado:** el paquete se extrae en una carpeta **cualquiera**, se sirve como lo haría Apache de GoDaddy (MIME de `.mjs` incorrecto, bajo subruta) y la verificación visual en Chromium pasa en escritorio y móvil, claro y oscuro, sin errores de consola.
