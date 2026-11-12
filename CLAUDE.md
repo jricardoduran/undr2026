@@ -8,6 +8,8 @@ Este repositorio contiene:
 **Primero claridad matemática, luego claridad conceptual, luego código.**
 Kobalt **no** es un inventario tradicional. Antes de diseñar, programar, revisar o probar cualquier cosa de Kobalt, carga la skill **`kobalt-kernels`**. Para escribir o revisar pruebas, carga también **`kobalt-verificar-leyes`**.
 
+**Bitácora (léela primero):** `kobalt/BITACORA.md` guarda el estado exacto, el porqué de cada decisión, las lecciones y el siguiente paso. **Actualízala en cada paso significativo** (estado, decisión tomada y su razón, lo aprendido). Es la persistencia del proceso entre sesiones.
+
 **Documento rector:** `kobalt/CONSOLIDACION_Y_PLAN.md`. Contiene el núcleo irreducible, qué mecanismos emergen, el perfil v1 y las fases. Toda tarea se ubica en una de sus fases.
 
 ## Mapa
