@@ -164,7 +164,7 @@ test('contrato R1–R4 (L16, L27, vocabulario): importa solo el núcleo, sin dom
   if (process.env.KOBALT_PREGUNTAS_IMPL && !existsSync(DIR)) return; // validación del contrato contra el modelo o un mutante
   const archivos = []; const rec = d => { for (const f of readdirSync(d)) { const p = join(d, f); if (statSync(p).isDirectory()) rec(p); else archivos.push(p); } };
   rec(DIR);
-  const vocab = /producto|variante|stock|sku|bodega|precio|inventario|catálogo|venta|cliente|depósito/i;
+  const vocab = /producto|variante|stock|sku|bodega|precio|inventario|catálogo|venta(?!na)|cliente|depósito/i;
   let todo = '';
   for (const f of archivos) {
     const txt = readFileSync(f, 'utf8'); todo += txt;

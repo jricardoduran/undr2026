@@ -622,3 +622,23 @@ Fuente: `kobalt/docs/2026-11-12_AMPLIACION_V3_Y_REVISION.md`, §3, §4 y §6.
 
    [V] 0 discrepancias frente al `core.js` de la v3 en 22.804 acciones. «Solo registro» frente a «suave» es un hecho de elegibilidad (L15); la disponibilidad física, libre o prudente es una pregunta sin evento.
 3. **Oráculo de aceptación:** se añaden los escenarios de la v3 (modalidades y lectura físico/libre/prudente) a los de la v2.
+
+---
+
+## Anexo B · Precisiones fijadas por el verificador (2026‑11‑12)
+Las fuerzan `kobalt/tests/leyes/dominio.*`; ninguna contradice una ley.
+1. **`pend⁰`:**
+   - es una familia restringida de la especie D, con las transiciones `Vender.registro` y `Asignar.registro`;
+   - `Cancelar` también la mueve, y VF8 la incluye;
+   - las plantillas de cajero y vendedor añaden `Disparar:Vender.registro`.
+2. **`dominio.propietarios`:** su valor inicial es `null`, que significa `[nucleo.constituyente]`. Σ no lee la génesis.
+3. **`conjunto: sinEfecto`:** el efecto es el elemento `(A,Q)`, es decir, reemplazo por clave. «Añadir si falta» exigiría leer el estado y rompería la pregunta sin estado `q_cat`.
+4. **Motivo de marcado:** `negativo:<lugar>`, con el primer lugar que baja en el orden de los movimientos.
+5. **Lote con guarda `final`:** `R` es la unión de los `R_c(t_j)` menos las liberaciones. Se comprueban los lugares con `W` neto < 0.
+6. **Alcance propio:** una transición sin `objetivo` falla cerrada (`ajeno`). El disparo interno `alNacer` no comprueba alcance.
+7. **Corrección a la restricción del producto (Anexo A):** `nulo?(descuento) ∨ descuento = 0 ∨ descuento ≤ precio`. La forma anterior rechazaba todo producto sin descuento.
+8. **«Máximo 60» en `*:*`:** es el número de claves explícitas de esa familia por entidad.
+9. **Actividad:** se lee de la característica `estado = activo`. Un tipo sin `estado` cuenta como activo.
+10. **Invariantes:** VF6–VF9 son dato en `𝒩.auditoría` (formas lineales con `rango`). VF5 es genérica.
+11. **F1:** el color es de la variante, así que la fibra contiene `v1`, no `P1`.
+12. **Teorema 6.1:** la inducción necesita `H ≥ 0` al inicio del intervalo.
