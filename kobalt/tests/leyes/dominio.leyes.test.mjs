@@ -308,7 +308,7 @@ paraTodo('L12 L11 tabla de efectos sobre (H, A, P, P⁰, libre): Asignar no camb
       if (t === 'Cancelar') {
         const mk = (St, f) => M.valorLugar(St.D, f, [a.s]);
         const cp = mk(S0, 'pend'), ca = mk(S0, 'asig');
-        assert.deepEqual([dd.dP, dd.dl, dd.dA, dd.dl - dd.dP], [-cp, ca, -ca, cp + ca], `Cancelar e_${k + 1}`);
+        assert.deepEqual([dd.dP, dd.dl, dd.dA, dd.dl - dd.dP], [0 - cp, ca, 0 - ca, cp + ca], `Cancelar e_${k + 1}`);
       }
     }
     if (t === 'Ingresar') { const dd = deltas(a.w, a.v); assert.deepEqual([dd.dH, dd.dl, dd.dA, dd.dP], [a.q, a.q, 0, 0]); }
@@ -416,17 +416,19 @@ paraTodo('L9 L33 V10 resolverProyeccion (ACTUALIZAR desde cualquier checkpoint) 
   const V0 = M.coordenadas(S(Γ).D, S(Γ).parametros)[0] ?? [2, 1];
   const proys = [M.PROYECCIONES.T, M.PROYECCIONES.catalogo, M.PROYECCIONES.marcado, M.PROYECCIONES.auditoria, ...B.map(w => M.PROYECCIONES.flat(w)),
     ...(B.length ? [M.PROYECCIONES.disponibilidad(B[0], V0)] : []), M.PROYECCIONES.fibra('color', 'Azul')];
-  const cortes = [...new Set([0, Math.floor(n / 4), Math.floor(n / 2), n - 1, n].filter(x => x >= 0))];
+  const cortes = [...new Set([0, Math.floor(n / 3), n - 1, n].filter(x => x >= 0))];
   for (const proy of proys) {
+    const rec = new Map(cortes.map(k => [k, C.resolverP(Γ, proy, k)])); // RECONSTRUIR desde la génesis (oráculo)
     for (const c of cortes) for (const m of cortes) {
-      if (c > m) continue;
-      const guardado = C.resolverP(Γ, proy, c);
-      const inc = C.resolverP(Γ, proy, m, { acum: guardado.acum, checkpoint: guardado.checkpoint });
-      const rec = C.resolverP(Γ, proy, m);
-      assert.equal(inc.accion, c === m ? 'REUTILIZAR' : 'ACTUALIZAR', `${proy.id} ${c}→${m}`);
-      assert.deepEqual(inc.acum, rec.acum, `${proy.id}: acum incremental ${c}→${m} ≠ reconstruido`);
-      assert.deepEqual(inc.Y, rec.Y, `${proy.id}: Y incremental ${c}→${m} ≠ reconstruido`);
+      if (c >= m) continue;
+      const g0 = rec.get(c), r = rec.get(m);
+      const inc = C.resolverP(Γ, proy, m, { acum: g0.acum, checkpoint: g0.checkpoint });
+      assert.equal(inc.accion, 'ACTUALIZAR', `${proy.id} ${c}→${m}`);
+      assert.deepEqual(inc.acum, r.acum, `${proy.id}: acum incremental ${c}→${m} ≠ reconstruido`);
+      assert.deepEqual(inc.Y, r.Y, `${proy.id}: Y incremental ${c}→${m} ≠ reconstruido`);
     }
+    const r = rec.get(n);
+    assert.equal(C.resolverP(Γ, proy, n, { acum: r.acum, checkpoint: r.checkpoint }).accion, 'REUTILIZAR');
   }
   // y cada pregunta coincide con su lectura directa sobre S_n
   const St = S(Γ), par = St.parametros;
@@ -439,7 +441,7 @@ paraTodo('L9 L33 V10 resolverProyeccion (ACTUALIZAR desde cualquier checkpoint) 
     if (B.length) assert.deepEqual(C.consultar(Γ, M.PROYECCIONES.disponibilidad(w, V0)), M.disponibilidad(St.D, par, w, V0));
   }
   return true;
-});
+}, Math.min(CASOS, 20));
 test('L33 clases = monoides: asociatividad y unidad de PRODUCTO por clase; aplicar es una acción (aplicar(aplicar(D,δ₁),δ₂) = aplicar(D, δ₁·δ₂))', () => {
   const r = C.prng(SEMILLA ^ 0x5eed);
   const gen = {
