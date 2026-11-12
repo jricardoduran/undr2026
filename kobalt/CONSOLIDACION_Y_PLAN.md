@@ -274,6 +274,8 @@ Tecnología: módulos ES nativos, sin dependencias; `node --test` para el núcle
 3. **Los módulos solo se habían probado en Node.** El empaquetado debe probarse en **Chromium real**: sin `node:`, sin `Buffer`, sin APIs de servidor. (El núcleo calcula SHA‑256 en JS puro, así que no exige contexto seguro; aun así se recomienda HTTPS.)
 4. **Sin dependencias ni pasos de compilación** en el servidor.
 
+> **Corrección posterior (12‑nov, noche):** el entorno **bloqueó** copiar al repositorio los archivos subidos por el usuario (la librería Kobalt UI y los paquetes de referencia), aunque la autorización de publicar sigue vigente. Mientras no se levante el bloqueo: la librería **sigue sin versionarse** (carpeta `kobalt/app/ui/` ignorada, instalada con `instalar-ui`), el paquete `sin-ui` se publica en GitHub y el paquete `con-ui` se entrega directamente al usuario. El usuario puede subir esos archivos él mismo o añadir una regla de permiso.
+
 > **Actualización (12‑nov, noche):** el usuario autorizó publicar todo de forma permanente. La librería Kobalt UI se **versiona sin modificar** en `kobalt/app/ui/` con sus hashes, y **ambos paquetes** pueden publicarse. La decisión «¿va también el paquete con la librería a GitHub?» queda **resuelta: sí**. El resto de esta parte sigue vigente.
 
 **Dos paquetes, según de quién es cada pieza:**

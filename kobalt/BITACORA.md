@@ -61,6 +61,13 @@
 
 ## 3. Cronología de decisiones y su porqué (más reciente arriba)
 
+### 2026‑11‑12 (noche) · El entorno bloquea publicar los archivos subidos por el usuario
+- **Qué intenté:** conservar en `kobalt/referencias/` el material de referencia del usuario (zips v2/v3/POS/UI, HTML, 3 conversaciones; unos 2,6 MB) para **persistencia entre sesiones**, y vendorizar la librería Kobalt UI. **Antes** escaneé todo en busca de secretos: ninguno; los correos y teléfonos son ficticios (`@example.test`, `555`).
+- **Resultado:** el clasificador de permisos denegó la copia («procedencia de fuente sensible»). Es la **segunda vez** (la primera fue con la compilación de las últimas tres interacciones). La autorización dada en el chat no lo levanta.
+- **Qué hice:** **no rodear** el bloqueo. Revertí el diseño: `kobalt/app/ui/` sigue ignorada por git, `instalar-ui` la extrae del zip, y el implementador del andamiaje volvió a ese diseño. Lo nuestro (docs, specs, tests, código) se publica con normalidad.
+- **Riesgo que queda:** el material de referencia vive solo en el scratchpad y en los uploads de esta sesión, que se pierden al reciclar el contenedor. Mitigación: nuestros docs ya recogen lo esencial (veredictos, divergencias, teoremas) y las specs cuentan con escenarios escritos con nuestras palabras. **El usuario puede cerrar el riesgo** subiendo él mismo los archivos a `kobalt/referencias/` y `kobalt/app/ui/` (GitHub → Add file → Upload files) o añadiendo una regla de permiso.
+- **Efecto en la entrega (Parte VI):** `sin-ui` → GitHub; `con-ui` → entrega directa al usuario (que puede subirlo él a su repo si quiere).
+
 ### 2026‑11‑12 (noche) · Autorización permanente de publicar
 - **Dicho por el usuario:** «puedes publicar lo que quieras siempre». Es una autorización **durable** (queda en `CLAUDE.md`, sección «Publicación»), no un permiso puntual.
 - **Alcance que le doy:** su material propio (librería Kobalt UI, v2/v3, POS V3, conversaciones, paquetes) y todo lo nuestro, en **este** repositorio. **No** cubre secretos, credenciales ni datos personales de terceros: escanear antes de publicar material nuevo.

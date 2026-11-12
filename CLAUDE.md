@@ -53,6 +53,7 @@ node kobalt/kernels/Verificacion/2026-11-10_2043_RUN_KOB2_TESTS.js
 
 ## Publicación (autorización permanente del usuario, 2026‑11‑12)
 El usuario autorizó **publicar siempre lo que se quiera en este repositorio**, incluido su material propio no publicado (librería Kobalt UI, POS/inventario v2 y v3, conversaciones y paquetes). Esa autorización **no cubre** secretos, credenciales, claves ni datos personales de terceros: antes de publicar material nuevo, escanéalo en busca de ellos. Se sigue registrando en `kobalt/BITACORA.md` qué se publica y por qué.
+**Límite del entorno:** el sistema de permisos puede bloquear copiar al repositorio archivos *subidos por el usuario* (se observó el 12‑nov: «procedencia de fuente sensible»), aunque el usuario lo autorice en el chat. Si ocurre: **no se rodea** (ni con otra herramienta ni troceando la copia); se informa y se sigue con lo que no dependa de ello. El usuario puede añadir una regla de permiso para Bash o subir él mismo esos archivos al repositorio.
 
 ## Reglas duras
 - Los kernels de `kobalt/kernels/` no se editan nunca.
