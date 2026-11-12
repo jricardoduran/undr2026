@@ -37,7 +37,7 @@ Algunas contribuciones dependen del estado previo (por ejemplo la merma, `h − 
 |---|---|---|
 | **P1** | **Incrementalidad** [T]: `f*(Γ‖a) = f*(Γ)·f(a)` | Toda pregunta se mantiene al día con el sufijo nuevo; su archivo de optimización es `f*(Γ_{0:n})` con checkpoint `(n, h_n)` (L9) |
 | **P2** | **Estado mínimo = cociente de Nerode** de `obs ∘ f* ∘ φ` [T] (L10) | La propia pregunta dice cuánto hay que guardar. Monoide pequeño (suma, último, mínimo): unos bytes. Sin cociente pequeño (la mediana [V]): guardar el multiconjunto o recalcular |
-| **P3** | **Intervalos** [T][V]: si `M` es grupo, `Q(i,j) = P_j · P_i⁻¹` | Con prefijos materializados, cualquier ventana sale en O(1): ventas entre dos fechas = resta de dos prefijos. Si `M` es solo monoide: árbol de segmentos, O(log n) |
+| **P3** | **Intervalos** [T][V]: si `M` es grupo, `Q(i,j) = P_i⁻¹ · P_j` (corregido por la spec de la fase 2: `P_j·P_i⁻¹` solo coincide en grupos conmutativos; en `S₃` falla 482/2000 veces) | Con prefijos materializados, cualquier ventana sale en O(1): ventas entre dos fechas = resta de dos prefijos. Si `M` es solo monoide: árbol de segmentos, O(log n) |
 | **P4** | **Conmutatividad ⇒ distribuible** [T] | Si `M` es conmutativo, la pregunta se calcula sobre réplicas o particiones en cualquier orden y se combina con `·`. Si no lo es, exige un corte causalmente cerrado (L21) |
 | **P5** | **Producto** [T]: `(f₁,f₂)* = f₁* × f₂*` en `M₁ × M₂` | N preguntas en **una sola pasada** por `Γ` |
 | **P6** | **Composición de filtros** [T]: `φ₁ ∘ φ₂` es filtro y `f* ∘ φ` sigue siendo homomorfismo | Las orientaciones «por producto, por cajero, por época, por tipo» se combinan libremente |
