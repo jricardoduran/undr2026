@@ -317,6 +317,9 @@ diferencial('L16 impl: capacidades finas, E4 en lotes, tipo incoherente y alcanc
   C.disparar('U1', 'Asignar', { s: [4, 0], q: 1 }), C.lote('U1', C.disparar('U1', 'Cobrar', { s: [4, 0], x: 1 }), C.disparar('U1', 'Contar', { w: W, v, h: 0 })),
   C.fijar('dueño', 'variante', 'nombre', P, 'X'), C.fijar('U1', 'producto', 'nombre', P, 'X'), venta('venta.suave', 1),
   C.disparar('caja', 'Asignar', { s: [5, 0], q: 1 }), venta('venta.inmediata', 2, 'caja', 'POS'), C.disparar('lector', 'Ingresar', { w: W, v, q: 1 })]);
+diferencial('L16 impl: alcance propio falla CERRADO en una transición sin objetivo (capacidad Disparar:Ingresar + alcance Disparar:*)', {
+  'nucleo.capacidades': { 'dueño': ['*'], repo: ['Disparar:Ingresar', 'Disparar:Contar'] }, 'dominio.alcancePropio': { repo: ['Disparar:*'] } }, [
+  C.disparar('repo', 'Ingresar', { w: W, v, q: 1 }), C.disparar('repo', 'Contar', { w: W, v, h: 0 }), C.disparar('dueño', 'Ingresar', { w: W, v, q: 1 })]);
 diferencial('L20 impl: Lote atómico; guarda «final» admite el orden interno libre', {}, [
   C.lote('dueño', C.nacer('dueño', 'venta', { variante: v, bodega: W, precio: 10, canal: 'POS' }), C.disparar('dueño', 'Vender', { s: { nacido: 0 }, q: 2 }),
     C.disparar('dueño', 'Asignar', { s: { nacido: 0 }, q: 2 }), C.disparar('dueño', 'Ingresar', { w: W, v, q: 2 })),

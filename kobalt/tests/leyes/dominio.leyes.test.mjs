@@ -352,6 +352,12 @@ test('L16 E3 E4 capacidades finas, lotes, coherencia del tipo y alcance propio',
   ok(Γ, fijar('U1', 'producto', 'nombre', [nP, 0], 'Mío 2'));
   assert.deepEqual(proponer(Γ, nacer('U1', 'variante', { producto: P, sku: 'U1-2' })), { resultado: 'INADMISIBLE', motivo: 'ajeno' });
 });
+test('L16 alcance propio falla CERRADO: una transición sin objetivo (Ingresar, Contar) con capacidad y alcance «Disparar:*» ⇒ ajeno', () => {
+  const { Γ, W, v } = base({ 'nucleo.capacidades': { 'dueño': ['*'], repo: ['Disparar:Ingresar', 'Disparar:Contar'] }, 'dominio.alcancePropio': { repo: ['Disparar:*'] } });
+  assert.deepEqual(proponer(Γ, disparar('repo', 'Ingresar', { w: W, v, q: 1 })), { resultado: 'INADMISIBLE', motivo: 'ajeno' });
+  assert.deepEqual(proponer(Γ, disparar('repo', 'Contar', { w: W, v, h: 0 })), { resultado: 'INADMISIBLE', motivo: 'ajeno' });
+  ok(Γ, disparar('dueño', 'Ingresar', { w: W, v, q: 1 }));
+});
 
 // ═════════════════════════ L1 / L2 / L17 · secciones, columnas, fibras, ficha ═════════════════════════
 paraTodo('L1 Reconstruct(secciones) = Reconstruct(columnas) = R sobre q_cat', g => {
