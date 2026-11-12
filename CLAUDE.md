@@ -34,6 +34,12 @@ Para cada módulo o flujo:
 5. **`kobalt-revisor-conceptual`** audita el diff y emite `CONFORME` u `OBJECIONES`.
 6. Solo con `PASS` + `CONFORME` se integra el worktree. Un `VETO` o una objeción vuelve al paso 3 (o al 1 si la spec está mal).
 
+### Pregunta de coherencia (del POS V3, `AGENTS.md`)
+Antes de dar por definitiva una decisión de diseño o implementar un cambio, responde:
+> ¿Es coherente esta decisión con la arquitectura de base? ¿Qué estamos heredando de la implementación anterior o de la práctica habitual, y qué razón del dominio o de la trayectoria justifica conservarlo?
+
+Identifica la entidad, la acción y la autoridad sobre sus efectos; qué debe quedar en la trayectoria para reconstruir la respuesta en cada corte y qué puede derivarse; y cuál es la unidad de validación y atomicidad. **Si hay un tope fijo, identifica su fundamento y el caso legítimo que podría impedir.** Comprueba un ejemplo normal y otro en que **cambie el estado entre la vista previa y el compromiso**.
+
 ### Proporcionalidad (2026‑11‑12)
 La fuente de la corrección es la matemática; las pruebas y revisiones comprueban la **traducción** y a veces delatan errores de la propia matemática. Ciclo completo (spec → oráculo → implementación → mutantes → revisión) para el **núcleo** y las leyes de las que depende todo. Para dominio, preguntas e interfaz: spec con teoremas + oráculo derivado de las leyes + una revisión conceptual; mutantes solo para leyes críticas (conservación, doble descuento, autoridad). Las fases, agentes y worktrees son disciplina de desarrollo, **no** mecanismos de la arquitectura.
 
