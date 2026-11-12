@@ -415,6 +415,10 @@ function analizar(q, lectores) {
   if (esMapa(q) && Object.hasOwn(q, 'derivada')) {
     if (Object.keys(q).length !== 2 || !Object.hasOwn(q, 'de') || !['prefijos', 'segmentos'].includes(q.derivada)) fallo('pregunta derivada inválida');
     const c = analizar(q.de, lectores);
+    // L34 como regla ESTÁTICA de la pregunta (objeción conceptual del 12‑nov): una materialización no se materializa otra
+    // vez, y lo que contiene 'secuencia' no se materializa nunca (su cociente de Nerode es la propia Γ filtrada).
+    if (contieneDerivada(c)) fallo('una pregunta derivada no puede derivarse otra vez (L34)');
+    if (!leyes(c.M).materializable) fallo('secuencia no se materializa nunca (L34)');
     const M = q.derivada === 'prefijos' ? escaneoDe(c.M) : segmentosDe(c.M);
     return { tipo: 'derivada', derivada: q.derivada, c, M, leeEstado: c.leeEstado, usaTRef: false };
   }
@@ -434,6 +438,7 @@ function analizar(q, lectores) {
   if (rφ.usaTRef || ra.usaTRef || rs.usaTRef) fallo('tRef solo puede aparecer en obs (L15, E1)');
   return { tipo: 'simple', q, M, ap, leeEstado: rφ.leeEstado || ra.leeEstado || rs.leeEstado || ro.leeEstado, usaTRef: ro.usaTRef };
 }
+const contieneDerivada = A => A.tipo === 'derivada' || (A.tipo === 'tupla' && A.cs.some(contieneDerivada));
 // La forma {clave, valor[, etiqueta]} es azúcar de {op:'mapa', de:[…]} (claves en este orden: clave, etiqueta, valor). [PV]
 function aporteExpr(a) {
   if (!esMapa(a)) return null;
@@ -524,6 +529,7 @@ export function materializar(q, Γ, j, o = {}) {
   const qd = { derivada: o.tipo, de: q };
   const g = o.guardado ? { acum: o.guardado.acum, checkpoint: o.guardado.checkpoint } : null;
   const r = responder(qd, Γ, { ...o, i: 0, j, guardado: g });
+  if (r.resultado !== 'OK') return r; // p. ej. q ya es (o contiene) una derivada: L34 estática
   return { resultado: 'OK', accion: r.accion, mat: { tipo: o.tipo, acum: r.acum, checkpoint: r.checkpoint } };
 }
 
@@ -532,6 +538,7 @@ export function ventana(q, Γ, i, j, mat, o = {}) {
   const c = compilar(q, o); if (c.resultado !== 'COMPILADA') return invalida(c);
   const n = Γ.entradas.length;
   if (!ent(i) || !ent(j) || i < 0 || i > j || j > n) throw new Error('ventana fuera de la trayectoria local');
+  if (!leyes(c.analisis.M).materializable) return { resultado: 'MATERIALIZACIÓN_INVÁLIDA' }; // L34: no hay materialización legítima
   const cp = mat?.checkpoint;
   const qd = { derivada: mat?.tipo, de: q };
   if (!mat || !['prefijos', 'segmentos'].includes(mat.tipo) || !cp || cp.ver !== identidad(qd) || cp.streamId !== Γ.streamId
