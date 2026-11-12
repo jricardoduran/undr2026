@@ -31,6 +31,12 @@
 //   q ::= {φ: expr, aporte: Aporte, M: DescM, obs: DescObs [, sello: expr] [, ventanaTiempo: 'prefijo'|'filtro']}
 //       | [q₁ … q_m]  (m ≥ 1; el producto de P5: Y = [Y₁…Y_m], acum = [acum₁…acum_m])
 //       | {derivada: 'prefijos'|'segmentos', de: q}   (q^▷ / q^▦; las construye materializar)
+//     L34 ESTÁTICA (objeción conceptual del 12‑nov): {derivada, de: q} es PREGUNTA_INVÁLIDA si q contiene 'secuencia'
+//     (sola, en una tupla o en una etiqueta de mapa) o si q es, o contiene en una tupla, otra derivada. Por tanto
+//     compilar/responder de esas derivadas ⇒ PREGUNTA_INVÁLIDA; materializar de una derivada (o de una tupla con una)
+//     ⇒ PREGUNTA_INVÁLIDA (nunca {resultado:'OK'} con una materialización vacía; orden en materializar: NO_MATERIALIZABLE,
+//     PREGUNTA_INVÁLIDA de la derivada, NO_GRUPO); ventana sobre una pregunta con
+//     'secuencia' ⇒ MATERIALIZACIÓN_INVÁLIDA (no existe materialización legítima).
 //     Claves exactas ('φ' es la letra griega). Toda clave fuera de esa lista ⇒ PREGUNTA_INVÁLIDA.
 //   Aporte ::= expr | {clave: expr, valor: expr [, etiqueta: expr]}; la segunda forma ≡ {op:'mapa', de:[{v:'clave'}, clave,
 //     ({v:'etiqueta'}, etiqueta,)? {v:'valor'}, valor]}. [PV]
@@ -447,6 +453,36 @@ test('contrato L15 obs con tRef: el mismo acum responde a dos tRef sin reconstru
     for (const tRef of [-2, 0, 3, 100]) {
       const ri = await I.responder(q, Γ, OI({ tRef, guardado: { acum: g.acum, checkpoint: g.checkpoint } }));
       assert.equal(ri.accion, 'REUTILIZAR'); ver(pick(ri, KR), pick(P.responder(q, Γ, OP({ tRef, guardado: { acum: g.acum, checkpoint: g.checkpoint } })), KR), msg(c));
+    }
+  }
+});
+
+// ═════════════════════════ L34 estática (objeción conceptual del 12‑nov) ═════════════════════════
+test('contrato L34 estática: derivadas de secuencia, de tupla con secuencia y de derivada ⇒ PREGUNTA_INVÁLIDA (compilar, responder, materializar); ventana sobre secuencia ⇒ MATERIALIZACIÓN_INVÁLIDA', async () => {
+  preparar();
+  const Γ = G.trayectoria(SEMILLA + 5); const n = Γ.entradas.length;
+  const qs = { φ: { v: true }, aporte: { a: ['q'] }, M: { nombre: 'suma' }, obs: { nombre: 'identidad' } };
+  const qseq = { φ: { v: true }, aporte: { op: 'lista', de: [{ e: 'tipo' }] }, M: { nombre: 'secuencia' }, obs: { nombre: 'identidad' } };
+  const qmapaSeq = { φ: { v: true }, aporte: { clave: { v: 'a' }, etiqueta: { v: 's' }, valor: { op: 'lista', de: [{ e: 'k' }] } }, M: { nombre: 'mapa', parametros: { etiquetas: { s: { nombre: 'secuencia' } } } }, obs: { nombre: 'identidad' } };
+  for (const tipo of ['prefijos', 'segmentos']) {
+    const d = { derivada: tipo, de: qs };
+    assert.equal((await I.compilar(d, { lectores: LI })).resultado, 'COMPILADA', 'la derivada de una pregunta materializable sí es válida');
+    for (const [base, etiqueta] of [[qseq, 'secuencia'], [[qs, qseq], 'tupla con secuencia'], [qmapaSeq, 'mapa con etiqueta secuencia'], [d, 'derivada de derivada'], [[qs, d], 'tupla con una derivada']]) {
+      const dd = { derivada: tipo, de: base };
+      const m = `${tipo} de ${etiqueta}`;
+      assert.equal(P.compilar(dd, { lectores: LP }).resultado, 'PREGUNTA_INVÁLIDA', `(modelo) ${m}`);
+      assert.equal((await I.compilar(dd, { lectores: LI })).resultado, 'PREGUNTA_INVÁLIDA', `compilar: ${m}`);
+      assert.equal((await I.responder(dd, Γ, OI())).resultado, 'PREGUNTA_INVÁLIDA', `responder: ${m}`);
+    }
+    for (const [q, etiqueta] of [[d, 'una derivada'], [[qs, d], 'una tupla con una derivada']]) {
+      const r = await I.materializar(q, Γ, n, OI({ tipo }));
+      assert.equal(r.resultado, 'PREGUNTA_INVÁLIDA', `materializar(${tipo}) de ${etiqueta}: ${JSON.stringify(r)}`);
+    }
+    for (const q of [qseq, [qs, qseq], qmapaSeq]) {
+      assert.equal((await I.materializar(q, Γ, n, OI({ tipo }))).resultado, 'NO_MATERIALIZABLE');
+      const forjada = { tipo, acum: [], checkpoint: { streamId: Γ.streamId, n, h: Γ.hashes[n], ver: P.identidad({ derivada: tipo, de: q }), epoca: 0 } };
+      assert.equal((await I.ventana(q, Γ, 0, n, forjada, OI())).resultado, 'MATERIALIZACIÓN_INVÁLIDA', `ventana sobre ${JSON.stringify(q.M ?? 'tupla')}`);
+      assert.equal((await I.ventana(q, Γ, 0, 0, null, OI())).resultado, 'MATERIALIZACIÓN_INVÁLIDA');
     }
   }
 });

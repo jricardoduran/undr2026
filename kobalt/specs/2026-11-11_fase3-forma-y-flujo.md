@@ -642,3 +642,31 @@ Las fuerzan `kobalt/tests/leyes/dominio.*`; ninguna contradice una ley.
 10. **Invariantes:** VF6–VF9 son dato en `𝒩.auditoría` (formas lineales con `rango`). VF5 es genérica.
 11. **F1:** el color es de la variante, así que la fibra contiene `v1`, no `P1`.
 12. **Teorema 6.1:** la inducción necesita `H ≥ 0` al inicio del intervalo.
+
+---
+
+## Anexo C · Resolución de la revisión conceptual de la implementación (2026‑11‑12)
+Veredicto de la revisión sobre `94726c7`: **OBJECIONES (4)**. Esto queda fijado:
+
+1. **El efecto es total; las guardas solo admiten (Teorema 2, L7).**
+   - Se separa `efecto(D, e, C) → δ`, una función **total** que no devuelve motivos. Calcula los IDs `(i,j)`, el estado inicial de los ciclos, `W(t)` evaluado en `S_{k−1}` y el `δ` de `alNacer`.
+   - `guarda(D, e, C)` usa `efecto` y añade las comprobaciones.
+   - `T` y el lector `movimientos` usan **solo** `efecto`. Nunca lanzan sobre una entrada comprometida.
+   - Una incoherencia (por ejemplo, una guarda corregida en código después de comprometer) se ve en `q_aud` y nunca impide leer.
+   - Prueba exigida: `Fold` y las proyecciones de una `Γ` válida siguen funcionando aunque una guarda se vuelva más estricta.
+2. **La actividad es dato de la Forma (L31, L35).** Cada tipo de `Φ` declara `actividad: {característica, valores} | ausente`, con el valor inicial del Anexo B.9 en la Forma inicial. `G^par` comprueba que cambiar la actividad no rompe κ (VF10), igual que cuando cambia κ.
+3. **La configuración de lectura son parámetros de la pregunta (L32):**
+   - `disponibilidad(w, v, {familias, agregación})`, con agregación `Σ_w max(0,·)` o `max(0, Σ_w ·)` (§10);
+   - `visible(…, regla)`, y la regla de visibilidad de la galería vive en su declaración de `Φ`, junto a `admite`;
+   - `fibra(k, v, τ)`.
+
+   Los valores de `inicial.mjs` son solo **valores por defecto**.
+4. **Un solo lenguaje y un solo catálogo (L32).** La fase 3 **reutiliza** de `kobalt/src/preguntas/`:
+   - `evaluar`, `validarExpr` y `registrarLector`;
+   - el catálogo de monoides `monoide(…)`, que incluye la detección de desbordamiento.
+
+   Se elimina `dominio/expresiones.mjs` y los monoides propios de `proyecciones.mjs`. Los lectores del dominio (`carac`, `movimientos`, `nacimientos`…) se registran con `nombre@versión` y clase (entrada o estado), para que las preguntas de la fase 2 los usen sobre esta `Γ`. Requisito: la fase 2 debe estar integrada antes.
+5. **`q_T` frente a «secuencia no se materializa».** `T` no es `Γ` filtrada: es la lista de identidades nacidas de tipos densos. Se añade al catálogo de la fase 2 el monoide **`nacimientos`** (concatenación de listas de IDs), materializable. Su cociente de Nerode es él mismo, porque cada ID hace falta para la alineación implícita (L29). La prohibición sigue valiendo para `secuencia` sobre entradas arbitrarias.
+6. **Desbordamiento:** `INTERPRETE.m` y las sumas usan las operaciones con frontera de ℤ del catálogo. Un desbordamiento es un error visible.
+7. **Hueco de la spec (verificador):** `G^par` solo compara la aridad de `índices`, así que una Red que **reordena** los tipos de índice de una familia con marcado se admitía, y después sus claves cambiaban de significado. Ahora `G^par` exige **los mismos `índices`, en el mismo orden**, para toda familia con marcado distinto de cero.
+8. **Ajustes al oráculo (no bloqueantes):** el modelo debe usar `Object.hasOwn` en las búsquedas por nombre (`Disparar:__proto__` lanzaba en el modelo) y tratar `−0` como `0`, igual que CV.

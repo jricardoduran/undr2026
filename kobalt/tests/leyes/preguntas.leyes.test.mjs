@@ -342,6 +342,23 @@ test('L34 (§7.3) secuencia no se materializa nunca (ni sola ni dentro de un pro
   assert.equal(P.leyes({ nombre: 'mapa', parametros: { etiquetas: { s: { nombre: 'secuencia' } } } }).materializable, false);
 });
 
+test('L34 estática (objeción conceptual del 12‑nov): ninguna derivada materializa una secuencia ni otra derivada, por ninguna operación', () => {
+  const Γ = G.trayectoria(SEMILLA + 5); const n = Γ.entradas.length;
+  const qs = { φ: { v: true }, aporte: { a: ['q'] }, M: { nombre: 'suma' }, obs: { nombre: 'identidad' } };
+  const qseq = { φ: { v: true }, aporte: { op: 'lista', de: [{ e: 'tipo' }] }, M: { nombre: 'secuencia' }, obs: { nombre: 'identidad' } };
+  for (const tipo of ['prefijos', 'segmentos']) {
+    const d = { derivada: tipo, de: qs };
+    assert.equal(P.compilar(d, { lectores: L }).resultado, 'COMPILADA');
+    for (const base of [qseq, [qs, qseq], d, [qs, d]]) {
+      assert.equal(P.compilar({ derivada: tipo, de: base }, { lectores: L }).resultado, 'PREGUNTA_INVÁLIDA', JSON.stringify(base).slice(0, 80));
+      assert.equal(P.responder({ derivada: tipo, de: base }, Γ, O()).resultado, 'PREGUNTA_INVÁLIDA');
+    }
+    assert.equal(P.materializar(d, Γ, n, O({ tipo })).resultado, 'PREGUNTA_INVÁLIDA', 'materializar de una derivada');
+    const forjada = { tipo, acum: [], checkpoint: { streamId: Γ.streamId, n, h: Γ.hashes[n], ver: P.identidad({ derivada: tipo, de: qseq }), epoca: 0 } };
+    assert.equal(P.ventana(qseq, Γ, 0, n, forjada, O()).resultado, 'MATERIALIZACIÓN_INVÁLIDA');
+  }
+});
+
 // ═════════════════════════ Ventanas: P3 (Teorema 7.2), Teorema 7.3, VQ2, VQ3 ═════════════════════════
 const plegarLista = (M, xs) => xs.reduce((a, b) => M.op(a, b), structuredClone(M.unidad));
 
