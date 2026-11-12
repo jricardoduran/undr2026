@@ -289,3 +289,12 @@ Las fuerzan las pruebas `kobalt/tests/leyes/nucleo.*`.
 5. `STREAM_DUPLICADO` se comprueba antes que los conflictos y devuelve el primer StreamID repetido.
 6. Si `tiposInternos` no devuelve una lista de textos, el resultado es `NO_AUTORIZADO`.
 7. `conflictos` y `exceso` devuelven identidades, en orden de primera aparición.
+
+---
+
+## Anexo C · Pendientes del núcleo (observaciones del revisor, no bloqueantes) — 2026‑11‑12
+El núcleo enmendado `2e8d0d3` quedó integrado con **PASS** (113/113, 5 semillas, 44/45 mutantes detectados; el vivo es equivalente) y **CONFORME**. Para el siguiente ciclo del núcleo quedan estas observaciones:
+1. `readmitirDe` debe lanzar un error si `ctx.nodo` no es un estado de `nucleo.nodo@1` o si el valor está fuera del dominio de Σ. Hoy desactiva la readmisión sin avisar.
+2. Pasar `S` congelado o clonado a `f` cuando hay `leeEstado`, igual que se hace con `acum` para `obs`.
+3. Al reutilizar, `responder` reconstruye `S_m` aunque solo necesite `C_{ε_m}`. Usar `parametrosEn` (rendimiento; L34).
+4. Las leyes del monoide (asociatividad, conmutatividad) son declaraciones de cada pregunta: deben probarse en la fase 2.
