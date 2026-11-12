@@ -187,3 +187,23 @@ export function generarEscenarioConjunto(M, seed) {
   }
   return { gY: genesisY(), propY: [], gX, propX };
 }
+
+// ─────────── Enmienda E3/E4: escenario con la regla compuesto@1 (tipos patrón, lotes con tiposInternos, posición) ───────────
+export const CAPS_COMP = { 'dueño': ['*'], cajero: ['lote', 'a'], cajero2: ['lote', 'a', 'b'], hacedor: ['hacer:*'] };
+export const genesisCompuesto = () => ({ streamId: STREAM_X, predecesor: null,
+  C0: { 'nucleo.regla': 'compuesto@1', 'nucleo.constituyente': 'dueño', 'nucleo.capacidades': CAPS_COMP } });
+export function generarEscenarioCompuesto(M, seed) {
+  const r = prng(seed);
+  const propX = [];
+  for (let i = entero(r, 0, 40); i > 0; i--) {
+    const x = r(); let sol;
+    if (x < 0.15) sol = { u: elegir(r, ['dueño', 'cajero']), tipo: 'FijarParámetro', args: { modo: elegir(r, ['uno', 'dos', 'tres']) } };
+    else if (x < 0.45) sol = { u: elegir(r, ['dueño', 'cajero', 'cajero2', 'hacedor']), tipo: 'lote', args: { acciones: Array.from({ length: entero(r, 0, 3) }, () => elegir(r, ['a', 'b', 'nacer', 'lote', 'hacer:x'])) } };
+    else if (x < 0.75) { const t = elegir(r, ['hacer:x', 'hacer:', 'hacer:largo', 'hacer:largoZ', 'hacer:exacto', 'deshacer', 'hace']);
+      sol = { u: elegir(r, ['dueño', 'hacedor', 'cajero']), tipo: t, args: elegir(r, [{ x: 'k' }, { x: 'k', largo: true }, {}]) }; }
+    else sol = { u: elegir(r, ['dueño', 'cajero', 'cajero2']), tipo: elegir(r, ['nacer', 'a', 'b']), args: {} };
+    sol.sid = sidDe(entero(r, 0, 40)); sol.deps = [];
+    propX.push({ mecanismo: 'dueño', sol, cabeza: r() < 0.9 ? { modo: 'actual' } : { modo: 'atras', j: 1 } });
+  }
+  return { gY: genesisY(), propY: [], gX: genesisCompuesto(), propX };
+}

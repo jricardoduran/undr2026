@@ -1,6 +1,9 @@
 // Kobalt — modelo de referencia (oráculo) del NÚCLEO GENERAL (fase 1).
 //
-// Traducción literal de kobalt/specs/2026-11-11_fase1-nucleo.md (§3–§7). No optimiza,
+// Traducción literal de kobalt/specs/2026-11-11_fase1-nucleo.md (§3–§7) con la ENMIENDA E1–E8
+// (kobalt/specs/2026-11-11_fase1-enmienda-preguntas.md): E1 aportes/forma monoidal/ventana (i,j]; E2 nucleo.sid sobre Γ;
+// E3 tipos patrón; E4 tiposInternos en G1; E5 S_k solo por Fold o snapshot validado; E6 readmitir desde el nodo;
+// E7 identidades hex(CV(id)); E8 STREAM_DUPLICADO; NO_CONMUTATIVO en proyectarCorte. No optimiza,
 // no persiste y no tiene red. Sin vocabulario de dominio: el núcleo solo conoce
 // trayectorias, contratos, épocas, solicitudes (`sid`), proyecciones y diferencias.
 //
@@ -207,11 +210,21 @@ function sigmaCompleta(registro, idRegla, base) {
 /** coincide(π, tipo): igualdad exacta o prefijo terminado en `*`. */
 export const coincide = (patron, tipo) => patron === tipo || (patron.endsWith('*') && tipo.startsWith(patron.slice(0, -1)));
 /** Tipos de capacidad que exige una entrada: FijarParámetro(m) ⇒ "FijarParámetro:p" ∀p∈dom m. */
-const tiposCapacidad = e => (e.tipo === 'FijarParámetro' ? Object.keys(e.args).map(p => `FijarParámetro:${p}`) : [e.tipo]);
-export function autorizado(parametros, u, e) {
+// E4: Authorized_{C_ε}(u, e) ⟺ ∀ τ ∈ {tipo(e)} ∪ tiposInternos(e) : ∃ π ∈ capacidades(u) : coincide(π, τ).
+// FijarParámetro(m) conserva la regla de la fase 1: τ ∈ {FijarParámetro:p : p ∈ dom m}. tiposInternos solo se llama
+// sobre entradas de dominio que ya pasaron G5; si no devuelve una lista de textos, la autorización falla (cerrada).
+const tiposCapacidad = (e, regla) => {
+  if (e.tipo === 'FijarParámetro') return Object.keys(e.args).map(p => `FijarParámetro:${p}`);
+  if (e.clase !== 'dominio' || typeof regla?.tiposInternos !== 'function') return [e.tipo];
+  const internos = regla.tiposInternos(e);
+  if (!Array.isArray(internos) || !internos.every(t => typeof t === 'string')) return null;
+  return [e.tipo, ...internos];
+};
+export function autorizado(parametros, u, e, regla) {
   const pats = (parametros['nucleo.capacidades'] ?? {})[u];
   if (!Object.hasOwn(parametros['nucleo.capacidades'] ?? {}, u) || !Array.isArray(pats)) return false;
-  return tiposCapacidad(e).every(t => pats.some(p => coincide(p, t)));
+  const exigidos = tiposCapacidad(e, regla);
+  return exigidos !== null && exigidos.every(t => pats.some(p => coincide(p, t)));
 }
 const configuradorVivo = parametros => Object.values(parametros['nucleo.capacidades']).some(ps => ps.some(p => coincide(p, 'FijarParámetro:nucleo.capacidades')));
 
@@ -250,26 +263,31 @@ function formaValida(S, e, registro) {
   try { encEntrada(e); } catch { return false; }
   if (e.tipo === 'FijarParámetro') return esMapa(e.args) && Object.keys(e.args).length > 0;
   if (e.tipo === 'Sellar') return true;
-  const regla = registro[S.parametros['nucleo.regla']];
-  return Object.hasOwn(regla.tipos, e.tipo) && regla.tipos[e.tipo](e.args) === true;
+  const v = validadorDe(registro[S.parametros['nucleo.regla']].tipos, e.tipo);
+  return v !== null && v(e.args, e.tipo) === true;
+}
+/** E3: validador del tipo de dominio. Clave exacta primero; si no, la clave patrón 'prefijo*' de prefijo más largo.
+ *  Los tipos reservados del núcleo nunca se resuelven aquí (ningún patrón captura FijarParámetro ni Sellar). */
+export function validadorDe(tipos, tipo) {
+  if (claseDe(tipo) === 'contrato' || !tipos) return null;
+  if (Object.hasOwn(tipos, tipo)) return tipos[tipo];
+  let mejor = null;
+  for (const k of Object.keys(tipos)) if (k.endsWith('*') && tipo.startsWith(k.slice(0, -1)) && (mejor === null || k.length > mejor.length)) mejor = k;
+  return mejor === null ? null : tipos[mejor];
 }
 
-/** Estado de Y en la posición k (para G4 y Lect). `conocidas[Y]` es una trayectoria pura (ver §8). */
-function estadoDeConocida(conocidas, stream, k, registro) {
-  const ΓY = conocidas?.[stream];
-  if (!ΓY || ΓY.hashes.length - 1 < k) return null;
-  return estadoEn(ΓY, k, registro);
-}
-/** Lect: solo predicados estables declarados (de la regla de Y o del núcleo, Teorema 7.7), en el checkpoint de e.deps. */
+/** Lect: solo predicados estables declarados (de la regla de Y o del núcleo, Teorema 7.7), en el checkpoint de e.deps.
+ *  E5: S_Y en k se obtiene SOLO por Fold (nunca de Γ.estados). E2: `nucleo.sid` se define sobre la TRAYECTORIA. */
 function lectura(e, ctx) {
   return Object.freeze({
     estable(stream, nombre, ...args) {
       const d = e.deps.find(x => x.stream === stream);
       if (!d) return false;
-      const SY = estadoDeConocida(ctx.conocidas, stream, d.k, ctx.registro);
-      if (!SY) return false;
+      const ΓY = ctx.conocidas?.[stream];
+      if (!ΓY || ΓY.hashes.length - 1 < d.k) return false;
+      if (nombre === 'nucleo.sid') return ΓY.entradas.slice(0, d.k).some(x => x.sid === args[0]);   // E2: ∃ i ≤ k : e_i.sid = s₀
+      const SY = estadoEn(ΓY, d.k, ctx.registro);
       if (nombre === 'nucleo.sellado') return SY.sellado === true;
-      if (nombre === 'nucleo.sid') return Object.hasOwn(SY.sids, args[0]);
       if (nombre === 'nucleo.nAlMenos') return SY.n >= args[0];
       const P = ctx.registro[SY.parametros['nucleo.regla']].estables?.[nombre];
       return P ? P(SY.D, ...args) === true : false;
@@ -301,7 +319,7 @@ export function admitir(S, e, ctx) {
   const { registro } = ctx;
   if (S.sellado) return { ok: false, rechazo: 'SELLADO' };                                           // G0
   if (!formaValida(S, e, registro)) return { ok: false, rechazo: 'INADMISIBLE', motivo: 'forma' };   // G5
-  if (!autorizado(S.parametros, e.u, e)) return { ok: false, rechazo: 'NO_AUTORIZADO' };            // G1
+  if (!autorizado(S.parametros, e.u, e, registro[S.parametros['nucleo.regla']])) return { ok: false, rechazo: 'NO_AUTORIZADO' }; // G1 (E4)
   if (Object.hasOwn(S.sids, e.sid)) return { ok: false, rechazo: 'YA_COMPROMETIDO', i: S.sids[e.sid] }; // G2
   if (e.epoca !== S.epoca || (ctx.epocaEsperada !== undefined && ctx.epocaEsperada !== S.epoca)) return { ok: false, rechazo: 'ÉPOCA_CAMBIADA' }; // G3
   for (const d of e.deps) {                                                                          // G4
@@ -358,8 +376,9 @@ export function trayectoriaNueva(g, registro) {
   return { resultado: 'CREADO', n: 0, h: h0, Γ: { streamId: g.streamId, g, gBytes: encGenesis(g), bloques: [], entradas: [], hashes: [h0], estados: [S0] } };
 }
 export const cabezaDe = Γ => ({ n: Γ.entradas.length, h: Γ.hashes.at(-1) });
+/** E5: S_k = Fold(S_0, Γ_k). `Γ.estados` es una proyección sin checkpoint: el modelo la PRODUCE para las pruebas,
+ *  pero nunca la LEE para decidir (admisión, Lect, incorporación, proyecciones). */
 export function estadoEn(Γ, k, registro) {
-  if (Γ.estados && Γ.estados[k]) return Γ.estados[k];
   return fold(estadoInicial(Γ.g, registro), Γ.entradas.slice(0, k), registro);
 }
 const extender = (Γ, nuevos) => {
@@ -417,9 +436,16 @@ function verificarSegmento(hInicial, kInicial, epocaInicial, bloques, cabezaFina
   return { ok: true, h, entradas };
 }
 
+/** E6: `ctx.readmitir` explícito; si no, `ctx.nodo.parametros['nodo.verificarAlIncorporar']`; si tampoco, el `inicial`
+ *  de REGLA_NODO.sigma. Ningún literal de configuración en el código (L31). */
+export function readmitirDe(ctx) {
+  if (ctx.readmitir !== undefined) return ctx.readmitir === true;
+  const v = ctx.nodo ? ctx.nodo.parametros['nodo.verificarAlIncorporar'] : REGLA_NODO.sigma['nodo.verificarAlIncorporar'].inicial;
+  return v === 'cadena+readmisión';
+}
 /**
  * Incorporar sobre un valor Γ (réplica, §5.3). Atómico: si falla, no se aplica nada.
- * ctx = {registro, conocidas?, readmitir? (por defecto true: «cadena + re‑admisión», §3.5)}.
+ * ctx = {registro, conocidas?, readmitir?, nodo?} (E6: ver readmitirDe).
  * READMISIÓN_PENDIENTE: la cadena se incorpora; la re‑admisión de la entrada i espera a la dependencia `dep`.
  */
 export function incorporarEn(Γ, cabeza, bloques, cabezaFinal, ctx) {
@@ -428,7 +454,7 @@ export function incorporarEn(Γ, cabeza, bloques, cabezaFinal, ctx) {
   let S = estadoEn(Γ, actual.n, ctx.registro);
   const seg = verificarSegmento(actual.h, actual.n, S.epoca, bloques, cabezaFinal);
   if (!seg.ok) return { resultado: 'DISCONTINUIDAD', i: seg.i, motivo: seg.motivo };
-  const readmitir = ctx.readmitir ?? true;
+  const readmitir = readmitirDe(ctx);
   const nuevos = []; let pendiente = null; let h = actual.h;
   for (let j = 0; j < seg.entradas.length; j++) {
     const e = seg.entradas[j], i = actual.n + j + 1;
@@ -517,11 +543,14 @@ export function leerTrayectoria(almacen, streamId, registro) {
   if (registro) { const est = [estadoInicial(g, registro)]; for (const e of entradas) est.push(transformar(est.at(-1), e, registro)); Γ.estados = est; }
   return Γ;
 }
-function conocidasDe(almacen, registro, excepto) {
+/** Trayectorias de otros ámbitos CITADAS en deps (L20: leer solo lo citado; una trayectoria ajena corrupta y no citada
+ *  no impide constituir). */
+function conocidasDe(almacen, registro, excepto, citados) {
   const out = {};
-  for (const s of almacen.streams()) if (s !== excepto) out[s] = leerTrayectoria(almacen, s, registro);
+  for (const s of new Set(citados)) if (s !== excepto && typeof s === 'string' && almacen.cabeza(s)) out[s] = leerTrayectoria(almacen, s, registro);
   return out;
 }
+const citadosEnBloques = bloques => bloques.flatMap(b => { try { return decEntrada(b).deps.map(d => d.stream); } catch { return []; } });
 
 /** Crear(g): StreamID nuevo en la materialidad ⇒ cabeza (0, h_0). */
 export function crear(almacen, g, registro) {
@@ -535,17 +564,17 @@ export function crear(almacen, g, registro) {
 export function appendIfHead(almacen, streamId, cabeza, mecanismo, sol, ctx) {
   const Γ = leerTrayectoria(almacen, streamId, ctx.registro);
   if (!Γ) return { resultado: 'INEXISTENTE' };
-  const r = comprometer(Γ, cabeza, mecanismo, sol, { registro: ctx.registro, conocidas: conocidasDe(almacen, ctx.registro, streamId) });
+  const r = comprometer(Γ, cabeza, mecanismo, sol, { registro: ctx.registro, conocidas: conocidasDe(almacen, ctx.registro, streamId, Array.isArray(sol?.deps) ? sol.deps.map(d => d?.stream) : []) });
   if (r.resultado !== 'COMPROMETIDO') return r;
   const m = almacen.anexarSiCabeza(streamId, cabeza, [r.Γ.bloques.at(-1)], { n: r.n, h: r.h });
   if (m.resultado !== 'OK') return { resultado: 'CABEZA_CAMBIADA', n: m.n, h: m.h };
   return { resultado: 'COMPROMETIDO', n: r.n, h: r.h, epoca: r.epoca };
 }
-/** Incorporar(s, (n,h), [b…], (m,h_m)) sobre la materialidad. ctx = {registro, readmitir?}. */
+/** Incorporar(s, (n,h), [b…], (m,h_m)) sobre la materialidad. ctx = {registro, readmitir?, nodo?}. */
 export function incorporar(almacen, streamId, cabeza, bloques, cabezaFinal, ctx) {
   const Γ = leerTrayectoria(almacen, streamId, ctx.registro);
   if (!Γ) return { resultado: 'INEXISTENTE' };
-  const r = incorporarEn(Γ, cabeza, bloques, cabezaFinal, { registro: ctx.registro, readmitir: ctx.readmitir, conocidas: conocidasDe(almacen, ctx.registro, streamId) });
+  const r = incorporarEn(Γ, cabeza, bloques, cabezaFinal, { registro: ctx.registro, readmitir: ctx.readmitir, nodo: ctx.nodo, conocidas: conocidasDe(almacen, ctx.registro, streamId, citadosEnBloques(bloques)) });
   if (r.resultado !== 'INCORPORADO' && r.resultado !== 'READMISIÓN_PENDIENTE') return r;
   const m = almacen.anexarSiCabeza(streamId, cabeza, bloques, cabezaFinal);
   if (m.resultado !== 'OK') return { resultado: 'CABEZA_CAMBIADA', n: m.n, h: m.h };
@@ -616,23 +645,50 @@ export function parametrosEn(Γ, k, registro) {
   for (const e of Γ.entradas.slice(0, k)) if (e.tipo === 'FijarParámetro') p = recomponerParametros(p, e.args, registro);
   return p;
 }
+/** E5: S_k = Fold(restaurarSnapshot(snap), Γ_{n_snap+1:k}) con el mayor snapshot válido ≤ k, o Fold(S_0, Γ_k). */
+export function estadoPorSnapshot(Γ, k, registro, snapshots = []) {
+  const validos = snapshots.filter(s => s && Number.isSafeInteger(s.n) && s.n <= k).sort((a, b) => b.n - a.n);
+  for (const s of validos) { const R = restaurarSnapshot(s, Γ.hashes, registro); if (R) return { S: fold(R, Γ.entradas.slice(s.n, k), registro), desde: s.n }; }
+  return { S: fold(estadoInicial(Γ.g, registro), Γ.entradas.slice(0, k), registro), desde: 0 };
+}
+export const esMonoidal = proy => typeof proy?.f === 'function';
+
 /**
- * Resolución reutilizar / actualizar / reconstruir (§7.4). Pura.
- * args = {proy, guardado: null | {Y, checkpoint}, trayectoria (Γ local verificada: {streamId, g, entradas, hashes}),
- *         m, registro, snapshots?: [snap…], tRef?}
- * → {accion: 'REUTILIZAR'|'ACTUALIZAR'|'RECONSTRUIR'|'DISCONTINUIDAD', Y, checkpoint, desde}
+ * E1 · aportes(Π, Γ, i, j, registro, snapshots?) → [f(e_k, ctx_k)]_{k=i+1..j}. Pura. ÚNICA definición de la contribución.
+ * ctx_k = {k, parametros: C_{ε_{k−1}} [, S: S_{k−1} si leeEstado]}. f NO recibe tRef, ni otras trayectorias.
  */
-export function resolverProyeccion({ proy, guardado, trayectoria: Γ, m, registro, snapshots = [], tRef }) {
+export function aportes(proy, Γ, i, j, registro, snapshots = []) {
+  if (!Number.isSafeInteger(i) || !Number.isSafeInteger(j) || i < 0 || i > j || j > Γ.entradas.length) throw new Error('aportes: ventana fuera de la trayectoria');
+  let { S } = estadoPorSnapshot(Γ, i, registro, snapshots);
+  const out = [];
+  for (let k = i + 1; k <= j; k++) {
+    const e = Γ.entradas[k - 1];
+    out.push(proy.f(e, proy.leeEstado ? { k, parametros: S.parametros, S } : { k, parametros: S.parametros }));
+    S = transformar(S, e, registro);
+  }
+  return out;
+}
+/** ⊗ de una lista de elementos del monoide (unidad si está vacía). */
+export const plegar = (monoide, ms) => ms.reduce((a, b) => monoide.op(a, b), structuredClone(monoide.unidad));
+
+/**
+ * Resolución reutilizar / actualizar / reconstruir. Pura.
+ * args = {proy, guardado: null | {Y, checkpoint} (clásica) | {acum, checkpoint} (monoidal), trayectoria (Γ local verificada:
+ *         {streamId, g, entradas, hashes}), i? = 0, m, registro, snapshots?: [snap…], tRef?}
+ * → {accion: 'REUTILIZAR'|'ACTUALIZAR'|'RECONSTRUIR'|'DISCONTINUIDAD', Y, acum? (monoidal), checkpoint, desde}
+ * Forma clásica: tabla §7.4 de la fase 1 (exige i = 0). Forma monoidal: tabla §7.3 de la enmienda.
+ */
+export function resolverProyeccion(args) {
+  return esMonoidal(args.proy) ? resolverMonoidal(args) : resolverClasica(args);
+}
+function resolverClasica({ proy, guardado, trayectoria: Γ, i = 0, m, registro, snapshots = [], tRef }) {
   const nLocal = Γ.entradas.length;
+  if (i !== 0) throw new Error('forma clásica: solo ventana (0, m]');
   if (!Number.isSafeInteger(m) || m < 0 || m > nLocal) throw new Error('corte fuera de la trayectoria local');
   const cp = k => ({ streamId: Γ.streamId, n: k, h: Γ.hashes[k], ver: proy.ver, epoca: epocaEn(Γ, k), ...(proy.sensibleATiempo ? { tRef } : {}) });
   const ctxPi = (S, k) => ({ registro, tRef, h: Γ.hashes[k], hashes: Γ.hashes.slice(0, k + 1), parametros: S.parametros });
   const reconstruir = accion => {
-    let desde = 0, S = null;
-    const validos = snapshots.filter(s => s && s.n <= m).sort((a, b) => b.n - a.n);
-    for (const s of validos) { const R = restaurarSnapshot(s, Γ.hashes, registro); if (R) { S = R; desde = s.n; break; } }
-    if (!S) S = estadoInicial(Γ.g, registro);
-    S = fold(S, Γ.entradas.slice(desde, m), registro);
+    const { S, desde } = estadoPorSnapshot(Γ, m, registro, snapshots);
     return { accion, Y: proy.pi(S, ctxPi(S, m)), checkpoint: cp(m), desde };
   };
   if (!guardado) return reconstruir('RECONSTRUIR');
@@ -651,6 +707,30 @@ export function resolverProyeccion({ proy, guardado, trayectoria: Γ, m, registr
     return { accion: 'ACTUALIZAR', Y, checkpoint: cp(m), desde: c.n };
   }
   return reconstruir('RECONSTRUIR');
+}
+/**
+ * E1 · forma monoidal sobre la ventana (i, m]. Se guarda acum ∈ M (nunca obs(acum)); Y = obs(acum, ctx_m) se calcula SIEMPRE.
+ * checkpoint = {streamId, n: m, h: h_m, ver, epoca: ε_m [, i, hI: h_i si i > 0]} (sin tRef: E1.4b).
+ * desde = posición desde la que se calcularon aportes (i al reconstruir; c.n al reutilizar o actualizar).
+ * Precisión del verificador: un checkpoint con c.n < i es DISCONTINUIDAD (su acum no puede ser el de la ventana).
+ */
+function resolverMonoidal({ proy, guardado, trayectoria: Γ, i = 0, m, registro, snapshots = [], tRef }) {
+  const nLocal = Γ.entradas.length;
+  if (!Number.isSafeInteger(i) || !Number.isSafeInteger(m) || i < 0 || i > m || m > nLocal) throw new Error('ventana fuera de la trayectoria local');
+  const checkpoint = { streamId: Γ.streamId, n: m, h: Γ.hashes[m], ver: proy.ver, epoca: epocaEn(Γ, m), ...(i > 0 ? { i, hI: Γ.hashes[i] } : {}) };
+  const responder = (accion, acum, desde) => {
+    const { S } = estadoPorSnapshot(Γ, m, registro, snapshots);
+    const ctxObs = proy.leeEstado ? { parametros: S.parametros, S, tRef } : { parametros: S.parametros, tRef };
+    return { accion, Y: proy.obs(structuredClone(acum), ctxObs), acum, checkpoint, desde };
+  };
+  const reconstruir = accion => responder(accion, plegar(proy.monoide, aportes(proy, Γ, i, m, registro, snapshots)), i);
+  if (!guardado) return reconstruir('RECONSTRUIR');
+  const c = guardado.checkpoint;
+  if (c.ver !== proy.ver || (c.i ?? 0) !== i || (i > 0 && c.hI !== Γ.hashes[i])) return reconstruir('RECONSTRUIR');
+  if (c.streamId !== Γ.streamId || !Number.isSafeInteger(c.n) || c.n < i || c.n > nLocal || Γ.hashes[c.n] !== c.h || c.epoca !== epocaEn(Γ, c.n)) return reconstruir('DISCONTINUIDAD');
+  if (c.n > m) return reconstruir('RECONSTRUIR'); // retroceder con inv es una optimización de la fase 2
+  if (c.n === m) return responder('REUTILIZAR', structuredClone(guardado.acum), c.n);
+  return responder('ACTUALIZAR', proy.monoide.op(structuredClone(guardado.acum), plegar(proy.monoide, aportes(proy, Γ, c.n, m, registro, snapshots))), c.n);
 }
 
 // Proyecciones propias del núcleo (§7.7). pi(S, ctx) con ctx = {registro, tRef, h, hashes, parametros}; g(Y, e, ctx).
@@ -698,19 +778,34 @@ export function cerrarCorte(σ0, tray) {
   }
   return { resultado: 'CERRADO', σ };
 }
-/** Π multi‑trayectoria: solo sobre cortes cerrados. tray[X] debe incluir g. φ(estados por StreamID). */
+/**
+ * Π multi‑trayectoria: solo sobre cortes cerrados. tray[X] debe incluir g. Cuarto argumento:
+ *  - φ(estados por StreamID) (forma clásica), o
+ *  - una proyección MONOIDAL (E1.5): exige monoide.conmutativo (si no, NO_CONMUTATIVO, antes de mirar el corte);
+ *    valor = ⊗_X acum_X(0, σ_X) (el orden no importa; se usa el de StreamID). obs NO se aplica aquí: C_ε es por trayectoria.
+ */
 export function proyectarCorte(σ, tray, registro, φ) {
+  if (esMonoidal(φ) && φ.monoide.conmutativo !== true) return { resultado: 'NO_CONMUTATIVO' };
   if (!esCerrado(σ, tray)) return { resultado: 'NO_CERRADO' };
+  if (esMonoidal(φ)) {
+    let acum = structuredClone(φ.monoide.unidad);
+    for (const X of Object.keys(σ).sort()) acum = φ.monoide.op(acum, plegar(φ.monoide, aportes(φ, tray[X], 0, σ[X], registro)));
+    return { resultado: 'OK', valor: acum };
+  }
   const estados = {};
   for (const X of Object.keys(σ).sort()) estados[X] = fold(estadoInicial(tray[X].g, registro), tray[X].entradas.slice(0, σ[X]), registro);
   return { resultado: 'OK', valor: φ(estados) };
 }
-/** Compose como coproducto (L25): conserva procedencia; el mismo hecho desde dos StreamID ⇒ CONFLICTO. */
-export function componer(aportes) {
+/** Compose como coproducto (L25): conserva procedencia; el mismo hecho desde dos StreamID ⇒ CONFLICTO.
+ *  E8: el coproducto se indexa por StreamID: dos aportes con el mismo StreamID son dos copias ⇒ STREAM_DUPLICADO.
+ *  Las claves se definen como propiedades propias (una clave «__proto__» es un hecho, no un prototipo). */
+export function componer(aportesC) {
+  const vistos = new Set();
+  for (const { streamId } of aportesC) { if (vistos.has(streamId)) return { resultado: 'STREAM_DUPLICADO', streamId }; vistos.add(streamId); }
   const hechos = {};
-  for (const { streamId, hechos: hs } of aportes) for (const [clave, valor] of Object.entries(hs)) {
+  for (const { streamId, hechos: hs } of aportesC) for (const [clave, valor] of Object.entries(hs)) {
     if (Object.hasOwn(hechos, clave) && hechos[clave].streamId !== streamId) return { resultado: 'CONFLICTO', clave, streams: [hechos[clave].streamId, streamId] };
-    hechos[clave] = { streamId, valor };
+    Object.defineProperty(hechos, clave, { value: { streamId, valor }, enumerable: true, writable: true, configurable: true });
   }
   return { resultado: 'COMPUESTO', hechos };
 }
@@ -721,19 +816,23 @@ export function componer(aportes) {
  * Conflictos(O) = ids con dos requisitos distintos (por CV). Δ = {o ∈ O dedup. por (id, contenido) : id ∉ Conflictos ∧ ¬rec(o,A)}.
  * Exceso = Reconocidos(A) ∖ id(O). Pura: no escribe nada.
  */
+// E7: las identidades son valores CV y se comparan por hex(CV(id)) (una lista [a, 1] repetida en dos objetos distintos
+// es UNA identidad). Una id que no es CV lanza. conflictos y exceso devuelven las identidades (primera aparición).
+const claveId = ι => bytesAHex(cv(ι));
 export function diferencia(O, A, instancia) {
-  const contenidos = new Map();
-  for (const o of O) { const ι = instancia.id(o); const c = bytesAHex(cv(o)); if (!contenidos.has(ι)) contenidos.set(ι, new Set()); contenidos.get(ι).add(c); }
-  const conflictos = [...contenidos].filter(([, cs]) => cs.size > 1).map(([ι]) => ι);
-  const enConflicto = new Set(conflictos);
+  const ids = O.map(o => instancia.id(o)), claves = ids.map(claveId);
+  const contenidos = new Map(), primera = new Map();
+  O.forEach((o, j) => { const k = claves[j]; if (!contenidos.has(k)) { contenidos.set(k, new Set()); primera.set(k, ids[j]); } contenidos.get(k).add(bytesAHex(cv(o))); });
+  const enConflicto = new Set([...contenidos].filter(([, cs]) => cs.size > 1).map(([k]) => k));
+  const conflictos = [...enConflicto].map(k => primera.get(k));
   const vistos = new Set(); const delta = [];
-  for (const o of O) {
-    const ι = instancia.id(o);
-    if (enConflicto.has(ι) || vistos.has(ι)) continue;
-    vistos.add(ι);
+  O.forEach((o, j) => {
+    const k = claves[j];
+    if (enConflicto.has(k) || vistos.has(k)) return;
+    vistos.add(k);
     if (!instancia.rec(o, A)) delta.push(o);
-  }
-  const exceso = instancia.reconocidos ? [...instancia.reconocidos(A)].filter(ι => !contenidos.has(ι)) : [];
+  });
+  const exceso = instancia.reconocidos ? [...instancia.reconocidos(A)].filter(ι => !contenidos.has(claveId(ι))) : [];
   return { delta, conflictos, exceso };
 }
 
@@ -757,17 +856,20 @@ export const REGLA_NODO = Object.freeze({
 // ═════════════════════════════════════════════════════════════════════════════════════════
 const claveOk = c => typeof c === 'string' && c.length > 0;
 const requiereOk = r => r === undefined || (esMapa(r) && Object.keys(r).length === 2 && esHex(r.stream, 16) && claveOk(r.clave));
+const requiereSidOk = r => r === undefined || (esMapa(r) && Object.keys(r).length === 2 && esHex(r.stream, 16) && esHex(r.sid));
 const soloClaves = (a, obligatorias, opcionales = []) => esMapa(a) && obligatorias.every(k => Object.hasOwn(a, k))
   && Object.keys(a).every(k => obligatorias.includes(k) || opcionales.includes(k));
 
 // contador@1: registro clave‑valor abstracto con orden de creación (T emergente, L28) y valor por defecto (L29).
 //   D = {orden: [clave…] (orden de primera aparición), v: {clave ↦ entero explícito}}
-//   sumar{clave,q} · fijar{clave,v}; ambas con `requiere: {stream, clave}` opcional (lectura estable de otro ámbito).
+//   sumar{clave,q} · fijar{clave,v}; ambas con `requiere: {stream, clave}` opcional (lectura estable de otro ámbito)
+//   y `requiereSid: {stream, sid}` opcional (predicado estable del núcleo `nucleo.sid`, E2).
 //   Σ: límite ∈ {ninguno, ≥0} (inicial ≥0), defecto ∈ ℤ ∪ {desconocido} (inicial 0).
 const baseDe = (D, clave, P) => (Object.hasOwn(D.v, clave) ? D.v[clave] : Number.isSafeInteger(P.defecto) ? P.defecto : null);
 function guardaContador(D, e, P, lect) {
   const a = e.args;
   if (a.requiere !== undefined && !lect.estable(a.requiere.stream, 'existe', a.requiere.clave)) return 'requisito';
+  if (a.requiereSid !== undefined && !lect.estable(a.requiereSid.stream, 'nucleo.sid', a.requiereSid.sid)) return 'requisitoSid';
   const base = baseDe(D, a.clave, P);
   let nuevo;
   if (e.tipo === 'fijar') nuevo = a.v;
@@ -796,8 +898,8 @@ const establesContador = {
   posicion: (D, i, clave) => D.orden[i - 1] === clave,           // estable: el orden solo se extiende (L28)
 };
 const tiposContador1 = {
-  sumar: a => soloClaves(a, ['clave', 'q'], ['requiere']) && claveOk(a.clave) && Number.isSafeInteger(a.q) && requiereOk(a.requiere),
-  fijar: a => soloClaves(a, ['clave', 'v'], ['requiere']) && claveOk(a.clave) && Number.isSafeInteger(a.v) && requiereOk(a.requiere),
+  sumar: a => soloClaves(a, ['clave', 'q'], ['requiere', 'requiereSid']) && claveOk(a.clave) && Number.isSafeInteger(a.q) && requiereOk(a.requiere) && requiereSidOk(a.requiereSid),
+  fijar: a => soloClaves(a, ['clave', 'v'], ['requiere', 'requiereSid']) && claveOk(a.clave) && Number.isSafeInteger(a.v) && requiereOk(a.requiere) && requiereSidOk(a.requiereSid),
 };
 export const CONTADOR_1 = Object.freeze({
   id: 'contador@1', D0: { orden: [], v: {} }, tipos: tiposContador1, guarda: guardaContador, T: Tcontador,
@@ -827,8 +929,34 @@ export const CONJUNTO_1 = Object.freeze({
   sigma: { 'máximo': { dominio: v => v === 'ilimitado' || (Number.isSafeInteger(v) && v >= 0), inicial: 'ilimitado' } },
   estables: {},
 });
+// compuesto@1 (E3, E4 y «posición en T_r»): tipos patrón y una acción compuesta `lote` con tiposInternos.
+//   tipos: 'lote' {acciones:[tipo…]} · 'hacer:*' {x} · 'hacer:largo*' {x, largo} (patrón más largo) · 'hacer:exacto' {} (exacta)
+//          · 'nacer' {} · 'a' {} · 'b' {}. El validador recibe (args, tipo).
+//   D = {nd (entradas de dominio aplicadas), nacidos: [posición i de cada `nacer`], hechos: [tipo…]}.
+//   T calcula la posición de la entrada sin recibirla: i = nd + e.ε + 1 (enmienda, «Lo que NO cambia»).
+const tipoInternoOk = t => typeof t === 'string' && t.length > 0 && t !== 'lote';
+export const COMPUESTO_1 = Object.freeze({
+  id: 'compuesto@1', D0: { nd: 0, nacidos: [], hechos: [] },
+  tipos: Object.freeze({
+    lote: a => soloClaves(a, ['acciones']) && Array.isArray(a.acciones) && a.acciones.length > 0 && a.acciones.every(tipoInternoOk),
+    'hacer:*': (a, t) => soloClaves(a, ['x']) && claveOk(a.x) && typeof t === 'string' && t.length > 'hacer:'.length,
+    'hacer:largo*': (a, t) => soloClaves(a, ['x', 'largo']) && claveOk(a.x) && a.largo === true && typeof t === 'string',
+    'hacer:exacto': a => soloClaves(a, []),
+    nacer: a => soloClaves(a, []), a: a => soloClaves(a, []), b: a => soloClaves(a, []),
+  }),
+  tiposInternos: e => (e.tipo === 'lote' ? [...e.args.acciones] : []),
+  guarda: () => 'ok',
+  T: (D, e) => ({ nd: D.nd + 1, nacidos: e.tipo === 'nacer' ? [...D.nacidos, D.nd + e.epoca + 1] : D.nacidos, hechos: [...D.hechos, e.tipo] }),
+  sigma: { modo: { dominio: enumerado('uno', 'dos', 'tres'), inicial: 'uno' } },
+  estables: {},
+});
+// todo@1 (E3): un patrón '*' acepta cualquier tipo de dominio y NUNCA captura FijarParámetro ni Sellar.
+export const TODO_1 = Object.freeze({
+  id: 'todo@1', D0: { n: 0 }, tipos: Object.freeze({ '*': a => a === null }), guarda: () => 'ok', T: D => ({ n: D.n + 1 }), sigma: {}, estables: {},
+});
 export const REGISTRO_JUGUETE = Object.freeze({
   'contador@1': CONTADOR_1, 'contador@2': CONTADOR_2, 'conjunto@1': CONJUNTO_1, 'nucleo.nodo@1': REGLA_NODO,
+  'compuesto@1': COMPUESTO_1, 'todo@1': TODO_1,
 });
 
 // Proyecciones de juguete. UNIVERSO fijo de posiciones para el «Flat» de §7.1.
@@ -870,3 +998,41 @@ export const JUGUETE_PROY = Object.freeze({
   umbral: Object.freeze({ id: 'juguete.umbral', ver: 1, sensibleAEpoca: false, sensibleATiempo: true,
     pi: (S, ctx) => (S.D && S.D.v ? Object.keys(S.D.v).filter(k => S.D.v[k] >= ctx.tRef).sort() : []) }),
 });
+
+// Proyecciones MONOIDALES de juguete (E1). f(e, ctx) con ctx = {k, parametros (C_ε antes de e) [, S: S_{k−1}]};
+// monoide = {unidad, op, conmutativo?, idempotente?}; obs(acum, {parametros (C_{ε_j}) [, S: S_j], tRef}).
+const sumaMapas = (a, b) => { const o = {}; for (const [k, v] of [...Object.entries(a), ...Object.entries(b)]) Object.defineProperty(o, k, { value: (Object.hasOwn(o, k) ? o[k] : 0) + v, enumerable: true, writable: true, configurable: true }); return o; };
+const ordenado = o => Object.fromEntries(Object.keys(o).sort().map(k => [k, o[k]]));
+export const JUGUETE_MONO = Object.freeze({
+  // E1.1: «número de acciones por tipo». No es función de S. Conmutativo.
+  conteo: Object.freeze({ id: 'mono.conteo', ver: 1, sensibleAEpoca: false, sensibleATiempo: false,
+    f: e => ({ [e.tipo]: 1 }), monoide: Object.freeze({ unidad: {}, op: sumaMapas, conmutativo: true }), obs: acum => ordenado(acum) }),
+  // (suma, mínimo prefijo) de los `sumar`: NO conmutativo. obs = max(0, suma) no es congruente (L10) y no hace falta.
+  sumaMinPref: Object.freeze({ id: 'mono.sumaMinPref', ver: 1, sensibleAEpoca: false, sensibleATiempo: false,
+    f: e => (e.clase === 'dominio' && e.tipo === 'sumar' ? [e.args.q, Math.min(0, e.args.q)] : [0, 0]),
+    monoide: Object.freeze({ unidad: [0, 0], op: ([s1, m1], [s2, m2]) => [s1 + s2, Math.min(m1, s1 + m2)] }),
+    obs: ([s, m]) => ({ suma: s, minPref: m, positivo: Math.max(0, s) }) }),
+  // último: posición de la última entrada de dominio. Idempotente, no conmutativo.
+  ultimo: Object.freeze({ id: 'mono.ultimo', ver: 2, sensibleAEpoca: false, sensibleATiempo: false,
+    f: (e, ctx) => (e.clase === 'dominio' ? [ctx.k] : []), monoide: Object.freeze({ unidad: [], op: (a, b) => (b.length ? b : a), idempotente: true }),
+    obs: acum => (acum.length ? acum[0] : null) }),
+  // cada aporte usa el contrato de SU entrada (E1.4a): suma de `sumar` agrupada por el `límite` vigente en esa entrada.
+  porEpoca: Object.freeze({ id: 'mono.porEpoca', ver: 1, sensibleAEpoca: false, sensibleATiempo: false,
+    f: (e, ctx) => (e.clase === 'dominio' && esContador(ctx.parametros) && e.tipo === 'sumar' ? { [ctx.parametros['límite']]: e.args.q } : {}),
+    monoide: Object.freeze({ unidad: {}, op: sumaMapas, conmutativo: true }),
+    obs: (acum, ctx) => ({ total: ordenado(acum), limiteVigente: ctx.parametros['límite'] ?? null }) }),
+  // L15 / E1.4b: solo obs lee tRef ⇒ el checkpoint no lleva tRef.
+  umbral: Object.freeze({ id: 'mono.umbral', ver: 1, sensibleAEpoca: false, sensibleATiempo: true,
+    f: e => (e.clase === 'dominio' && e.tipo === 'sumar' ? { [e.args.clave]: e.args.q } : {}),
+    monoide: Object.freeze({ unidad: {}, op: sumaMapas, conmutativo: true }),
+    obs: (acum, ctx) => Object.keys(acum).filter(k => acum[k] >= ctx.tRef).sort() }),
+  // E1.2 (leeEstado): la variación |v − base(S_{k−1})| de cada `fijar` depende del estado previo. obs lee S_j.
+  merma: Object.freeze({ id: 'mono.merma', ver: 1, sensibleAEpoca: false, sensibleATiempo: false, leeEstado: true,
+    f: (e, ctx) => {
+      if (e.clase !== 'dominio' || e.tipo !== 'fijar' || !esContador(ctx.parametros)) return 0;
+      const b = baseDe(ctx.S.D, e.args.clave, ctx.parametros); return Math.abs(e.args.v - (b ?? 0));
+    },
+    monoide: Object.freeze({ unidad: 0, op: (a, b) => a + b, conmutativo: true }),
+    obs: (acum, ctx) => ({ merma: acum, n: ctx.S.n }) }),
+});
+
