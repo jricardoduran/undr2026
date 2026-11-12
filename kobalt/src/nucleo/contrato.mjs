@@ -5,7 +5,8 @@
 //   Σ_nucleo (parámetros reservados `nucleo.*`)              ↔ sigmaNucleo
 //   Σ_r completa = Σ_nucleo ⊕ Σ_r                            ↔ sigmaCompleta
 //   coincide(π, tipo)                                        ↔ coincide
-//   Authorized_{C_ε}(u, e)                                   ↔ autorizado
+//   Authorized_{C_ε}(u, e) con tiposInternos (E4)            ↔ autorizado(parametros, u, e, regla)
+//   validador de tipo, exacto o patrón 'prefijo*' (E3)       ↔ validadorDe(tipos, tipo)
 //   parámetros' = inic(Σ_{r'}) ⊕ vigentes|_{dom Σ_{r'}} ⊕ m   ↔ recomponerParametros
 //   S = (n, ε, C_ε, sellado, Sids, D)                        ↔ {n, epoca, parametros, sellado, sids, D}
 //   S_0                                                      ↔ estadoInicial(g, registro)
@@ -14,10 +15,12 @@
 //   efecto común (n := n+1, Sids[sid] := n, retención)       ↔ efectoComun
 //   T(S, e) con la regla y los parámetros de C_{ε}           ↔ transformar(S, e, registro)
 //   Fold(S, Γ)                                               ↔ fold(S, entradas, registro)
-//   S_k de una trayectoria conocida                          ↔ estadoEnTrayectoria(Γ, k, registro)
+//   S_k = Fold(S_0, Γ_k) de una trayectoria conocida (E5)    ↔ estadoEnTrayectoria(Γ, k, registro)
+//   P_sid(s₀, k) :⟺ ∃ i ≤ k : e_i.sid = s₀ (E2)              ↔ lect.estable(Y, 'nucleo.sid', s₀)
 //
 // Leyes: L4 (Fold es acción del monoide; T pura), L6 (V1–V8 por inducción con las guardas), L7 (las guardas NO son
-// condiciones V_C: el tipo de S no codifica ninguna), L16 (Authorized por capacidades declaradas antes; ε registrada),
+// condiciones V_C: el tipo de S no codifica ninguna), L16 (Authorized por capacidades declaradas antes, también para
+// cada acción interna de una compuesta, E4; ε registrada), L3 (E2: nucleo.sid estable porque Γ solo se extiende),
 // L20 (T_r nunca recibe Lect: exactamente 3 argumentos), L31 (configuración = FijarParámetro, abre época ε+1;
 // todo parámetro tiene dominio y valor inicial en Σ; ningún valor abierto se fija aquí salvo como `inicial`).
 //
@@ -35,15 +38,40 @@ export const claseDe = tipo => (TIPOS_CONTRATO.includes(tipo) ? 'contrato' : 'do
 /** coincide(π, tipo): igualdad exacta, o π termina en `*` y es prefijo de tipo. */
 export const coincide = (patron, tipo) => patron === tipo || (patron.endsWith('*') && tipo.startsWith(patron.slice(0, -1)));
 
-/** Tipos de capacidad que exige e: FijarParámetro(m) ⇒ «FijarParámetro:p» ∀p ∈ dom m; si no, el tipo. */
-const capacidadesExigidas = e => (e.tipo === 'FijarParámetro' ? Object.keys(e.args).map(p => `FijarParámetro:${p}`) : [e.tipo]);
+/**
+ * Tipos de capacidad que exige e (E4): {tipo(e)} ∪ tiposInternos(e).
+ *   FijarParámetro(m) ⇒ {FijarParámetro:p : p ∈ dom m} (el mismo principio: m compone un cambio por parámetro).
+ *   Acción de dominio de una regla con `tiposInternos` ⇒ [tipo, ...tiposInternos(e)] (solo tras G5, que fija la forma).
+ *   Si `tiposInternos` no devuelve una lista de textos ⇒ null: la autorización falla cerrada.
+ */
+function capacidadesExigidas(e, regla) {
+  if (e.tipo === 'FijarParámetro') return Object.keys(e.args).map(p => `FijarParámetro:${p}`);
+  if (e.clase !== 'dominio' || typeof regla?.tiposInternos !== 'function') return [e.tipo];
+  const internos = regla.tiposInternos(e);
+  if (!Array.isArray(internos) || !internos.every(t => typeof t === 'string')) return null;
+  return [e.tipo, ...internos];
+}
 
-/** Authorized_{C_ε}(u, e). `u` es una afirmación del solicitante, no una prueba de autoría (L23). */
-export function autorizado(parametros, u, e) {
+/** Authorized_{C_ε}(u, e) ⟺ ∀τ ∈ {tipo(e)} ∪ tiposInternos(e): ∃π ∈ capacidades(u): coincide(π, τ).
+ *  `u` es una afirmación del solicitante, no una prueba de autoría (L23). */
+export function autorizado(parametros, u, e, regla) {
   const caps = parametros['nucleo.capacidades'] ?? {};
   if (!Object.hasOwn(caps, u) || !Array.isArray(caps[u])) return false;
   const pats = caps[u];
-  return capacidadesExigidas(e).every(t => pats.some(p => coincide(p, t)));
+  const exigidos = capacidadesExigidas(e, regla);
+  return exigidos !== null && exigidos.every(t => pats.some(p => coincide(p, t)));
+}
+
+/** E3: validador del tipo de dominio en `tipos` de la regla. Una clave exacta gana; si no, la clave patrón 'prefijo*'
+ *  de prefijo más largo. Los tipos reservados del núcleo (FijarParámetro, Sellar) nunca se resuelven aquí. → v | null */
+export function validadorDe(tipos, tipo) {
+  if (!tipos || typeof tipo !== 'string' || claseDe(tipo) === 'contrato') return null;
+  if (Object.hasOwn(tipos, tipo)) return tipos[tipo];
+  let mejor = null;
+  for (const k of Object.keys(tipos)) {
+    if (k.endsWith('*') && tipo.startsWith(k.slice(0, -1)) && (mejor === null || k.length > mejor.length)) mejor = k;
+  }
+  return mejor === null ? null : tipos[mejor];
 }
 
 const CAPACIDAD_CONFIGURADORA = 'FijarParámetro:nucleo.capacidades';
@@ -114,25 +142,26 @@ function formaValida(S, e, registro) {
   try { encEntrada(e); } catch { return false; }
   if (e.tipo === 'FijarParámetro') return esMapa(e.args) && Object.keys(e.args).length > 0;
   if (e.tipo === 'Sellar') return true;
-  const regla = registro[S.parametros['nucleo.regla']];
-  return Object.hasOwn(regla.tipos ?? {}, e.tipo) && regla.tipos[e.tipo](e.args) === true;
+  const v = validadorDe(registro[S.parametros['nucleo.regla']].tipos, e.tipo);
+  return typeof v === 'function' && v(e.args, e.tipo) === true; // E3: el validador recibe (args, tipo)
 }
 
-/** S_k de una trayectoria conocida {g, entradas[, estados]} (para G4 y Lect). Si trae estados, se usan. */
+/** S_k = Fold(S_0, Γ_k) de una trayectoria {g, entradas}. E5: `Γ.estados`, si viene, es una proyección sin checkpoint
+ *  y NO se lee (con snapshots validados, ver `estadoPorSnapshot` en snapshot.mjs). */
 export function estadoEnTrayectoria(Γ, k, registro) {
-  if (Array.isArray(Γ.estados) && Γ.estados[k]) return Γ.estados[k];
   return fold(estadoInicial(Γ.g, registro), Γ.entradas.slice(0, k), registro);
 }
 
-/** Lect: SOLO predicados estables (del núcleo, Teorema 7.7, o declarados por la regla de Y), evaluados en S_Y en el
- *  checkpoint (Y, k, h) que la entrada cita en e.deps. Nunca lee la cabeza actual de Y (Teorema 7.6). */
+/** Lect: SOLO predicados estables (del núcleo, Teorema 7.7, o declarados por la regla de Y), evaluados en el checkpoint
+ *  (Y, k, h) que la entrada cita en e.deps. Nunca lee la cabeza actual de Y (Teorema 7.6).
+ *  E2: 'nucleo.sid'(s₀) se evalúa sobre la TRAYECTORIA (∃ i ≤ k : e_i.sid = s₀), estable por L3 sin hipótesis de
+ *  retención; «s₀ ∈ Sids_Y» no lo es (Teorema E2.1). */
 function lectura(e, ctx) {
   const memo = new Map();
   const estadoDe = (stream, k) => {
     const clave = `${stream}:${k}`;
     if (!memo.has(clave)) {
-      const ΓY = ctx.conocidas?.[stream];
-      memo.set(clave, !ΓY || ΓY.hashes.length - 1 < k ? null : estadoEnTrayectoria(ΓY, k, ctx.registro));
+      memo.set(clave, estadoEnTrayectoria(ctx.conocidas[stream], k, ctx.registro));
     }
     return memo.get(clave);
   };
@@ -140,10 +169,11 @@ function lectura(e, ctx) {
     estable(stream, nombre, ...args) {
       const d = e.deps.find(x => x.stream === stream);
       if (!d) return false;
+      const ΓY = ctx.conocidas?.[stream];
+      if (!ΓY || ΓY.hashes.length - 1 < d.k) return false;
+      if (nombre === 'nucleo.sid') { for (let i = 0; i < d.k; i++) if (ΓY.entradas[i].sid === args[0]) return true; return false; }
       const SY = estadoDe(stream, d.k);
-      if (!SY) return false;
       if (nombre === 'nucleo.sellado') return SY.sellado === true;
-      if (nombre === 'nucleo.sid') return Object.hasOwn(SY.sids, args[0]);
       if (nombre === 'nucleo.nAlMenos') return SY.n >= args[0];
       const P = ctx.registro[SY.parametros['nucleo.regla']].estables?.[nombre];
       return P ? P(SY.D, ...args) === true : false;
@@ -177,7 +207,7 @@ export function admitir(S, e, ctx) {
   const { registro } = ctx;
   if (S.sellado) return { ok: false, rechazo: 'SELLADO' };                                                        // G0
   if (!formaValida(S, e, registro)) return { ok: false, rechazo: 'INADMISIBLE', motivo: 'forma' };                // G5
-  if (!autorizado(S.parametros, e.u, e)) return { ok: false, rechazo: 'NO_AUTORIZADO' };                         // G1
+  if (!autorizado(S.parametros, e.u, e, registro[S.parametros['nucleo.regla']])) return { ok: false, rechazo: 'NO_AUTORIZADO' }; // G1 (E4)
   if (Object.hasOwn(S.sids, e.sid)) return { ok: false, rechazo: 'YA_COMPROMETIDO', i: S.sids[e.sid] };          // G2
   if (e.epoca !== S.epoca || (ctx.epocaEsperada !== undefined && ctx.epocaEsperada !== S.epoca)) return { ok: false, rechazo: 'ÉPOCA_CAMBIADA' }; // G3
   for (const d of e.deps) {                                                                                       // G4

@@ -10,6 +10,7 @@
 //   Verificar(copia, desde)                  ↔ verificar
 //   copia material → Γ verificada            ↔ trayectoriaDeCopia
 //   Incorporar (decisión, atómica)           ↔ decidirIncorporacion(Γ, (n,h), [b…], (m,h_m), ctx)
+//   ¿re‑admitir? (nodo.verificarAlIncorporar) ↔ readmitirDe(ctx)   (E6)
 //   Resolver(c, c') sin resolver el FORK     ↔ resolver(hashesA, hashesB)
 //
 // Leyes: L3 (solo se extiende Γ: toda decisión produce bloques a anexar, nunca a editar), L8 (la decisión se toma sobre
@@ -20,6 +21,7 @@
 import { esHex } from './bytes.mjs';
 import { encGenesis, decGenesis, hashGenesisBytes, encEntrada, decEntrada, hashPaso } from './derivacion.mjs';
 import { claseDe, estadoInicial, estadoEnTrayectoria, admitir, transformar } from './contrato.mjs';
+import { REGLA_NODO } from './nodo.mjs';
 
 export const cabezaDe = Γ => ({ n: Γ.entradas.length, h: Γ.hashes[Γ.hashes.length - 1] });
 
@@ -131,8 +133,20 @@ export function trayectoriaDeCopia(copia) {
 }
 
 /**
+ * E6 · ¿re‑admitir al incorporar? Es configuración del nodo (L31): `nodo.verificarAlIncorporar` ∈ {cadena,
+ * cadena+readmisión}. Fuente, en este orden: `ctx.readmitir` explícito (sustituye la configuración en una llamada);
+ * `ctx.nodo.parametros['nodo.verificarAlIncorporar']` (C_ε de Γ_{Nodo_d}); y, sin nodo, el valor `inicial` declarado
+ * en Σ de REGLA_NODO. El código no fija ningún valor propio.
+ */
+export function readmitirDe(ctx) {
+  if (ctx.readmitir !== undefined) return ctx.readmitir === true;
+  const v = ctx.nodo ? ctx.nodo.parametros['nodo.verificarAlIncorporar'] : REGLA_NODO.sigma['nodo.verificarAlIncorporar'].inicial;
+  return v === 'cadena+readmisión';
+}
+
+/**
  * Incorporar (§5.3), decisión pura y ATÓMICA: o se acepta el segmento completo o no se aplica nada.
- * ctx = {registro, conocidas?, readmitir? = true}. La re‑admisión evalúa cada e_i sobre S_{i−1}, es decir, con el
+ * ctx = {registro, conocidas?, readmitir?, nodo?} (ver readmitirDe). La re‑admisión evalúa cada e_i sobre S_{i−1}, es decir, con el
  * contrato de la época REGISTRADA C_{ε_{i−1}}, nunca con el actual (L7, L16).
  * → {resultado:'INCORPORADO', n, h} | {resultado:'READMISIÓN_PENDIENTE', i, dep, n, h} (la cadena SÍ se incorpora)
  *   | {resultado:'CABEZA_CAMBIADA', n, h} | {resultado:'DISCONTINUIDAD', i, motivo[, rechazo]}
@@ -143,7 +157,7 @@ export function decidirIncorporacion(Γ, cabeza, bloques, cabezaFinal, ctx) {
   let S = estadoEnTrayectoria(Γ, actual.n, ctx.registro);
   const seg = verificarSegmento(actual.h, actual.n, S.epoca, bloques, cabezaFinal);
   if (!seg.ok) return { resultado: 'DISCONTINUIDAD', i: seg.i, motivo: seg.motivo };
-  const readmitir = ctx.readmitir ?? true;
+  const readmitir = readmitirDe(ctx);
   let pendiente = null;
   for (let j = 0; j < seg.entradas.length; j++) {
     const e = seg.entradas[j], i = actual.n + j + 1;

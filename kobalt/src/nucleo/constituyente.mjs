@@ -78,12 +78,13 @@ export async function appendIfHead(almacen, streamId, cabeza, mecanismo, sol, ct
   return { resultado: 'COMPROMETIDO', n: d.n, h: d.h, epoca: d.epoca };
 }
 
-/** Incorporar (§5.3): verifica y re‑admite; ATÓMICO (un único compare‑and‑append con todo el segmento). */
+/** Incorporar (§5.3): verifica y, según la configuración del nodo (E6), re‑admite; ATÓMICO (un único compare‑and‑append
+ *  con todo el segmento). ctx = {registro, readmitir?, nodo?}. */
 export async function incorporar(almacen, streamId, cabeza, bloques, cabezaFinal, ctx) {
   const Γ = await leerTrayectoria(almacen, streamId);
   if (!Γ) return { resultado: 'INEXISTENTE' };
   const conocidas = await conocidasPara(almacen, streamsCitados(bloques), streamId);
-  const r = decidirIncorporacion(Γ, cabeza, bloques, cabezaFinal, { registro: ctx.registro, readmitir: ctx.readmitir, conocidas });
+  const r = decidirIncorporacion(Γ, cabeza, bloques, cabezaFinal, { registro: ctx.registro, readmitir: ctx.readmitir, nodo: ctx.nodo, conocidas });
   if (r.resultado !== 'INCORPORADO' && r.resultado !== 'READMISIÓN_PENDIENTE') return r;
   const m = await almacen.anexarSiCabeza(streamId, cabeza, bloques, cabezaFinal);
   if (m.resultado !== 'OK') return { resultado: 'CABEZA_CAMBIADA', n: m.n, h: m.h };
