@@ -328,3 +328,10 @@ Ninguno de estos parámetros cambia una respuesta: solo cuándo y cómo se calcu
 **Contradicciones con leyes:** ninguna. Las tres precisiones de la cabecera corrigen documentos, no leyes.
 **Supuestos empíricos:** ninguno.
 **Dependencia con la fase 3:** el lenguaje de expresiones (§4.2) y el registro de lectores son la **única** pieza que la fase 3 reutiliza. Debe implementarse primero (§4.2 es autocontenido).
+
+---
+
+## Anexo · Precisiones de la revisión del 2026‑11‑12
+Fuente: `kobalt/docs/2026-11-12_AMPLIACION_V3_Y_REVISION.md`, §1 y §2.
+1. **Toda pregunta determinista es un homomorfismo** (a `End(S)`, o al producto en corona si depende del estado). Lo que se clasifica no es «monoidal o no», sino el **tamaño** del monoide mínimo (cociente de Nerode). Ese tamaño decide la materialización, las ventanas por prefijos (grupo) y la distribución (conmutatividad). El conteo absoluto vive en el monoide pequeño `{+q}∪{=h}`, no en `(ℤ,+)`.
+2. **Las guardas no intervienen en la lectura.** Actúan solo al admitir; una pregunta se evalúa sobre `Γ` ya comprometida y es la evaluación pura de un homomorfismo.

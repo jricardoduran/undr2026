@@ -608,3 +608,17 @@ Notación de rechazo: `NA` = `NO_AUTORIZADO`; `IN(m)` = `INADMISIBLE(m)`; `forma
 | F7 Idempotencia y autoridad | `Contar` con `sid = demo‑1`; el mismo `sid` y contenido ⇒ `YA_COMPROMETIDO(i)`; el mismo `sid` con `h = 999` ⇒ `YA_COMPROMETIDO(i)` y la puerta informa `CONFLICTO_SID` (C5); `U1: Contar` ⇒ `NA`; `verificar` = OK | — |
 | F8 UI y automatización | (fase 6) la misma puerta para ambos | Fuera de esta fase |
 | F9 Recuperación | copia = `(g, bloques)`; restaurar = `crear(g)` + `incorporar` ⇒ la misma cabeza y la misma `q_cat`; mezclar con otra `Γ` ⇒ `GÉNESIS_DISTINTA` o `CABEZA_CAMBIADA`; un respaldo v1 (`sha256/256`) sin derivación registrada ⇒ rechazo | Igual que la v2, con el contrato de derivación del núcleo |
+
+---
+
+## Anexo · Reducción a un solo verbo y modalidades de la v3 (2026‑11‑12)
+Fuente: `kobalt/docs/2026-11-12_AMPLIACION_V3_Y_REVISION.md`, §3, §4 y §6.
+1. **Un solo verbo.** Una acción de dominio es un elemento de soporte finito `δ ∈ ∏_{(e,k)} M_{clase(k)}`, y aplicarla actúa coordenada a coordenada. `Nacer`, `Fijar`, `Añadir`, `Quitar` y `Disparar` son **formas** de `δ`: nacer es aplicar `δ` en coordenadas frescas `(i,j)`; `Lote` es el producto del monoide. El intérprete es una sola función por clase de coordenada. Los nombres (`Disparar:Vender`…) son plantillas de dato y sirven para las capacidades (E3/E4). Completitud: cada clase contiene constantes. Intención: `+(−1) ≠ =9`.
+2. **Modalidades de venta de la v3 como plantillas:**
+   - solo registro: `Vender` con las unidades pendientes en `pend⁰_s`, no elegible para la pregunta prudente;
+   - demanda suave: `Vender` con las unidades en `pend_s`;
+   - asignación firme: `Vender·Asignar`;
+   - inmediata: `Vender·Asignar·Despachar`.
+
+   [V] 0 discrepancias frente al `core.js` de la v3 en 22.804 acciones. «Solo registro» frente a «suave» es un hecho de elegibilidad (L15); la disponibilidad física, libre o prudente es una pregunta sin evento.
+3. **Oráculo de aceptación:** se añaden los escenarios de la v3 (modalidades y lectura físico/libre/prudente) a los de la v2.
