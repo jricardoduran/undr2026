@@ -130,13 +130,22 @@ export const FORMA_INICIAL = Object.freeze({
     },
     cliente: { características: { nombre: asig(txt(1, 120), R_), contacto: asig(txt(0, 200)) } },
     usuario: { κ: ['principal'], características: { nombre: asig(txt(1, 120), R_), principal: asig(txt(1, 200), { ...R_, ...I_ }), papel: asig(txt(0, 80)) } },
-    venta: {
-      alNacer: 'Abrir',
+    // Anexo D: el contexto de una venta (canal, cliente, actor) vive en el PEDIDO; la venta lo hereda por `padre`.
+    pedido: {
       características: {
+        canal: asig(txt(1, 80), { ...R_, ...I_, ...H_ }),
+        cliente: { clase: 'referencia', cardinalidad: 'uno', valor: ref('cliente'), ...I_, ...H_ },
+        actor: asig(txt(1, 200), { ...I_, ...H_ }),
+        '*:*': SIMPLE,
+      },
+    },
+    venta: {
+      padre: 'pedido', alNacer: 'Abrir',
+      características: {
+        pedido: { clase: 'referencia', cardinalidad: 'uno', valor: ref('pedido'), ...R_, ...I_ },
         variante: { clase: 'referencia', cardinalidad: 'uno', valor: ref('variante'), ...R_, ...I_, admite: { fijar: ADMITE_VENTA_VARIANTE } },
         bodega: { clase: 'referencia', cardinalidad: 'uno', valor: ref('bodega'), ...R_, ...I_ },
-        precio: asig(ent(0, D12), { ...R_, ...I_ }), canal: asig(txt(1, 80), { ...R_, ...I_ }),
-        cliente: { clase: 'referencia', cardinalidad: 'uno', valor: ref('cliente'), ...I_ }, '*:*': SIMPLE,
+        precio: asig(ent(0, D12), { ...R_, ...I_ }), '*:*': SIMPLE,
       },
     },
     devolución: { alNacer: 'Abrir', características: { venta: { clase: 'referencia', cardinalidad: 'uno', valor: ref('venta'), ...R_, ...I_ } } },
@@ -210,6 +219,11 @@ export const RED_INICIAL = Object.freeze({
       ...['pend', 'pend⁰', 'asig', 'desp'].map(f => término(f, coefS, K0)),
       ...['sol', 'recibido'].map(f => término(f, coefD, [car(X('i0'), 'venta')])),
       ...['porCobrar', 'cobrado', 'reembolsado'].map(f => término(f, V(-1), K0))] },
+    // VF13 (Anexo D.5): p·(pend + pend⁰ + asig + desp + cancel + Σ(sol + recibido)) = porCobrar + cobrado + reembolsado + anulado
+    { nombre: 'VF13', términos: [
+      ...['pend', 'pend⁰', 'asig', 'desp', 'cancel'].map(f => término(f, coefS, K0)),
+      ...['sol', 'recibido'].map(f => término(f, coefD, [car(X('i0'), 'venta')])),
+      ...['porCobrar', 'cobrado', 'reembolsado', 'anulado'].map(f => término(f, V(-1), K0))] },
     { nombre: 'VF8.devolución', términos: [término('sol', coefD, K0), término('recibido', coefD, K0), término('cupo', V(-1), K0), término('cupoUsado', V(-1), K0)] },
     { nombre: 'VF9', términos: [término('abierta', V(1), K0)], rango: [0, 1] },
   ],
@@ -229,23 +243,39 @@ export const TIPO_FIBRA = 'variante';
 // Plantillas de capacidades y alcance (§3, con P‑E y el depósito pend⁰ del Anexo): datos de configuración, no código.
 export const CAPACIDADES = Object.freeze({
   propietario: ['*'],
-  cajero: ['Lote', 'Nacer:venta', 'Nacer:cliente', 'Nacer:devolución', 'Disparar:Vender', 'Disparar:Vender.registro', 'Disparar:Asignar', 'Disparar:Despachar', 'Disparar:Cobrar', 'Disparar:Devolver'],
-  vendedor: ['Lote', 'Nacer:producto', 'Nacer:variante', 'Nacer:cliente', 'Nacer:venta', 'Nacer:devolución', 'Fijar:producto.*', 'Fijar:variante.*',
+  cajero: ['Lote', 'Nacer:pedido', 'Nacer:venta', 'Nacer:cliente', 'Nacer:devolución', 'Disparar:Vender', 'Disparar:Vender.registro', 'Disparar:Asignar', 'Disparar:Despachar', 'Disparar:Cobrar', 'Disparar:Devolver'],
+  vendedor: ['Lote', 'Nacer:producto', 'Nacer:variante', 'Nacer:cliente', 'Nacer:pedido', 'Nacer:venta', 'Nacer:devolución', 'Fijar:producto.*', 'Fijar:variante.*',
     'Añadir:producto.galería', 'Quitar:producto.galería', 'Disparar:Vender', 'Disparar:Vender.registro', 'Disparar:Cobrar', 'Disparar:Cancelar', 'Disparar:Devolver'],
   lector: [],
 });
-export const ALCANCE = Object.freeze({ cajero: ['Disparar:*'], vendedor: ['Fijar:*', 'Nacer:variante', 'Disparar:*'] });
+// `Nacer:pedido` NO entra en ningún alcance (no tiene padre ni objetivo: fallaría cerrado); `Nacer:venta` sí (dueño(pedido) = u).
+export const ALCANCE = Object.freeze({ cajero: ['Nacer:venta', 'Disparar:*'], vendedor: ['Fijar:*', 'Nacer:variante', 'Nacer:venta', 'Disparar:*'] });
 
-// Plantillas de venta (Anexo, modalidades de la v3): sintaxis de la puerta; lo comprometido es el Lote [P].
-export const PLANTILLAS = Object.freeze({
-  'venta.registro': ['Vender.registro'],
-  'venta.suave': ['Vender'],
-  'venta.firme': ['Vender', 'Asignar'],
-  'venta.inmediata': ['Vender', 'Asignar', 'Despachar'],
+// Plantillas de venta (Anexo D.3): una modalidad es la FORMA del Lote que se compromete; no hay un campo «modalidad».
+export const MODALIDADES = Object.freeze({
+  entregarAhora: ['Vender', 'Asignar', 'Despachar'],
+  apartar: ['Vender', 'Asignar'],
+  pedido: ['Vender'],
+  registrar: ['Vender.registro'],
 });
-export function plantillaVenta(nombre, valores, q) {
-  return { tipo: 'Lote', args: { acciones: [{ tipo: 'Nacer:venta', args: { valores } }, ...PLANTILLAS[nombre].map(t => ({ tipo: `Disparar:${t}`, args: { s: { nacido: 0 }, q } }))] } };
+/** plantillaLínea(contexto = {canal, cliente?, actor?}, línea = {variante, bodega, precio, cantidad, modalidad}, pedido) → solicitud
+ *  (sin `u`). pedido = null ⇒ rama «primera»: Lote[Nacer:pedido (@0), Nacer:venta{pedido:@0} (@1), Disparar{s:@1}…];
+ *  pedido = ρ (ID) ⇒ rama «siguiente»: Lote[Nacer:venta{pedido:ρ} (@0), Disparar{s:@0}…]. {nacido: j} cuenta NACIMIENTOS. */
+export function plantillaLínea(contexto, línea, pedido = null) {
+  const primera = pedido === null;
+  const { variante, bodega, precio, cantidad, modalidad } = línea;
+  const s = { nacido: primera ? 1 : 0 };
+  const ctx = {};
+  for (const k of ['canal', 'cliente', 'actor']) if (contexto?.[k] !== undefined) ctx[k] = contexto[k];
+  const acciones = [
+    ...(primera ? [{ tipo: 'Nacer:pedido', args: { valores: ctx } }] : []),
+    { tipo: 'Nacer:venta', args: { valores: { pedido: primera ? { nacido: 0 } : pedido, variante, bodega, precio } } },
+    ...MODALIDADES[modalidad].map(t => ({ tipo: `Disparar:${t}`, args: { s, q: cantidad } })),
+  ];
+  return { tipo: 'Lote', args: { acciones } };
 }
+/** ID de la venta de una plantilla comprometida en la entrada n. */
+export const idLínea = (n, pedido = null) => [n, pedido === null ? 1 : 0];
 
 // ─────────────────────────── tipos de valor ───────────────────────────
 export function valido(tv, v) {
@@ -1019,13 +1049,7 @@ export function filtrar(D, par, τ, φ) {
 export function ficha(D, par, id, cfg = DISPONIBILIDAD_INICIAL) {
   const Φ = par['dominio.forma'], acc = accD(D), k = kid(id), e = acc.ent(k);
   if (!e) return null;
-  const cs = new Set([...Object.keys(tipoDe(Φ, e.tipo).características).filter(c => !esFamilia(c)), ...acc.propias(k)]);
-  if (e.padre) {
-    const pk = kid(e.padre), pτ = acc.ent(pk).tipo;
-    for (const c of [...Object.keys(tipoDe(Φ, pτ).características), ...acc.propias(pk)]) if (!esFamilia(c) && declaracion(Φ, pτ, c)?.heredable) cs.add(c);
-  }
-  const efectivaM = {};
-  for (const c of [...cs].sort()) { const v = efectiva(acc, Φ, k, c); if (v !== undefined) efectivaM[c] = v; }
+  const efectivaM = seccionEfectiva(acc, Φ, id);
   const existencias = {};
   for (const [cl, n] of Object.entries(D.m)) { const { f, idx } = parsearLugar(cl); if (f === cfg.familias.existencias && idx[1] === k) existencias[idx[0]] = n; }
   return { id, tipo: e.tipo, slot: slot(D, par, id), efectiva: efectivaM, existencias };
@@ -1104,6 +1128,19 @@ function seccionesDeAcum(acum) {
   }
   return out;
 }
+/** Sección efectiva de una entidad: todas las características declaradas o propias (y las heredables del padre). */
+export function seccionEfectiva(acc, Φ, id) {
+  const k = kid(id), e = acc.ent(k);
+  if (!e) return null;
+  const cs = new Set([...Object.keys(tipoDe(Φ, e.tipo).características).filter(c => !esFamilia(c)), ...acc.propias(k)]);
+  if (e.padre) {
+    const pk = kid(e.padre), pτ = acc.ent(pk).tipo;
+    for (const c of [...Object.keys(tipoDe(Φ, pτ).características), ...acc.propias(pk)]) if (!esFamilia(c) && declaracion(Φ, pτ, c)?.heredable) cs.add(c);
+  }
+  const out = {};
+  for (const c of [...cs].sort()) { const v = efectiva(acc, Φ, k, c); if (v !== undefined) out[c] = v; }
+  return out;
+}
 export const seccionesCanonicas = D => {
   const secs = secciones(D), out = {};
   for (const ik of Object.keys(secs)) { const p = {}; for (const c of Object.keys(secs[ik].propia).sort()) p[c] = secs[ik].propia[c]; out[ik] = { ...secs[ik], propia: p }; }
@@ -1125,6 +1162,7 @@ export const monoideCatalogo = desc => {
 const M_CLAVE = P.monoide({ nombre: 'sumaPorClave' });
 const M_CAT = P.monoide({ nombre: 'mapa', parametros: { etiquetas: { último: { nombre: 'último' } } } });
 const M_NAC = monoideCatalogo({ nombre: 'nacimientos' });
+const M_PEDIDO = P.monoide({ nombre: 'tupla', parametros: { de: [{ nombre: 'mapa', parametros: { etiquetas: { último: { nombre: 'último' } } } }, { nombre: 'sumaPorClave' }] } });
 
 // ─────────────────────────── proyecciones (E1: forma monoidal del núcleo) ───────────────────────────
 const base = id => ({ id, ver: 1, sensibleAEpoca: false, sensibleATiempo: false });
@@ -1158,6 +1196,18 @@ export const PROYECCIONES = Object.freeze({
   disponibilidad: (w, v, cfg = DISPONIBILIDAD_INICIAL) => Object.freeze({ ...base(`dominio.disp:${w === null ? '*' : kid(w)}:${kid(v)}:${hexCV(cfg)}`), monoide: M_CLAVE, leeEstado: true,
     f: (e, ctx) => ordenada(movimientos(ctx.S.D, ctx.parametros, e)),
     obs: (acum, ctx) => disponibilidadDe(acum, accD(ctx.S.D), ctx.parametros['dominio.forma'], w, v, cfg) }),
+  /** hijos(ρ, τ, k, F) (Anexo D.4): GENÉRICA, sin nombres de dominio (τ, k, F son parámetros). M = tupla(q_cat, sumaPorClave(movimientos));
+   *  obs = {sección: efectiva(ρ), hijos: {x : tipo(x) = τ ∧ efectiva(x, k) = ρ} en orden de nacimiento, m: x ↦ {f ↦ m(f[x])}, suma: f ↦ Σ_x m(f[x])}.
+   *  Los hijos se leen en S_j (el padre es inmutable, VF4: exacto para cualquier ventana). */
+  hijos: (ρ, τ, k, F) => Object.freeze({ ...base(`dominio.hijos:${kid(ρ)}:${τ}:${k}:${F.join(',')}`), monoide: M_PEDIDO, leeEstado: true,
+    f: (e, ctx) => [contribuciones(e, ctx.k, ctx.parametros), ordenada(movimientos(ctx.S.D, ctx.parametros, e))],
+    obs: (acum, ctx) => {
+      const Φ = ctx.parametros['dominio.forma'], acc = accD(ctx.S.D), rk = kid(ρ);
+      const hs = acc.claves().filter(x => acc.ent(x).tipo === τ && igual(efectiva(acc, Φ, x, k), ρ)).sort(cmpK);
+      const m = {}, suma = Object.fromEntries(F.map(f => [f, 0]));
+      for (const x of hs) { m[x] = {}; for (const f of F) { const n = propio(acum[1], claveLugar(f, [idDe(x)])) ?? 0; m[x][f] = n; suma[f] = sumaExacta(suma[f], n); } }
+      return { sección: seccionEfectiva(acc, Φ, ρ), hijos: hs.map(idDe), m, suma };
+    } }),
   /** q_fibra(k, v, τ) (§7.5) sobre las secciones propias de q_cat + Φ vigente (herencia en obs). */
   fibra: (c, valor, τ = TIPO_FIBRA) => Object.freeze({ ...base(`dominio.fibra:${τ}:${c}:${hexCV(valor)}`), monoide: M_CAT,
     f: (e, ctx) => contribuciones(e, ctx.k, ctx.parametros),

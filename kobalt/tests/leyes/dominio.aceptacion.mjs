@@ -55,7 +55,7 @@ export function registrarAceptacion(test, obtener, etiqueta) {
     const R = reg(Dom);
     const Γ = C.cauce(R, v2genesis(Dom));
     const L = () => lect(Dom, Γ);
-    const W = [1, 0], P1 = [2, 0], v1 = [2, 1], v2 = [3, 0], S1 = [7, 0], U1u = [12, 0], S2 = [14, 0], C1 = [15, 0], R1 = [17, 0], S3 = [20, 0];
+    const W = [1, 0], P1 = [2, 0], v1 = [2, 1], v2 = [3, 0], S1 = [7, 1], U1u = [12, 0], S2 = [14, 1], C1 = [15, 0], R1 = [17, 0], S3 = [20, 1];
     let nTras2 = 0;
     const paso = (nombre, f) => t.test(nombre, f);
 
@@ -104,7 +104,7 @@ export function registrarAceptacion(test, obtener, etiqueta) {
       assert.deepEqual(Dom.filtrar(L().D, L().par, 'variante', φ), [v1]);
     });
     await paso('#13 venta sin salida física: H = 15, P = 3', () => {
-      assert.equal(ok(Γ, lote('dueño', nacer('dueño', 'venta', { variante: v1, bodega: W, precio: 29000, canal: 'POS' }), disparar('dueño', 'Vender', { s: { nacido: 0 }, q: 3 }))), 7);
+      assert.equal(ok(Γ, lote('dueño', nacer('dueño', 'pedido', { canal: 'POS' }), nacer('dueño', 'venta', { pedido: { nacido: 0 }, variante: v1, bodega: W, precio: 29000 }), disparar('dueño', 'Vender', { s: { nacido: 1 }, q: 3 }))), 7);
       assert.deepEqual([L().disp(W, v1).H, L().disp(W, v1).P], [15, 3]);
     });
     await paso('#14 [L12] reserva sin doble descuento: D_prudente igual (12); A = 2; P = 1', () => {
@@ -137,9 +137,11 @@ export function registrarAceptacion(test, obtener, etiqueta) {
     });
     await paso('#20 el vendedor no puede contar ⇒ NO_AUTORIZADO', () => { rechazo(Γ, disparar('U1', 'Contar', { w: W, v: v1, h: 999 }), { resultado: 'NO_AUTORIZADO' }); });
     await paso('#21 el vendedor sí registra una venta (Web, con referencia de canal); creador(S2) = U1', () => {
-      assert.equal(ok(Γ, lote('U1', nacer('U1', 'venta', { variante: v1, bodega: W, precio: 35000, canal: 'Web', 'canal:ref': 'W1' }), disparar('U1', 'Vender', { s: { nacido: 0 }, q: 1 }))), 14);
+      assert.equal(ok(Γ, lote('U1', nacer('U1', 'pedido', { canal: 'Web', 'canal:ref': 'W1' }), nacer('U1', 'venta', { pedido: { nacido: 0 }, variante: v1, bodega: W, precio: 35000 }), disparar('U1', 'Vender', { s: { nacido: 1 }, q: 1 }))), 14);
       assert.equal(L().ent().find(x => igual(x.id, S2)).creador, 'U1');
-      assert.equal(L().carac(S2, 'canal:ref'), 'W1');
+      assert.equal(L().carac([14, 0], 'canal:ref'), 'W1', 'la referencia de canal vive en el pedido (familia *:*)');
+      assert.equal(L().carac(S2, 'canal'), 'Web', 'la venta hereda el canal del pedido');
+      assert.equal(L().ent().find(x => igual(x.id, S2)).padre.join('.'), '14.0');
     });
     await paso('#22 el vendedor no puede reservar ⇒ NO_AUTORIZADO', () => { rechazo(Γ, disparar('U1', 'Asignar', { s: S2, q: 1 }), { resultado: 'NO_AUTORIZADO' }); });
     await paso('#23 cliente con identidad propia', () => {
@@ -171,8 +173,8 @@ export function registrarAceptacion(test, obtener, etiqueta) {
     });
     await paso('#31 no reembolsar de más ⇒ cupo bajaría de 0', () => { rechazo(Γ, disparar('dueño', 'Reembolsar', { d: R1, x: 1 }), { resultado: 'INADMISIBLE', motivo: `negativo:cupo[${K(R1)}]` }); });
     await paso('#32 lote de venta inmediata con conteo intermedio: UNA entrada; H(v2) = 1; desp = 1', () => {
-      assert.equal(ok(Γ, lote('dueño', nacer('dueño', 'venta', { variante: v2, bodega: W, precio: 10000, canal: 'Mostrador' }), disparar('dueño', 'Vender', { s: { nacido: 0 }, q: 1 }),
-        disparar('dueño', 'Contar', { w: W, v: v2, h: 2 }), disparar('dueño', 'Asignar', { s: { nacido: 0 }, q: 1 }), disparar('dueño', 'Despachar', { s: { nacido: 0 }, q: 1 }))), 20);
+      assert.equal(ok(Γ, lote('dueño', nacer('dueño', 'pedido', { canal: 'Mostrador' }), nacer('dueño', 'venta', { pedido: { nacido: 0 }, variante: v2, bodega: W, precio: 10000 }), disparar('dueño', 'Vender', { s: { nacido: 1 }, q: 1 }),
+        disparar('dueño', 'Contar', { w: W, v: v2, h: 2 }), disparar('dueño', 'Asignar', { s: { nacido: 1 }, q: 1 }), disparar('dueño', 'Despachar', { s: { nacido: 1 }, q: 1 }))), 20);
       assert.deepEqual([L().disp(W, v2).H, L().lugar('desp', [S3])], [1, 1]);
     });
     await paso('#33 [L28] un lote fallido no cambia el estado ni consume slots: referenciaInexistente', () => {
@@ -322,7 +324,7 @@ export function registrarAceptacion(test, obtener, etiqueta) {
       ok(Γ, disparar('dueño', 'Ingresar', { w: W, v: v1, q: 3 }));
       assert.deepEqual(C.consultar(Γ, Dom.PROYECCIONES.flat(W)).valores, [13], 'F3');
       assert.deepEqual(C.consultar(Γ, Dom.PROYECCIONES.flat(W), nContar).valores, [10], 'F3: pregunta en el corte anterior');
-      const S1 = [ok(Γ, lote('dueño', nacer('dueño', 'venta', { variante: v1, bodega: W, precio: 32000, canal: 'POS' }), disparar('dueño', 'Vender', { s: { nacido: 0 }, q: 2 }))), 0];
+      const S1 = [ok(Γ, lote('dueño', nacer('dueño', 'pedido', { canal: 'POS' }), nacer('dueño', 'venta', { pedido: { nacido: 0 }, variante: v1, bodega: W, precio: 32000 }), disparar('dueño', 'Vender', { s: { nacido: 1 }, q: 2 }))), 1];
       ok(Γ, fijar('dueño', 'producto', 'precio', P1, 40000));
       assert.deepEqual([lugar('porCobrar', S1), d().H, d().P, Dom.carac(S(Γ).D, S(Γ).parametros, S1, 'precio')], [64000, 13, 2, 32000], 'F4');
       const libre0 = d().libre;
@@ -389,7 +391,7 @@ export function registrarAceptacion(test, obtener, etiqueta) {
     };
     await t.test('C3 Cancelar parcial: con algo despachado y cobrado ≤ despachado·p se cancela lo pendiente y lo asignado (la v2 lo rechazaba)', () => {
       const { Γ, W, v } = base();
-      const s = [ok(Γ, { u: 'dueño', ...Ref.plantillaVenta('venta.suave', { variante: v, bodega: W, precio: 100, canal: 'POS' }, 3) }), 0];
+      const s = [ok(Γ, { u: 'dueño', ...Ref.plantillaLínea({ canal: 'POS' }, { variante: v, bodega: W, precio: 100, cantidad: 3, modalidad: 'pedido' }) }), 1];
       ok(Γ, disparar('dueño', 'Asignar', { s, q: 2 }));
       ok(Γ, disparar('dueño', 'Despachar', { s, q: 1 }));
       ok(Γ, disparar('dueño', 'Cobrar', { s, x: 100 }));
@@ -401,7 +403,7 @@ export function registrarAceptacion(test, obtener, etiqueta) {
     });
     await t.test('C3 frontera: si lo cobrado supera lo despachado·p, Cancelar se rechaza (porCobrar restringido)', () => {
       const { Γ, W, v } = base();
-      const s = [ok(Γ, { u: 'dueño', ...Ref.plantillaVenta('venta.suave', { variante: v, bodega: W, precio: 100, canal: 'POS' }, 3) }), 0];
+      const s = [ok(Γ, { u: 'dueño', ...Ref.plantillaLínea({ canal: 'POS' }, { variante: v, bodega: W, precio: 100, cantidad: 3, modalidad: 'pedido' }) }), 1];
       ok(Γ, disparar('dueño', 'Cobrar', { s, x: 300 }));
       rechazo(Γ, disparar('dueño', 'Cancelar', { s }), { resultado: 'INADMISIBLE', motivo: `negativo:porCobrar[${K(s)}]` });
     });
@@ -432,9 +434,9 @@ export function registrarAceptacion(test, obtener, etiqueta) {
       ok(Γ, disparar('dueño', 'Transferir.llegada', { w: W, w2: W2, v, q: 4 }));
       const d = w => Dom.disponibilidad(S(Γ).D, S(Γ).parametros, w, v);
       assert.deepEqual([d(W).H, d(W2).H, d(W2).libre], [6, 4, 4]);
-      ok(Γ, { u: 'dueño', ...Ref.plantillaVenta('venta.inmediata', { variante: v, bodega: W2, precio: 100, canal: 'POS' }, 6) }, 'POS liberado: se vende más de lo que hay');
+      ok(Γ, { u: 'dueño', ...Ref.plantillaLínea({ canal: 'POS' }, { variante: v, bodega: W2, precio: 100, cantidad: 6, modalidad: 'entregarAhora' }) }, 'POS liberado: se vende más de lo que hay');
       assert.deepEqual([d(W2).H, d(W2).déficit], [-2, 2]);
-      rechazo(Γ, { u: 'dueño', ...Ref.plantillaVenta('venta.inmediata', { variante: v, bodega: W2, precio: 100, canal: 'Web' }, 1) }, { resultado: 'INADMISIBLE', motivo: `negativo:libre[${K(W2)},${K(v)}]` });
+      rechazo(Γ, { u: 'dueño', ...Ref.plantillaLínea({ canal: 'Web' }, { variante: v, bodega: W2, precio: 100, cantidad: 1, modalidad: 'entregarAhora' }) }, { resultado: 'INADMISIBLE', motivo: `negativo:libre[${K(W2)},${K(v)}]` });
       assert.deepEqual(Dom.auditoria(S(Γ).D, S(Γ).parametros), []);
     });
   });
@@ -449,7 +451,7 @@ export function registrarAceptacion(test, obtener, etiqueta) {
     const W = [1, 0], P1 = [2, 0], v = [2, 1];
     const d = () => Dom.disponibilidad(S(Γ).D, S(Γ).parametros, W, v);
     const leer = () => { const x = d(); return { físico: x.H, libre: x.noAsignada, prudente: x.prudente, H: x.H, A: x.A, P: x.P }; };
-    const vender = (modo, q, u = 'dueño') => [ok(Γ, { u, ...Ref.plantillaVenta(modo, { variante: v, bodega: W, precio: 35000, canal: 'POS' }, q) }, modo), 0];
+    const vender = (modo, q, u = 'dueño', pedido = null) => Ref.idLínea(ok(Γ, { u, ...Ref.plantillaLínea({ canal: 'POS' }, { variante: v, bodega: W, precio: 35000, cantidad: q, modalidad: modo }, pedido) }, modo), pedido);
     const ventas = () => Dom.entidades(S(Γ).D).filter(x => x.tipo === 'venta').length;
     let sSuave, nAntesInmediata;
     await t.test('probeta 1: Contar 10 ⇒ físico = libre = prudente = 10; leer las tres no añade compromisos', () => {
@@ -460,33 +462,33 @@ export function registrarAceptacion(test, obtener, etiqueta) {
       assert.equal(Γ.entradas.length, n, 'una pregunta no produce evento');
     });
     await t.test('probeta 2: «solo registro» 2 ⇒ H = 10, A = 0, P = 0 (pendientes en pend⁰, no elegibles); las tres lecturas siguen en 10', () => {
-      const s = vender('venta.registro', 2);
+      const s = vender('registrar', 2);
       assert.deepEqual(leer(), { físico: 10, libre: 10, prudente: 10, H: 10, A: 0, P: 0 });
       assert.equal(Dom.valorLugar(S(Γ).D, 'pend⁰', [s]), 2);
       assert.equal(Dom.carac(S(Γ).D, S(Γ).parametros, s, 'precio'), 35000);
     });
     await t.test('probeta 3: «demanda suave» 3 ⇒ P = 3; físico 10, libre 10, prudente 7', () => {
-      sSuave = vender('venta.suave', 3);
+      sSuave = vender('pedido', 3);
       assert.deepEqual(leer(), { físico: 10, libre: 10, prudente: 7, H: 10, A: 0, P: 3 });
     });
     await t.test('probeta 4: «asignación firme» 4 = UN compromiso (lote venta + asignación) ⇒ A = 4; libre 6; prudente 3', () => {
       const n = Γ.entradas.length;
-      vender('venta.firme', 4);
+      vender('apartar', 4);
       assert.equal(Γ.entradas.length, n + 1);
-      assert.deepEqual(Γ.entradas.at(-1).args.acciones.map(a => a.tipo), ['Nacer:venta', 'Disparar:Vender', 'Disparar:Asignar']);
+      assert.deepEqual(Γ.entradas.at(-1).args.acciones.map(a => a.tipo), ['Nacer:pedido', 'Nacer:venta', 'Disparar:Vender', 'Disparar:Asignar']);
       assert.deepEqual(leer(), { físico: 10, libre: 6, prudente: 3, H: 10, A: 4, P: 3 });
     });
     await t.test('probeta 5: «inmediata» 2 (crear + asignar + despachar indivisible) ⇒ H = 8, A = 4, P = 3; libre 4; prudente 1; sin cobro inventado', () => {
       nAntesInmediata = Γ.entradas.length;
-      const s = vender('venta.inmediata', 2);
+      const s = vender('entregarAhora', 2);
       assert.deepEqual(leer(), { físico: 8, libre: 4, prudente: 1, H: 8, A: 4, P: 3 });
       assert.deepEqual([Dom.valorLugar(S(Γ).D, 'cobrado', [s]), Dom.valorLugar(S(Γ).D, 'porCobrar', [s]), Dom.valorLugar(S(Γ).D, 'desp', [s])], [0, 70000, 2]);
     });
     await t.test('probeta 6: demanda suave 100 existe sin reserva (P = 103, prudente 0, H = 8); una venta firme de 5 se rechaza sin evento ni venta', () => {
-      vender('venta.suave', 100);
+      vender('pedido', 100);
       assert.deepEqual([leer().P, leer().prudente, leer().H], [103, 0, 8]);
       const n = ventas();
-      rechazo(Γ, { u: 'dueño', ...Ref.plantillaVenta('venta.firme', { variante: v, bodega: W, precio: 35000, canal: 'POS' }, 5) }, { resultado: 'INADMISIBLE', motivo: `negativo:libre[${K(W)},${K(v)}]` });
+      rechazo(Γ, { u: 'dueño', ...Ref.plantillaLínea({ canal: 'POS' }, { variante: v, bodega: W, precio: 35000, cantidad: 5, modalidad: 'apartar' }) }, { resultado: 'INADMISIBLE', motivo: `negativo:libre[${K(W)},${K(v)}]` });
       assert.equal(ventas(), n);
     });
     await t.test('probeta 7 [L12]: asignar 2 desde la demanda suave de 3 ⇒ A 4 → 6, P 103 → 101, prudente sigue en 0 (sin doble descuento); el vendedor no puede', () => {
@@ -513,10 +515,79 @@ export function registrarAceptacion(test, obtener, etiqueta) {
       assert.deepEqual(proponer(Γ, sol), { resultado: 'YA_COMPROMETIDO', i: r.n });
     });
     await t.test('probeta 13: el vendedor registra demanda suave en un producto visible; no puede contar ni reservar en firme', () => {
-      vender('venta.suave', 1, 'U1');
+      vender('pedido', 1, 'U1');
       rechazo(Γ, disparar('U1', 'Contar', { w: W, v, h: 0 }), { resultado: 'NO_AUTORIZADO' });
-      rechazo(Γ, { u: 'U1', ...Ref.plantillaVenta('venta.firme', { variante: v, bodega: W, precio: 35000, canal: 'POS' }, 1) }, { resultado: 'NO_AUTORIZADO' });
+      rechazo(Γ, { u: 'U1', ...Ref.plantillaLínea({ canal: 'POS' }, { variante: v, bodega: W, precio: 35000, cantidad: 1, modalidad: 'apartar' }) }, { resultado: 'NO_AUTORIZADO' });
       assert.deepEqual(Dom.auditoria(S(Γ).D, S(Γ).parametros), []);
+    });
+  });
+
+  // ═════════════════════════ Anexo D · pedido, segunda línea y las cuatro modalidades ═════════════════════════
+  test(`Oráculo D [${etiqueta}] pedido con varias líneas (rama «siguiente»), cuatro modalidades (tabla D.3), total y fibra del pedido`, async t => {
+    const Dom = dom();
+    const R = reg(Dom);
+    const Γ = C.cauce(R, v2genesis(Dom, { 'nucleo.capacidades': { 'dueño': ['*'], caja: Ref.CAPACIDADES.cajero }, 'dominio.alcancePropio': { caja: Ref.ALCANCE.cajero } }));
+    ok(Γ, nacer('dueño', 'bodega', { nombre: 'principal' }));
+    ok(Γ, lote('dueño', nacer('dueño', 'producto', { nombre: 'P1', precio: 100, público: true }), nacer('dueño', 'variante', { producto: { nacido: 0 }, sku: 'A' }), nacer('dueño', 'variante', { producto: { nacido: 0 }, sku: 'B' })));
+    const W = [1, 0], va = [2, 1], vb = [2, 2];
+    ok(Γ, nacer('dueño', 'cliente', { nombre: 'Cliente' }));
+    const cli = [3, 0];
+    ok(Γ, disparar('dueño', 'Contar', { w: W, v: va, h: 20 }));
+    ok(Γ, disparar('dueño', 'Contar', { w: W, v: vb, h: 20 }));
+    const d = v => Dom.disponibilidad(S(Γ).D, S(Γ).parametros, W, v);
+    const lug = (f, id) => Dom.valorLugar(S(Γ).D, f, [id]);
+    let ρ, l1, l2, l3, l4;
+    await t.test('primera línea: Lote[Nacer:pedido, Nacer:venta, …]; el pedido es @0 (i, 0) y la venta @1 (i, 1); el canal, el cliente y el actor viven en el pedido', () => {
+      const n = ok(Γ, { u: 'dueño', ...Ref.plantillaLínea({ canal: 'POS', cliente: cli, actor: 'Tienda A' }, { variante: va, bodega: W, precio: 100, cantidad: 2, modalidad: 'entregarAhora' }) });
+      ρ = [n, 0]; l1 = [n, 1];
+      assert.deepEqual(Γ.entradas.at(-1).args.acciones.map(a => a.tipo), ['Nacer:pedido', 'Nacer:venta', 'Disparar:Vender', 'Disparar:Asignar', 'Disparar:Despachar']);
+      const lec = lect(Dom, Γ);
+      assert.deepEqual([lec.carac(l1, 'canal'), lec.carac(l1, 'cliente'), lec.carac(l1, 'actor')], ['POS', cli, 'Tienda A'], 'heredados del padre');
+      assert.deepEqual(lec.ent().find(x => igual(x.id, l1)).padre, ρ);
+      assert.equal(Dom.seccionPropia(S(Γ).D, l1).canal, undefined, 'VF12: la sección propia de la línea no tiene canal');
+      assert.deepEqual([d(va).H, lug('desp', l1)], [18, 2]);
+    });
+    await t.test('segunda línea (rama «siguiente»): Lote[Nacer:venta{pedido: ρ}, …]; la venta es @0; canal y cliente NO se repiten', () => {
+      const n = ok(Γ, { u: 'dueño', ...Ref.plantillaLínea(null, { variante: vb, bodega: W, precio: 50, cantidad: 3, modalidad: 'apartar' }, ρ) });
+      l2 = Ref.idLínea(n, ρ);
+      assert.deepEqual(l2, [n, 0]);
+      assert.deepEqual(Γ.entradas.at(-1).args.acciones.map(a => a.tipo), ['Nacer:venta', 'Disparar:Vender', 'Disparar:Asignar']);
+      assert.deepEqual(Dom.entidades(S(Γ).D).filter(x => x.tipo === 'pedido').length, 1, 'no hay un segundo pedido');
+      assert.equal(lect(Dom, Γ).carac(l2, 'canal'), 'POS');
+      assert.deepEqual([d(vb).A, d(vb).libre], [3, 17]);
+    });
+    await t.test('modalidades pedido y registrar en el mismo pedido (tabla D.3)', () => {
+      l3 = Ref.idLínea(ok(Γ, { u: 'dueño', ...Ref.plantillaLínea(null, { variante: va, bodega: W, precio: 100, cantidad: 4, modalidad: 'pedido' }, ρ) }), ρ);
+      l4 = Ref.idLínea(ok(Γ, { u: 'dueño', ...Ref.plantillaLínea(null, { variante: va, bodega: W, precio: 100, cantidad: 5, modalidad: 'registrar' }, ρ) }), ρ);
+      const x = d(va);
+      assert.deepEqual([x.H, x.P, x.P0, x.A, x.libre, x.prudente, x.noAsignada], [18, 4, 5, 0, 18, 14, 18]);
+      assert.deepEqual([lug('pend', l3), lug('pend⁰', l4)], [4, 5]);
+    });
+    await t.test('total(ρ) = Σ q·p de los Vender; hijos(ρ, venta, pedido, F) devuelve las cuatro líneas; fibra(pedido, ρ, venta) = líneas de ρ', () => {
+      const F = ['porCobrar', 'cobrado', 'reembolsado', 'anulado'];
+      const h = C.consultar(Γ, Dom.PROYECCIONES.hijos(ρ, 'venta', 'pedido', F));
+      assert.deepEqual(h.hijos, [l1, l2, l3, l4]);
+      const total = Object.values(h.suma).reduce((a, b) => a + b, 0);
+      assert.equal(total, 2 * 100 + 3 * 50 + 4 * 100 + 5 * 100);
+      assert.deepEqual(h.sección, { canal: 'POS', cliente: cli, actor: 'Tienda A' });
+      assert.deepEqual(Dom.fibra(S(Γ).D, S(Γ).parametros, 'pedido', ρ, 'venta').miembros, [l1, l2, l3, l4]);
+      ok(Γ, disparar('dueño', 'Cobrar', { s: l1, x: 200 }));
+      ok(Γ, disparar('dueño', 'Cancelar', { s: l3 }));
+      const h2 = C.consultar(Γ, Dom.PROYECCIONES.hijos(ρ, 'venta', 'pedido', F));
+      assert.equal(Object.values(h2.suma).reduce((a, b) => a + b, 0), total, 'cobrar y cancelar redistribuyen el valor entre las cuatro familias, no lo cambian');
+      assert.deepEqual([h2.suma.cobrado, h2.suma.anulado], [200, 400]);
+      assert.deepEqual(Dom.auditoria(S(Γ).D, S(Γ).parametros), []);
+    });
+    await t.test('el cajero opera su propio pedido y no el de otro; el propietario añade una línea al pedido de la caja y la línea sigue siendo de la caja', () => {
+      const n = ok(Γ, { u: 'caja', ...Ref.plantillaLínea({ canal: 'Web' }, { variante: va, bodega: W, precio: 10, cantidad: 1, modalidad: 'pedido' }) });
+      const ρc = [n, 0], lc = [n, 1];
+      rechazo(Γ, { u: 'caja', ...Ref.plantillaLínea(null, { variante: va, bodega: W, precio: 10, cantidad: 1, modalidad: 'pedido' }, ρ) }, { resultado: 'INADMISIBLE', motivo: 'ajeno' }, 'una línea en el pedido del propietario');
+      const m = ok(Γ, { u: 'dueño', ...Ref.plantillaLínea(null, { variante: va, bodega: W, precio: 10, cantidad: 1, modalidad: 'pedido' }, ρc) });
+      assert.equal(Dom.dueño(S(Γ).D, [m, 0]), 'caja');
+      assert.equal(Dom.entidades(S(Γ).D).find(x => igual(x.id, [m, 0])).creador, 'dueño');
+      ok(Γ, disparar('caja', 'Cobrar', { s: [m, 0], x: 5 }));
+      rechazo(Γ, disparar('caja', 'Cobrar', { s: l1, x: 1 }), { resultado: 'INADMISIBLE', motivo: 'ajeno' });
+      assert.ok(lc);
     });
   });
 }

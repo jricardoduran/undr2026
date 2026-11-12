@@ -140,3 +140,37 @@ Cada página lleva un **controlador fino** que solo traduce eventos a `proponer`
 5. **Páginas** sobre `kobalt.css`, con verificación visual en Chromium (capturas a escritorio y móvil).
 
 **Regla de publicación.** La librería y el POS V3 son material tuyo no publicado. Las páginas las referencian por una ruta relativa `kobalt/app/ui/`, ignorada por git, con un script `instalar-ui` que la extrae de tu zip. El repositorio público contiene nuestras páginas y controladores, no tu librería.
+
+---
+
+## Parte IV — Con el zip original de Kobalt UI (hallazgos, 12‑nov noche)
+
+**Verificado [V].**
+- Los **hashes** de `SHA256SUMS_2_2_1.txt` coinciden y el verificador propio de la librería da **66/66**.
+- Las diferencias con el `.txt` eran solo un salto de línea final. El análisis de las partes I–III sigue valiendo.
+- `index.html` (el shell) trae su marcado: 202 etiquetas, 11.299 bytes. Se renderizó en Chromium, escritorio y móvil, sin errores de consola.
+
+**Cómo es el demo real.**
+- Tema **oscuro** por defecto, navegación lateral agrupada (Principal, Comercio, Relaciones, Conocimiento), barra superior con búsqueda `⌘K`, un grupo de ajustes (tema, densidad, navegación) y pestañas por app (Vender/Historial, Existencias/Alertas).
+- Cada escena: «eyebrow» + título + descripción + **tira de evidencia** + métricas + tabla o cuadrícula.
+
+**1. La tira de evidencia es nuestro corte y nuestra completitud.**
+- El shell expone `renderEvidence({status, coverage, detail, tone})`. En el demo dice `FOUND / FIXTURE_COMPLETE · catálogo, stock y clientes disponibles`, y `INDETERMINATE · preparando proyección` mientras carga.
+- Es la forma visible de lo que ya tenemos: la **resolución** de una pregunta (`EXACT`, `CHAIN`, `FORK`, `NO_EVIDENCE`, como en KOB2) y su **corte**.
+- **Propuesta [P]:** todo observable de la puerta lleva `evidencia = {estado, cobertura, detalle}`. Ejemplo: `EXACT / corte 5 de 5 · lectura prudente`. Así el demo ya enseña lo que nuestras leyes garantizan (L22, L27) sin construir nada: es una ranura que el shell ya tiene.
+
+**2. Dónde se une, exactamente.**
+- `demo.boot.js` tiene una «única responsabilidad: conectar la fixture con el runtime»: `KobaltRuntime.start({world, initialApp, theme, density})`.
+- Un **arranque nuestro** puede construir el «mundo» desde la puerta y llamar a ese mismo `start`.
+- Las **apps propias** se registran con `KobaltUI.registerApp({id, label, group, icon, order, mount})` y reciben `(host, projection, shell, params)`. El shell les ofrece `openDialog`, `notify`, `navigate`, `selectTab` y `downloadCsv`.
+- **Ninguna app de la librería escribe nada**: ninguna intención llega a un dominio. Nuestras apps llaman a `puerta.proponer`.
+
+**3. Qué se reutiliza y qué no (decisión).**
+
+| | Decisión |
+|---|---|
+| Shell, navegación, ajustes, temas, densidad, búsqueda, `kobalt.css`, componentes | **Se reutilizan íntegros.** Es lo que hace que las páginas luzcan como el demo |
+| Las 8 apps de demostración y `KobaltSemantics` | **No se usan**, por las divergencias de §3 |
+| Páginas específicas (`pos`, `inventario`, `ventas`, `producto`) | Cada una es el **mismo shell** con una app nuestra como `initialApp` |
+
+**4. Publicación.** Se mantiene la regla: la librería es material tuyo no publicado. El repositorio contiene un script que extrae tu zip a `kobalt/app/ui/` (ignorada por git), comprueba sus hashes y **genera** las páginas de entrada desde tu `index.html`. Si prefieres que la librería sí viva en el repositorio, basta con que lo autorices.

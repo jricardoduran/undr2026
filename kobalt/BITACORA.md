@@ -17,6 +17,7 @@
 | Fase 4 (alta e importación), 5 (materialidad IndexedDB), 6b (páginas), 7 (Drive), 8+ (comercio) | — | Pendientes | `CONSOLIDACION_Y_PLAN.md`, parte IV |
 
 **Siguiente paso concreto (actualizado 12‑nov, tarde):**
+00. **(Más reciente)** Con el zip original: lanzar un implementador para el **andamiaje del shell** (`kobalt/app/`: `instalar-ui`, arranque propio, una app mínima registrada, páginas generadas, verificación en Chromium). Es independiente de la fase 3 y reduce el riesgo de la fase 6b. Las apps de negocio esperan a fase 3 + puerta.
 0. **(Última actualización, noche)** El matemático **ya entregó** el Anexo D. Se lo paso al verificador de la fase 3 como incremento (lista D.7 en su informe: Forma con `pedido`, plantillas `plantillaLínea`, `hijos`, generador, VF11–VF13, casos dirigidos, aceptación reescrita, mutantes). Después: implementador de la fase 3 (con `nacimientos` y el `pedido`). La fase 6a (puerta) queda como spec y espera a la fase 3 y al adaptador (fase 5).
    (Nota anterior) El verificador de la fase 3 **ya entregó** sin el Anexo D. Como el `pedido` es solo un cambio de datos en `FORMA_INICIAL` (la Red no cambia), se incorpora como **incremento pequeño** del modelo y las pruebas cuando el matemático termine, y **antes** de lanzar al implementador. Dos requisitos que ya conoce el implementador: añadir el monoide `nacimientos` a `kobalt/src/preguntas/monoides.mjs` (con sus leyes) y reutilizar el lenguaje y el catálogo de la fase 2.
    El matemático escribe (a) la spec de la puerta y las páginas y (b) el **Anexo D** de la fase 3 (entidad `pedido` + modalidades de venta como plantillas). Cuando termine, pasar al verificador de la fase 3 (`a60d140…`) la lista de cambios del Anexo D **antes** de que entregue, para que el dominio se rehaga una sola vez.
@@ -58,6 +59,12 @@
 ---
 
 ## 3. Cronología de decisiones y su porqué (más reciente arriba)
+
+### 2026‑11‑12 (noche, tarde) · Llega el zip original de Kobalt UI: el shell se puede reutilizar
+- **Verificado:** hashes de la release OK, el verificador propio de la librería da 66/66, y el `index.html` (shell) sí trae marcado (202 etiquetas). El `.txt` solo difería en un salto de línea final: el análisis previo vale. Demo real renderizado en Chromium (escritorio y móvil) sin errores.
+- **Hallazgo clave:** el shell tiene una ranura de **evidencia** `{status, coverage, detail, tone}` (`FOUND / FIXTURE_COMPLETE · …`, `INDETERMINATE · preparando proyección`). Es la forma visible de nuestra **resolución + corte** (EXACT/CHAIN/FORK/NO_EVIDENCE de KOB2). Propuesta [P] (Anexo A de la spec 6a, por ratificar): todo observable lleva `evidencia = {estado, cobertura, detalle}`.
+- **Punto de unión exacto:** `KobaltRuntime.start({world, initialApp, theme, density})` y `KobaltUI.registerApp({id, label, group, icon, order, mount(host, projection, shell, params)})`. El shell da `openDialog/notify/navigate/selectTab/downloadCsv`. **Ninguna app de la librería escribe**: las nuestras llamarán a `puerta.proponer`.
+- **Decisión:** páginas específicas = el **mismo shell** con una app propia como `initialApp`; se reutilizan shell, CSS, temas, densidad y componentes; no se usan sus 8 apps ni `KobaltSemantics`. **Material no publicado:** script `instalar-ui` extrae el zip a `kobalt/app/ui/` (git lo ignora), comprueba hashes y **genera** las páginas desde su `index.html`.
 
 ### 2026‑11‑12 (noche) · El matemático entrega la puerta (fase 6a) y el Anexo D (`pedido`)
 - **Entregado:** `kobalt/specs/2026-11-12_fase6a-puerta-y-paginas.md` (puerta con 4 verbos, teoremas T‑P1…T‑P11, perfiles, adaptador, 6 páginas, Lk → verificación, 18 parámetros con valor inicial) y el **Anexo D** de la fase 3 (tipo `pedido`, modalidades de venta como plantillas, VF11–VF13).

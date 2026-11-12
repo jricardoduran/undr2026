@@ -613,3 +613,11 @@ Todos son parámetros de `Γ_{Nodo_d}` con regla `kobalt.puerta@1` (§3), salvo 
 1. **Núcleo [P]:** exportar `autorizado` y `coincide` desde `nucleo/index.mjs`, para que `q_puede` use la misma función que G1. Es una exportación, no un cambio de semántica (ya hay otros pendientes anotados en la bitácora).
 2. **Fase 3:** el Anexo D (Forma, plantillas, `hijos`, VF11–VF13) y la exposición de la **expresión** `admite.fijar` de `venta.variante` para `catálogoVendible` (una sola expresión para la guarda y el catálogo).
 3. **Fase 2:** ninguno.
+
+---
+
+## Anexo A · Precisión del coordinador tras recibir el zip original de Kobalt UI (2026‑11‑12) [P]
+Pendiente de ratificar por el matemático. Fuente: `kobalt/docs/2026-11-12_REVISION_UI_Y_POS_V3.md`, Parte IV.
+1. **Sello de evidencia.** Todo observable del «mundo» de la puerta lleva `evidencia = {estado, cobertura, detalle}`. `estado` toma sus valores de la **resolución** del núcleo (`EXACT`, `CHAIN`, `FORK`, `GÉNESIS_DISTINTA`, `SIN_EVIDENCIA`) o `INDETERMINADO` mientras se calcula. `cobertura` es el corte («corte `n` de `N`») y la lectura vigente. `detalle` es texto. El shell lo muestra en su ranura `renderEvidence`. No añade ámbito ni estado: es una proyección del `Ctx` (L22, L27).
+2. **Las páginas son el shell con una app nuestra.** Cada página específica arranca `KobaltRuntime.start` con un mundo derivado de la puerta y `initialApp` propia. Sus apps se registran con `registerApp` y no usan `KobaltSemantics` ni las apps de demostración.
+3. **Material de terceros.** La librería no se copia al repositorio: se instala en `kobalt/app/ui/` (ignorada) con comprobación de hashes, y las páginas de entrada se **generan** desde su `index.html`.

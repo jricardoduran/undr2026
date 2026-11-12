@@ -44,6 +44,12 @@ export const MUTANTES = [
   { nombre: 'loteSinTiposInternos (E4)', ley: 'L16', de: "export const tiposInternos = e => (e.tipo === 'Lote' ? e.args.acciones.map(a => a.tipo) : []);", a: 'export const tiposInternos = e => [];' },
   { nombre: 'sinAlcancePropio', ley: 'L16', de: 'const alcanza = (par, u, tipo) => {', a: 'const alcanza = (par, u, tipo) => { return false; ' },
   { nombre: 'complementoSinMáscara', ley: 'L2', de: 'export const complemento = (F, U = F.conocidos) =>', a: 'export const complemento = (F, U = F.activos) =>' },
+  // ── Anexo D (pedido): leyes críticas nuevas ──
+  { nombre: 'dueñoIgnoraPadre (dueño = creador de la propia venta)', ley: 'D.2 / L16', de: 'while (e && e.padre && n++ < 1000) e = acc.ent(kid(e.padre)) ?? null;', a: '' },
+  { nombre: 'canalSinHeredable (canal del pedido no se hereda)', ley: 'D.1 / VF12 / L35', de: 'canal: asig(txt(1, 80), { ...R_, ...I_, ...H_ }),', a: 'canal: asig(txt(1, 80), { ...R_, ...I_ }),' },
+  { nombre: 'alcanceNacerVentaIgnoraPadre (cualquiera añade líneas al pedido de otro)', ley: 'D.2 / L16', de: "if (alcanza(cx.par, cx.u, a.tipo) && (!padre || dueñoAcc(accD(Dt), kid(padre)) !== cx.u)) return 'ajeno';", a: "if (alcanza(cx.par, cx.u, a.tipo) && !padre) return 'ajeno';" },
+  { nombre: 'plantillaSiguienteRepitePedido (dos pedidos)', ley: 'D.3 / VF11', de: 'const primera = pedido === null;', a: 'const primera = true;' },
+  { nombre: 'NacerPedidoBajoAlcance (falla abierta)', ley: 'D.2 / B.6 / L16', de: "if (alcanza(cx.par, cx.u, a.tipo) && (!padre || dueñoAcc(accD(Dt), kid(padre)) !== cx.u)) return 'ajeno';", a: "if (alcanza(cx.par, cx.u, a.tipo) && padre && dueñoAcc(accD(Dt), kid(padre)) !== cx.u) return 'ajeno';" },
   // ── Anexo C (lo nuevo) ──
   { nombre: 'efectoQueLanza (T pasa por la guarda)', ley: 'C.1 / L7 / Teorema 2', de: '    T, sigma: SIGMA, guardaPar, codD: D => D,', a: T_QUE_LANZA },
   { nombre: 'actividadIncrustada (estado = activo como convención de código)', ley: 'C.2 / VF10', de: 'export function activaAcc(acc, Φ, k) {',

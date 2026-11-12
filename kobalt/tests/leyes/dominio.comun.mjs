@@ -79,13 +79,23 @@ export const qHex = n => n.toString(16).padStart(2, '0').repeat(32);
 const SKUS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', ''];
 const COLORES = ['Azul', 'Rojo', 'Verde'];
 const ACTORES = ['dueño', 'dueño', 'dueño', 'dueño', 'dueño', 'dueño', 'caja', 'caja', 'U1', 'U1', 'lector', 'intruso'];
-const MODALIDADES = ['venta.registro', 'venta.suave', 'venta.suave', 'venta.firme', 'venta.inmediata'];
+const MODALIDADES = ['registrar', 'pedido', 'pedido', 'apartar', 'entregarAhora'];
 
 /** Forma extendida compatible: añade «material» (heredable) a producto y el tipo «proveedor». */
 export function formaExtendida(Φ) {
   const F = structuredClone(Φ);
   F.tipos.producto.características.material = { clase: 'asignación', valor: { texto: [0, 60] }, heredable: true };
   F.tipos.proveedor = { características: { nombre: { clase: 'asignación', valor: { texto: [1, 80] }, requerida: true } } };
+  return F;
+}
+/** Forma del Anexo A (anterior al Anexo D): sin `pedido`; `venta` sin padre y con `canal` y `cliente` propios. Para probar G^par sobre una Γ con ventas. */
+export function formaAnexoA(Φ) {
+  const F = structuredClone(Φ);
+  delete F.tipos.pedido;
+  const v = F.tipos.venta;
+  delete v.padre; delete v.características.pedido;
+  v.características.canal = { clase: 'asignación', valor: { texto: [1, 80] }, requerida: true, inmutable: true };
+  v.características.cliente = { clase: 'referencia', cardinalidad: 'uno', valor: { ref: 'cliente' }, inmutable: true };
   return F;
 }
 /** Forma incompatible: quita «color» de variante (rechazada por G^par si alguna variante tiene color). */
@@ -112,7 +122,7 @@ export function proponerAleatoria(r, M, St) {
   const D = St.D, par = St.parametros;
   const E = M.entidades(D);
   const de = τ => E.filter(x => x.tipo === τ).map(x => x.id);
-  const bod = de('bodega'), prod = de('producto'), vari = de('variante'), ven = de('venta'), dev = de('devolución');
+  const bod = de('bodega'), prod = de('producto'), vari = de('variante'), ven = de('venta'), dev = de('devolución'), ped = de('pedido'), cli = de('cliente');
   if (bod.length < 2) return nacer('dueño', 'bodega', { nombre: `B${bod.length + 1}` });
   const u = r() < 0.72 ? 'dueño' : elegir(r, ACTORES);
   const al = xs => (xs.length && r() > 0.04 ? elegir(r, xs) : [entero(r, 200, 299), 0]);
@@ -148,9 +158,14 @@ export function proponerAleatoria(r, M, St) {
     return (r() < 0.65 ? añadir : quitar)(u, 'producto', 'galería', p, el);
   }
   if (x < 0.38) {
-    const modo = elegir(r, MODALIDADES);
-    const valores = { variante: al(vari), bodega: al(bod), precio: elegir(r, [100, 250]), canal: elegir(r, ['POS', 'POS', 'Web']) };
-    return { u: elegir(r, ['dueño', 'dueño', 'caja', 'U1']), ...M.plantillaVenta(modo, valores, entero(r, 1, 4)) };
+    // Anexo D: el contexto {canal, cliente?, actor?} vive en el pedido; con p≈0,4 la línea se añade a un pedido existente («siguiente»)
+    const modalidad = elegir(r, MODALIDADES);
+    const línea = { variante: al(vari), bodega: al(bod), precio: elegir(r, [100, 250]), cantidad: entero(r, 1, 4), modalidad };
+    const contexto = { canal: elegir(r, ['POS', 'POS', 'Web']) };
+    if (cli.length && r() < 0.3) contexto.cliente = elegir(r, cli);
+    if (r() < 0.2) contexto.actor = elegir(r, ['Tienda A', 'Tienda B']);
+    const pedido = ped.length && r() < 0.4 ? elegir(r, ped) : null;
+    return { u: elegir(r, ['dueño', 'dueño', 'caja', 'U1']), ...M.plantillaLínea(contexto, línea, pedido) };
   }
   if (x < 0.45) return disparar(u, 'Ingresar', { w: al(bod), v: al(vari), q: entero(r, 1, 6) });
   if (x < 0.50) return disparar(u, 'Contar', { w: al(bod), v: al(vari), h: entero(r, 0, 6) });
@@ -183,6 +198,9 @@ export function proponerAleatoria(r, M, St) {
     () => lote(u, lote(u, disparar(u, 'Ingresar', { w: al(bod), v: al(vari), q: 1 }))),
     () => disparar(u, 'Abrir', { x: al(ven) }),
     () => nacer(u, 'fantasma', {}),
+    () => nacer(u, 'pedido', { canal: elegir(r, ['POS', 'Web']) }),                                    // pedido vacío (se compromete si hay capacidad)
+    () => lote(u, nacer(u, 'pedido', { canal: 'POS' }), nacer(u, 'venta', { pedido: { nacido: 0 }, variante: al(vari), bodega: al(bod), precio: 1, canal: 'POS' })), // venta con canal propio ⇒ característicaDesconocida
+    () => nacer(u, 'cliente', { nombre: `C${entero(r, 1, 9)}` }),
     () => disparar(u, 'Inventada', {}),
     () => lote(u, disparar(u, 'Ingresar', { w: al(bod), v: al(vari), q: 2 }), disparar(u, 'Contar', { w: al(bod), v: al(vari), h: 1 })),
   ];

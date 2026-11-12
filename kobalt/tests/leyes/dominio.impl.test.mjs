@@ -40,6 +40,24 @@
 //     expresiones con validarExpr(·, LECTORES) de la fase 2 (una expresión inválida ⇒ FijarParámetro 'fueraDeDominio').
 //
 // 2. FORMATO DE DATOS (deepEqual a los del modelo; las pruebas escriben Formas y Redes nuevas en este formato)
+//   ANEXO D (pedido; solo cambia DATOS de la Forma, la Red NO cambia): FORMA_INICIAL.tipos.pedido = {características: {canal (R, I, H),
+//     cliente (referencia‑uno → cliente, I, H), actor (I, H), '*:*'}} sin padre, sin κ, sin alNacer, sin actividad;
+//     tipos.venta = {padre: 'pedido', alNacer: 'Abrir', características: {pedido (referencia‑uno → pedido, R, I), variante,
+//     bodega, precio, '*:*'}} SIN canal ni cliente (el contexto se hereda del padre: `carac(venta, canal)` = canal del pedido).
+//     CAPACIDADES.cajero / .vendedor incluyen 'Nacer:pedido'; ALCANCE.cajero / .vendedor incluyen 'Nacer:venta' y NINGUNO
+//     'Nacer:pedido' (un tipo sin padre ni objetivo falla cerrado: ajeno). dueño(venta) = creador(pedido).
+//   PLANTILLAS (datos de la puerta que el modelo exporta y las pruebas usan):
+//     MODALIDADES = {entregarAhora: [Vender, Asignar, Despachar], apartar: [Vender, Asignar], pedido: [Vender], registrar: [Vender.registro]}
+//     plantillaLínea(contexto = {canal, cliente?, actor?}, línea = {variante, bodega, precio, cantidad, modalidad}, pedido) → solicitud
+//       sin `u`: pedido = null ⇒ Lote[Nacer:pedido{contexto}, Nacer:venta{pedido: {nacido:0}, …}, Disparar:⟨hechos⟩{s: {nacido:1}, q}…];
+//       pedido = ρ ⇒ Lote[Nacer:venta{pedido: ρ, …}, Disparar:⟨hechos⟩{s: {nacido:0}, q}…] (canal, cliente y actor NO se repiten).
+//       `{nacido: j}` cuenta NACIMIENTOS, no acciones. idLínea(n, pedido) = [n, 1] (primera) | [n, 0] (siguiente).
+//     VF13 es una entrada más de RED_INICIAL.auditoría (forma lineal con coeficientes p(s), p(s(d))).
+//   hijos(ρ, τ, k, F) ∈ PROYECCIONES (D.4; GENÉRICA, longitud 4; ningún nombre de dominio en el código): M = tupla(q_cat,
+//     sumaPorClave(movimientos)), leeEstado; obs = {sección: efectiva(ρ), hijos: [IDs x con tipo τ y carac(x, k) = ρ, en orden
+//     de nacimiento], m: {«i.j» ↦ {f ↦ m(f[x])}}, suma: {f ↦ Σ_x m(f[x])}}. total(ρ) = Σ_f suma[f] con las cuatro familias de valor.
+//   REQUISITO DEL NÚCLEO: `kobalt/src/nucleo/index.mjs` exporta `autorizado(parametros, u, e, regla)` y `coincide(patrón, tipo)`
+//     (hoy solo los exporta contrato.mjs, sin re‑exportar); la regla de dominio los reutiliza para el alcance propio en lugar de copiar el criterio de patrón.
 //   FORMA_INICIAL = {tipos: {τ: {características: {k | 'ns:*' | '*:*': Decl}, padre?: k_ref, denso?: true, κ?: [k…],
 //                    actividad?: {característica: k, valores: [v…]}  (C.2; ausente ⇒ toda entidad del tipo es activa),
 //                    restricciones?: [expr], alNacer?: t}}}
@@ -217,6 +235,8 @@ test('L35 la revisión estática discrimina: detecta un switch sobre «Asignar»
   assert.ok(v.some(x => x.includes('importa de kobalt/tests')), v.join('\n'));
   assert.ok(!v.some(x => x.startsWith('/x/dominio/inicial.mjs') || x.startsWith('/x/dominio/limpio.mjs')), v.join('\n'));
   assert.ok(v.some(x => x.includes('importa `evaluar`')), v.join('\n'));
+  const ped = revisarEstatica({ '/x/dominio/hijos.mjs': "import { evaluar } from '../preguntas/index.mjs';\nexport const hijos = (r) => (x) => x.tipo === 'pedido';\n" });
+  assert.ok(ped.some(x => x.includes('«pedido»')), 'el nombre `pedido` solo puede aparecer en inicial.mjs:\n' + ped.join('\n'));
   const segundo = revisarEstatica({ '/x/dominio/expr.mjs': "import { evaluar } from '../preguntas/index.mjs';\nconst OPS = { 'nulo?': x => x === null };\n" });
   assert.ok(segundo.some(x => x.includes('segundo evaluador')), segundo.join('\n'));
 });
@@ -325,13 +345,13 @@ function diferencial(nombre, C0extra, pasos) {
     assert.ok(esperados.some(r => r.resultado === 'COMPROMETIDO'));
   });
 }
-const venta = (modo, q, u = 'dueño', canal = 'POS') => ({ u, ...M.plantillaVenta(modo, { variante: v, bodega: W, precio: 100, canal }, q) });
+const venta = (modo, q, u = 'dueño', canal = 'POS', pedido = null) => ({ u, ...M.plantillaLínea({ canal }, { variante: v, bodega: W, precio: 100, cantidad: q, modalidad: modo }, pedido) });
 const redSinTransferir = () => { const r = structuredClone(M.RED_INICIAL); delete r.transiciones['Transferir.salida']; delete r.transiciones['Transferir.llegada']; delete r.familias.tránsito; return r; };
 diferencial('L7 impl: libre < 0 tras Contar; un conteo siempre se admite; la guarda bloquea nuevas asignaciones', {}, [
-  C.disparar('dueño', 'Ingresar', { w: W, v, q: 5 }), venta('venta.firme', 5), C.disparar('dueño', 'Contar', { w: W, v, h: 0 }),
-  C.disparar('dueño', 'Contar', { w: W, v, h: 0 }), venta('venta.firme', 1), venta('venta.suave', 1)]);
+  C.disparar('dueño', 'Ingresar', { w: W, v, q: 5 }), venta('apartar', 5), C.disparar('dueño', 'Contar', { w: W, v, h: 0 }),
+  C.disparar('dueño', 'Contar', { w: W, v, h: 0 }), venta('apartar', 1), venta('pedido', 1)]);
 diferencial('L7 Teorema 6.1 impl: H < 0 con POS liberado; por Web se rechaza', { 'dominio.liberaciones': M.LIBERACIONES_INICIAL }, [
-  venta('venta.inmediata', 1, 'dueño', 'POS'), venta('venta.inmediata', 1, 'dueño', 'Web'), C.disparar('dueño', 'Contar', { w: W, v, h: 3 })]);
+  venta('entregarAhora', 1, 'dueño', 'POS'), venta('entregarAhora', 1, 'dueño', 'Web'), C.disparar('dueño', 'Contar', { w: W, v, h: 3 })]);
 diferencial('L35 impl: Transferir añadida como dato en una época posterior', { 'dominio.red': redSinTransferir() }, [
   C.nacer('dueño', 'bodega', { nombre: 'W2' }), C.disparar('dueño', 'Ingresar', { w: W, v, q: 5 }),
   C.disparar('dueño', 'Transferir.salida', { w: W, w2: [3, 0], v, q: 2 }),
@@ -339,14 +359,14 @@ diferencial('L35 impl: Transferir añadida como dato en una época posterior', {
   C.disparar('dueño', 'Transferir.salida', { w: W, w2: [3, 0], v, q: 2 }), C.disparar('dueño', 'Transferir.llegada', { w: W, w2: [3, 0], v, q: 2 }),
   C.disparar('dueño', 'Transferir.llegada', { w: W, w2: [3, 0], v, q: 1 })]);
 diferencial('L35 impl: depósito, transición, característica y tipo nuevos = dato; la semántica de Asignar sale de la Red vigente', {}, [
-  C.disparar('dueño', 'Ingresar', { w: W, v, q: 1 }), venta('venta.suave', 3),
-  C.disparar('dueño', 'Asignar', { s: [4, 0], q: 3 }),
+  C.disparar('dueño', 'Ingresar', { w: W, v, q: 1 }), venta('pedido', 3),
+  C.disparar('dueño', 'Asignar', { s: [4, 1], q: 3 }),
   St => { const r = structuredClone(St.parametros['dominio.red']); r.transiciones.Asignar.restricción = ['pend'];
     r.familias.consignado = { especie: 'U', índices: ['bodega', 'variante'], restringida: true };
     r.transiciones.Consignar = { args: { w: { ref: 'bodega' }, v: { ref: 'variante' }, q: { entero: [1, 100] } }, nulo: 'rechazar', restricción: 'todas',
       movimientos: [{ desde: ['H', { a: ['w'] }, { a: ['v'] }], hacia: ['consignado', { a: ['w'] }, { a: ['v'] }], cantidad: { a: ['q'] } }, { desde: ['libre', { a: ['w'] }, { a: ['v'] }], hacia: ['ext.L'], cantidad: { a: ['q'] } }] };
     return C.fijarParametro('dueño', { 'dominio.red': r, 'dominio.forma': C.formaExtendida(St.parametros['dominio.forma']) }); },
-  C.disparar('dueño', 'Asignar', { s: [4, 0], q: 3 }), C.disparar('dueño', 'Consignar', { w: W, v, q: 1 }), C.disparar('dueño', 'Ingresar', { w: W, v, q: 2 }),
+  C.disparar('dueño', 'Asignar', { s: [4, 1], q: 3 }), C.disparar('dueño', 'Consignar', { w: W, v, q: 1 }), C.disparar('dueño', 'Ingresar', { w: W, v, q: 2 }),
   C.disparar('dueño', 'Consignar', { w: W, v, q: 1 }), C.fijar('dueño', 'producto', 'material', P, 'Lino'), C.nacer('dueño', 'proveedor', { nombre: 'Prov' })]);
 diferencial('L31 impl: G^par rechaza las migraciones incompatibles con los mismos motivos', {}, [
   C.disparar('dueño', 'Ingresar', { w: W, v, q: 1 }),
@@ -359,20 +379,87 @@ diferencial('L31 impl: G^par rechaza las migraciones incompatibles con los mismo
   St => C.fijarParametro('dueño', { 'dominio.red': C.redConMermar(St.parametros['dominio.red']) }),
   C.disparar('dueño', 'Mermar', { w: W, v, q: 1 })]);
 diferencial('L16 impl: capacidades finas, E4 en lotes, tipo incoherente y alcance propio', {}, [
-  C.disparar('dueño', 'Ingresar', { w: W, v, q: 9 }), C.disparar('U1', 'Contar', { w: W, v, h: 0 }), venta('venta.suave', 1, 'U1', 'Web'),
-  C.disparar('U1', 'Asignar', { s: [4, 0], q: 1 }), C.lote('U1', C.disparar('U1', 'Cobrar', { s: [4, 0], x: 1 }), C.disparar('U1', 'Contar', { w: W, v, h: 0 })),
-  C.fijar('dueño', 'variante', 'nombre', P, 'X'), C.fijar('U1', 'producto', 'nombre', P, 'X'), venta('venta.suave', 1),
-  C.disparar('caja', 'Asignar', { s: [5, 0], q: 1 }), venta('venta.inmediata', 2, 'caja', 'POS'), C.disparar('lector', 'Ingresar', { w: W, v, q: 1 })]);
+  C.disparar('dueño', 'Ingresar', { w: W, v, q: 9 }), C.disparar('U1', 'Contar', { w: W, v, h: 0 }), venta('pedido', 1, 'U1', 'Web'),
+  C.disparar('U1', 'Asignar', { s: [4, 1], q: 1 }), C.lote('U1', C.disparar('U1', 'Cobrar', { s: [4, 1], x: 1 }), C.disparar('U1', 'Contar', { w: W, v, h: 0 })),
+  C.fijar('dueño', 'variante', 'nombre', P, 'X'), C.fijar('U1', 'producto', 'nombre', P, 'X'), venta('pedido', 1),
+  C.disparar('caja', 'Asignar', { s: [5, 1], q: 1 }), venta('entregarAhora', 2, 'caja', 'POS'), C.disparar('lector', 'Ingresar', { w: W, v, q: 1 })]);
 diferencial('L16 impl: alcance propio falla CERRADO en una transición sin objetivo (capacidad Disparar:Ingresar + alcance Disparar:*)', {
   'nucleo.capacidades': { 'dueño': ['*'], repo: ['Disparar:Ingresar', 'Disparar:Contar'] }, 'dominio.alcancePropio': { repo: ['Disparar:*'] } }, [
   C.disparar('repo', 'Ingresar', { w: W, v, q: 1 }), C.disparar('repo', 'Contar', { w: W, v, h: 0 }), C.disparar('dueño', 'Ingresar', { w: W, v, q: 1 })]);
 diferencial('L20 impl: Lote atómico; guarda «final» admite el orden interno libre', {}, [
-  C.lote('dueño', C.nacer('dueño', 'venta', { variante: v, bodega: W, precio: 10, canal: 'POS' }), C.disparar('dueño', 'Vender', { s: { nacido: 0 }, q: 2 }),
-    C.disparar('dueño', 'Asignar', { s: { nacido: 0 }, q: 2 }), C.disparar('dueño', 'Ingresar', { w: W, v, q: 2 })),
+  C.lote('dueño', C.nacer('dueño', 'pedido', { canal: 'POS' }), C.nacer('dueño', 'venta', { pedido: { nacido: 0 }, variante: v, bodega: W, precio: 10 }), C.disparar('dueño', 'Vender', { s: { nacido: 1 }, q: 2 }),
+    C.disparar('dueño', 'Asignar', { s: { nacido: 1 }, q: 2 }), C.disparar('dueño', 'Ingresar', { w: W, v, q: 2 })),
   C.fijarParametro('dueño', { 'dominio.lote': { máximo: 50, guarda: 'final' } }),
-  C.lote('dueño', C.nacer('dueño', 'venta', { variante: v, bodega: W, precio: 10, canal: 'POS' }), C.disparar('dueño', 'Vender', { s: { nacido: 0 }, q: 2 }),
-    C.disparar('dueño', 'Asignar', { s: { nacido: 0 }, q: 2 }), C.disparar('dueño', 'Ingresar', { w: W, v, q: 2 })),
+  C.lote('dueño', C.nacer('dueño', 'pedido', { canal: 'POS' }), C.nacer('dueño', 'venta', { pedido: { nacido: 0 }, variante: v, bodega: W, precio: 10 }), C.disparar('dueño', 'Vender', { s: { nacido: 1 }, q: 2 }),
+    C.disparar('dueño', 'Asignar', { s: { nacido: 1 }, q: 2 }), C.disparar('dueño', 'Ingresar', { w: W, v, q: 2 })),
   { u: 'dueño', tipo: 'Lote', args: { acciones: [] } }, C.lote('dueño', C.lote('dueño', C.disparar('dueño', 'Ingresar', { w: W, v, q: 1 })))]);
+
+// ═════════════════════════ Anexo D (pedido) ═════════════════════════
+const capsD = { 'nucleo.capacidades': { 'dueño': ['*'], caja: M.CAPACIDADES.cajero, U1: M.CAPACIDADES.vendedor, sinPed: M.CAPACIDADES.cajero.filter(c => c !== 'Nacer:pedido'), raro: M.CAPACIDADES.cajero, lector: [] },
+  'dominio.alcancePropio': { caja: M.ALCANCE.cajero, U1: M.ALCANCE.vendedor, sinPed: M.ALCANCE.cajero, raro: ['Nacer:pedido', 'Nacer:venta', 'Disparar:*'] } };
+// entradas: 1 bodega, 2 lote producto/variante; a partir de ahí las ventas de cada caso
+diferencial('D impl: pedido con varias líneas, las cuatro modalidades, cliente y actor; rama «siguiente» y alcance propio (caja, U1, propietario)', capsD, [
+  C.nacer('dueño', 'cliente', { nombre: 'C' }), C.disparar('dueño', 'Ingresar', { w: W, v, q: 30 }),
+  { u: 'caja', ...M.plantillaLínea({ canal: 'POS', cliente: [3, 0], actor: 'Tienda A' }, { variante: v, bodega: W, precio: 100, cantidad: 2, modalidad: 'entregarAhora' }) },
+  { u: 'caja', ...M.plantillaLínea(null, { variante: v, bodega: W, precio: 100, cantidad: 3, modalidad: 'apartar' }, [5, 0]) },
+  { u: 'U1', ...M.plantillaLínea(null, { variante: v, bodega: W, precio: 100, cantidad: 1, modalidad: 'pedido' }, [5, 0]) },
+  { u: 'dueño', ...M.plantillaLínea(null, { variante: v, bodega: W, precio: 100, cantidad: 4, modalidad: 'pedido' }, [5, 0]) },
+  { u: 'dueño', ...M.plantillaLínea(null, { variante: v, bodega: W, precio: 100, cantidad: 5, modalidad: 'registrar' }, [5, 0]) },
+  C.disparar('caja', 'Cobrar', { s: [8, 0], x: 10 }), C.disparar('caja', 'Cancelar', { s: [7, 0] }), C.disparar('U1', 'Cobrar', { s: [8, 0], x: 1 }),
+  { u: 'sinPed', ...M.plantillaLínea({ canal: 'POS' }, { variante: v, bodega: W, precio: 1, cantidad: 1, modalidad: 'pedido' }) },
+  C.nacer('sinPed', 'pedido', { canal: 'POS' }), C.nacer('raro', 'pedido', { canal: 'POS' }), C.nacer('dueño', 'pedido', { canal: 'Web' }), C.nacer('dueño', 'pedido', {}),
+  C.lote('dueño', C.nacer('dueño', 'pedido', { canal: 'POS' }), C.nacer('dueño', 'venta', { pedido: { nacido: 0 }, variante: v, bodega: W, precio: 1, canal: 'POS' })),
+  C.nacer('dueño', 'venta', { variante: v, bodega: W, precio: 1 }), C.fijar('dueño', 'pedido', 'canal', [5, 0], 'Web')]);
+diferencial('D impl: la liberación POS se lee del canal heredado del pedido (también en la segunda línea)', { 'dominio.liberaciones': M.LIBERACIONES_INICIAL }, [
+  venta('entregarAhora', 1, 'dueño', 'POS'), venta('entregarAhora', 1, 'dueño', 'Web'), venta('registrar', 1, 'dueño', 'Web'),
+  venta('entregarAhora', 1, 'dueño', 'POS', [4, 0]), venta('entregarAhora', 1, 'dueño', 'Web', [5, 0]), C.disparar('dueño', 'Contar', { w: W, v, h: 3 })]);
+diferencial('D impl: el máximo del lote cuenta acciones (12 líneas entregarAhora admitidas, 13 ⇒ loteTamaño)', {}, [
+  C.disparar('dueño', 'Ingresar', { w: W, v, q: 100 }),
+  ...[13, 12].map(n => C.lote('dueño', C.nacer('dueño', 'pedido', { canal: 'POS' }), ...Array.from({ length: n }, (_, i) => [C.nacer('dueño', 'venta', { pedido: { nacido: 0 }, variante: v, bodega: W, precio: 1 }),
+    ...['Vender', 'Asignar', 'Despachar'].map(t => C.disparar('dueño', t, { s: { nacido: i + 1 }, q: 1 }))]).flat()))]);
+test('D impl G^par: Γ del Anexo A + pedido añadido se admite; venta.padre sobre ventas existentes ⇒ formaCambiaPadre (impl = modelo)', () => {
+  exigir();
+  const A = C.formaAnexoA(M.FORMA_INICIAL);
+  const g = C.genesisActores(M, { 'dominio.liberaciones': [], 'dominio.forma': A });
+  const ΓM = C.cauce(RM, g), ΓI = C.cauce(RI(), g);
+  const conPedido = structuredClone(A); conPedido.tipos.pedido = structuredClone(M.FORMA_INICIAL.tipos.pedido);
+  const pasos = [...inicio, C.disparar('dueño', 'Ingresar', { w: W, v, q: 3 }),
+    C.lote('dueño', C.nacer('dueño', 'venta', { variante: v, bodega: W, precio: 1, canal: 'POS' }), C.disparar('dueño', 'Vender', { s: { nacido: 0 }, q: 1 })),
+    C.fijarParametro('dueño', { 'dominio.forma': M.FORMA_INICIAL }), C.fijarParametro('dueño', { 'dominio.forma': conPedido }), C.nacer('dueño', 'pedido', { canal: 'Web' })];
+  for (const sol of pasos) assert.deepEqual(Nres(C.proponer(ΓI, sol)), Nres(C.proponer(ΓM, sol)), JSON.stringify(sol).slice(0, 200));
+  assert.equal(C.proponer(C.bifurcar(ΓM), C.fijarParametro('dueño', { 'dominio.forma': M.FORMA_INICIAL })).motivo, 'formaCambiaPadre');
+});
+test('D impl: hijos(ρ, τ, k, F) es GENÉRICA (4 parámetros; sirve para devoluciones de una venta) y su Y = la del modelo; total(ρ) = suma', () => {
+  exigir();
+  assert.equal(I.PROYECCIONES.hijos.length, 4, 'hijos(ρ, τ, k, F)');
+  const g = generado(2);
+  const ΓI = C.reejecutar(RI(), g.g, g.sols).Γ;
+  const pedidos = M.entidades(S(g.Γ).D).filter(x => x.tipo === 'pedido').slice(0, 5).map(x => x.id);
+  const F = ['porCobrar', 'cobrado', 'reembolsado', 'anulado'];
+  for (const ρ of pedidos) {
+    const a = C.consultar(ΓI, I.PROYECCIONES.hijos(ρ, 'venta', 'pedido', F)), b = C.consultar(g.Γ, M.PROYECCIONES.hijos(ρ, 'venta', 'pedido', F));
+    assert.deepEqual(a, b, `hijos(${ρ})`);
+  }
+  for (const s of M.entidades(S(g.Γ).D).filter(x => x.tipo === 'venta').slice(0, 5).map(x => x.id)) {
+    assert.deepEqual(C.consultar(ΓI, I.PROYECCIONES.hijos(s, 'devolución', 'venta', ['sol', 'recibido'])), C.consultar(g.Γ, M.PROYECCIONES.hijos(s, 'devolución', 'venta', ['sol', 'recibido'])));
+  }
+  const n = ΓI.entradas.length, h = I.PROYECCIONES.hijos(pedidos[0], 'venta', 'pedido', F);
+  const parcial = C.resolverP(ΓI, h, Math.floor(n / 2));
+  const inc = C.resolverP(ΓI, h, n, { acum: parcial.acum, checkpoint: parcial.checkpoint });
+  assert.deepEqual(inc.Y, C.consultar(ΓI, h));
+});
+test('D requisito: el núcleo exporta `autorizado` y `coincide` (la regla las usa para el alcance propio y las capacidades finas; mismo criterio de patrón)', () => {
+  assert.equal(typeof C.N.coincide, 'function', 'kobalt/src/nucleo/index.mjs debe exportar `coincide`');
+  assert.equal(typeof C.N.autorizado, 'function', 'kobalt/src/nucleo/index.mjs debe exportar `autorizado`');
+  assert.equal(C.N.coincide('Disparar:*', 'Disparar:Vender'), true);
+  assert.equal(C.N.coincide('Disparar:Vender', 'Disparar:Vender.registro'), false);
+  assert.equal(C.N.coincide('Nacer:pedido', 'Nacer:pedido'), true);
+  const par = { 'nucleo.capacidades': { u: ['Lote', 'Nacer:pedido'], v: ['*'] } };
+  assert.equal(C.N.autorizado(par, 'u', { clase: 'dominio', tipo: 'Lote', args: {} }, {}), true);
+  assert.equal(C.N.autorizado(par, 'u', { clase: 'dominio', tipo: 'Nacer:venta', args: {} }, {}), false);
+  assert.equal(C.N.autorizado(par, 'v', { clase: 'dominio', tipo: 'Nacer:venta', args: {} }, {}), true);
+  assert.equal(C.N.autorizado(par, 'nadie', { clase: 'dominio', tipo: 'Lote', args: {} }, {}), false);
+});
 
 // ═════════════════════════ Anexo C (fase 3 rehecha) ═════════════════════════
 const PR = await import('../../src/preguntas/index.mjs');
@@ -436,8 +523,8 @@ test('C.3 impl: disponibilidad total con ambas agregaciones, familias como pará
   const pasos = [C.nacer('dueño', 'bodega', { nombre: 'W' }), C.nacer('dueño', 'bodega', { nombre: 'W2' }),
     C.lote('dueño', C.nacer('dueño', 'producto', { nombre: 'P', público: true }), C.nacer('dueño', 'variante', { producto: { nacido: 0 }, sku: 'S' })),
     C.disparar('dueño', 'Ingresar', { w: W1, v, q: 5 }), C.disparar('dueño', 'Ingresar', { w: W2, v, q: 3 }),
-    { u: 'dueño', ...M.plantillaVenta('venta.firme', { variante: v, bodega: W2, precio: 1, canal: 'POS' }, 3) }, C.disparar('dueño', 'Contar', { w: W2, v, h: 0 }),
-    { u: 'dueño', ...M.plantillaVenta('venta.registro', { variante: v, bodega: W1, precio: 1, canal: 'POS' }, 2) },
+    { u: 'dueño', ...M.plantillaLínea({ canal: 'POS' }, { variante: v, bodega: W2, precio: 1, cantidad: 3, modalidad: 'apartar' }) }, C.disparar('dueño', 'Contar', { w: W2, v, h: 0 }),
+    { u: 'dueño', ...M.plantillaLínea({ canal: 'POS' }, { variante: v, bodega: W1, precio: 1, cantidad: 2, modalidad: 'registrar' }) },
     C.añadir('dueño', 'producto', 'galería', P1, { Q: C.qHex(3), creador: 'dueño', propósito: 'página', audiencia: 'creador', permitidos: [] })];
   for (const sol of pasos) assert.deepEqual(Nres(C.proponer(ΓI, sol)), Nres(C.proponer(ΓM, sol)), JSON.stringify(sol));
   const cfgs = [M.DISPONIBILIDAD_INICIAL, { ...M.DISPONIBILIDAD_INICIAL, agregación: 'máximoDeSuma' },
