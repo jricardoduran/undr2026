@@ -12,12 +12,13 @@
 |---|---|---|---|
 | Núcleo general (fase 1 + enmienda E1–E8) | `kobalt/src/nucleo/` | **Integrado** (PASS + CONFORME) | `2e8d0d3` |
 | Preguntas (fase 2) | `kobalt/src/preguntas/` | **Integrado** (PASS + CONFORME, tras 1 objeción y 1 VETO corregidos) | `ff96a40` |
-| Forma y red de flujo (fase 3) | `kobalt/src/dominio/` | **Se rehace** según el anexo C de su spec. La versión `94726c7` tuvo PASS y OBJECIONES (4). En curso: el verificador ajusta modelo y pruebas al anexo C | spec `…fase3-forma-y-flujo.md`, anexo C |
+| Forma y red de flujo (fase 3) | `kobalt/src/dominio/` | **Se rehace** según el anexo C. La versión `94726c7` tuvo PASS y OBJECIONES (4). **Modelo y pruebas del anexo C ya entregados y definitivos** (123 leyes, 17/17 mutantes; 25 pruebas de contrato fallan hasta que exista `src/dominio/`; commit `5391e50`, aunque diga «WIP»). **Falta:** el Anexo D (`pedido`) del matemático y la implementación | spec `…fase3-forma-y-flujo.md`, anexos C y D |
 | Fase 6a: puerta (preguntar/proponer) y páginas específicas sobre Kobalt UI 2.2.1 | `kobalt/specs/2026-11-12_fase6a-puerta-y-paginas.md` | **Spec en curso** (matemático). Análisis hecho: `docs/2026-11-12_REVISION_UI_Y_POS_V3.md` | `f0354dc` |
 | Fase 4 (alta e importación), 5 (materialidad IndexedDB), 6b (páginas), 7 (Drive), 8+ (comercio) | — | Pendientes | `CONSOLIDACION_Y_PLAN.md`, parte IV |
 
 **Siguiente paso concreto (actualizado 12‑nov, tarde):**
-0. El matemático escribe (a) la spec de la puerta y las páginas y (b) el **Anexo D** de la fase 3 (entidad `pedido` + modalidades de venta como plantillas). Cuando termine, pasar al verificador de la fase 3 (`a60d140…`) la lista de cambios del Anexo D **antes** de que entregue, para que el dominio se rehaga una sola vez.
+0. (Actualización) El verificador de la fase 3 **ya entregó** sin el Anexo D. Como el `pedido` es solo un cambio de datos en `FORMA_INICIAL` (la Red no cambia), se incorpora como **incremento pequeño** del modelo y las pruebas cuando el matemático termine, y **antes** de lanzar al implementador. Dos requisitos que ya conoce el implementador: añadir el monoide `nacimientos` a `kobalt/src/preguntas/monoides.mjs` (con sus leyes) y reutilizar el lenguaje y el catálogo de la fase 2.
+   El matemático escribe (a) la spec de la puerta y las páginas y (b) el **Anexo D** de la fase 3 (entidad `pedido` + modalidades de venta como plantillas). Cuando termine, pasar al verificador de la fase 3 (`a60d140…`) la lista de cambios del Anexo D **antes** de que entregue, para que el dominio se rehaga una sola vez.
 
 **Pasos que siguen (sin cambios):**
 1. Cuando el verificador de la fase 3 entregue el modelo y las pruebas del anexo C: commit, y el implementador de la fase 3 rehace `kobalt/src/dominio/` sobre la rama con la fase 2 integrada (reutiliza `evaluar`, `validarExpr`, `registrarLector` y `monoide` de `kobalt/src/preguntas/`; añade el monoide `nacimientos`).
