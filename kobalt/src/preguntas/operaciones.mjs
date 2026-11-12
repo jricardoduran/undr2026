@@ -65,6 +65,9 @@ export function materializar(q, Γ, j, o = {}) {
   if (!TIPOS_MATERIALIZACION.includes(o.tipo)) throw new Error('materializar: tipo ∈ {prefijos, segmentos}');
   const L = leyes(c.M);
   if (!L.materializable) return { resultado: 'NO_MATERIALIZABLE' };
+  // L34 estática: la derivada {derivada: tipo, de: q} debe ser una pregunta válida (q no puede ser ya una derivada).
+  const cd = compilarConMonoide({ derivada: o.tipo, de: q }, o);
+  if (cd.resultado !== 'COMPILADA') return comoInvalida(cd);
   if (o.tipo === 'prefijos' && L.ventana !== 'prefijos') return { resultado: 'NO_GRUPO' };
   const guardado = o.guardado ? { acum: o.guardado.acum, checkpoint: o.guardado.checkpoint } : null;
   const r = responder({ derivada: o.tipo, de: q }, Γ, { ...o, i: 0, j, guardado });
