@@ -1,0 +1,1875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>An Ethical Model — animated explainer</title>
+<style>
+:root{
+  --paper:#f6f1e8; --paper2:#fffdf8; --ink:#1d2030; --mut:#857f72; --line:#d9d1c2;
+  --inc:#b4472f; --ins:#6a4c9c; --res:#2d4f8f; --sem:#9a7419; --cont:#2c7a62; --adv:#7d1f1f; --goal:#6d7387;
+  --serif:Georgia,"Times New Roman",serif;
+  --sans:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#12141c;overflow:hidden;font-family:var(--sans);-webkit-tap-highlight-color:transparent}
+#stage{position:absolute;left:50%;top:50%;width:1600px;height:900px;transform-origin:50% 50%;
+  background:radial-gradient(120% 90% at 85% 0%,#fbf7ef 0%,var(--paper) 55%,#efe7d9 100%);overflow:hidden;cursor:pointer;user-select:none}
+svg#cv{position:absolute;inset:0;width:1600px;height:900px}
+/* header */
+#hdr{position:absolute;left:80px;top:42px;transition:opacity .5s}
+#kick{font:600 15px var(--sans);letter-spacing:.16em;color:var(--mut);text-transform:uppercase}
+#kick b{color:var(--ink);margin-right:.6em}
+#ttl{font:700 42px/1.15 var(--serif);color:var(--ink);margin-top:6px}
+#hdr.hide{opacity:0}
+/* subtitles */
+#subs{position:absolute;left:0;right:0;top:738px;height:108px;display:flex;align-items:center;justify-content:center;pointer-events:none}
+#subs span{max-width:1340px;text-align:center;font:500 27px/1.38 var(--sans);color:#fff;background:rgba(18,20,30,.86);
+  padding:10px 22px;border-radius:10px;box-decoration-break:clone;-webkit-box-decoration-break:clone;transition:opacity .25s}
+#subs.off span{display:none}
+#subs span.fade{opacity:0}
+/* controls */
+#ctl{position:absolute;left:0;right:0;bottom:0;height:52px;display:flex;align-items:center;gap:16px;padding:0 22px;
+  background:linear-gradient(transparent,rgba(18,20,30,.55));transition:opacity .35s;cursor:default}
+#ctl.hide{opacity:0}
+#ctl button{background:none;border:0;color:#fff;font:600 16px var(--sans);cursor:pointer;min-width:34px;height:34px;border-radius:6px}
+#ctl button:hover{background:rgba(255,255,255,.15)}
+#ctl button.offc{opacity:.45}
+#time{color:#fff;font:500 15px var(--sans);min-width:118px;font-variant-numeric:tabular-nums}
+#bar{flex:1;height:22px;position:relative;cursor:pointer}
+#bar .bg{position:absolute;left:0;right:0;top:9px;height:4px;background:rgba(255,255,255,.3);border-radius:2px}
+#bar .fg{position:absolute;left:0;top:9px;height:4px;background:#fff;border-radius:2px;width:0}
+#bar .tk{position:absolute;top:6px;width:2px;height:10px;background:rgba(255,255,255,.7)}
+#tip{position:absolute;bottom:30px;transform:translateX(-50%);background:#12141c;color:#fff;font:500 14px var(--sans);padding:4px 8px;border-radius:5px;white-space:nowrap;display:none}
+#toast{position:absolute;left:50%;top:40px;transform:translateX(-50%);background:#12141c;color:#fff;font:500 18px var(--sans);padding:10px 18px;border-radius:8px;opacity:0;transition:opacity .3s;pointer-events:none}
+#toast.show{opacity:1}
+#big{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);width:110px;height:110px;border-radius:50%;background:rgba(18,20,30,.7);
+  display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .3s;pointer-events:none}
+#big.show{opacity:1}
+#big svg{width:46px;height:46px}
+/* start screen: language choice (also unlocks speech, which browsers only allow after a click) */
+#start{position:absolute;inset:0;background:rgba(18,20,30,.62);display:flex;align-items:center;justify-content:center;cursor:default}
+#start.gone{display:none}
+#start .box{background:var(--paper2);border-radius:18px;padding:48px 64px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+#start .st{font:700 52px var(--serif);color:var(--ink)}
+#start .ss{font:500 20px var(--sans);color:var(--mut);margin-top:8px;letter-spacing:.04em}
+#start .row{display:flex;gap:22px;justify-content:center;margin-top:36px}
+#start button{font:600 24px var(--sans);padding:16px 34px;border-radius:12px;border:2px solid var(--ink);background:var(--ink);color:#fff;cursor:pointer}
+#start button[data-l="es"]{background:var(--inc);border-color:var(--inc)}
+#start .note{margin-top:22px;font:15px var(--sans);color:var(--mut)}
+/* svg typography */
+.se{font-family:var(--serif)} .sa{font-family:var(--sans)}
+.m{text-anchor:middle} .e{text-anchor:end}
+.cap{font:700 14px var(--sans);letter-spacing:.14em;fill:var(--mut)}
+.lb{font:22px var(--sans);fill:var(--ink)}
+.sm{font:17px var(--sans);fill:var(--mut)}
+.it{font-style:italic}
+.card{fill:var(--paper2);stroke:var(--line);stroke-width:1.5}
+.dark{fill:var(--ink)}
+.eq{font-size:34px;color:var(--ink);display:flex;justify-content:center;align-items:center;height:100%;flex-direction:column;gap:6px}
+.eq.small{font-size:28px}
+/* scenes & steps */
+.scene{opacity:0;visibility:hidden;transition:opacity .6s,visibility 0s linear .6s}
+.scene.cur{opacity:1;visibility:visible;transition:opacity .6s,visibility 0s}
+[data-step]{opacity:0;transform:translateY(14px);transition:opacity .75s ease,transform .75s cubic-bezier(.2,.7,.2,1)}
+[data-step].on{opacity:1;transform:none}
+[data-step].on.past{opacity:.36}
+.draw{stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 1s ease .2s}
+.on .draw,.draw.on{stroke-dashoffset:0}
+.grow{transform-box:fill-box;transform-origin:50% 100%;transition:transform .9s cubic-bezier(.3,.7,.2,1)}
+.grow.alt{transform:scaleY(.32)}
+.grow.d{transition-delay:.7s}
+.cutline{transition:stroke-dasharray .4s, opacity .6s}
+.cutline.alt{stroke-dasharray:8 8;opacity:.45}
+.hl{transition:fill .6s,stroke .6s}
+.hl.alt{fill:#efe4f7;stroke:var(--ins)}
+.vanish{transition:opacity .8s .6s}
+.vanish.alt{opacity:.3}
+.flow{stroke-dasharray:6 8;animation:flow 1.6s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-28}}
+.pulse{transform-box:fill-box;transform-origin:center;animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(1.12)}}
+.pulse2{transform-box:fill-box;transform-origin:center;animation:pulse2 2.6s ease-in-out infinite}
+@keyframes pulse2{50%{transform:scale(1.025)}}
+.reset{transform-box:fill-box;transform-origin:center;animation:spin 2.2s linear infinite}
+@keyframes spin{to{transform:rotate(-360deg)}}
+.knob{transform-box:view-box;transition:transform 1s cubic-bezier(.3,.7,.2,1) .4s}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition-duration:0s!important;transition-delay:0s!important;animation:none!important}
+}
+</style>
+</head>
+<body>
+<div id="stage">
+<svg id="cv" viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg" aria-label="Animated explainer canvas">
+<defs>
+  <marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#857f72"/></marker>
+  <marker id="ai" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#b4472f"/></marker>
+  <marker id="an" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#6a4c9c"/></marker>
+  <marker id="ar" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#2d4f8f"/></marker>
+  <marker id="as" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#9a7419"/></marker>
+  <marker id="ac" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#2c7a62"/></marker>
+  <marker id="ak" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1d2030"/></marker>
+</defs>
+
+<!-- ============ S0 · INTRO ============ -->
+<g class="scene" id="s0">
+  <g data-step="1"><text x="800" y="300" class="cap m" style="font-size:17px">AN ETHICAL MODEL · AI WELFARE RESEARCH PROPOSAL</text></g>
+  <g data-step="1" data-d="300">
+    <text x="800" y="400" class="se m" style="font-size:64px;font-weight:700;fill:var(--ink)">Does the system include</text>
+    <text x="800" y="478" class="se m" style="font-size:64px;font-weight:700;fill:var(--ink)">the entities it affects?</text>
+  </g>
+  <g data-step="2">
+    <rect x="330" y="560" width="200" height="46" rx="23" fill="var(--inc)"/><text x="430" y="590" class="m sa" style="font-size:19px;fill:#fff;font-weight:600">inclusion</text>
+    <rect x="550" y="560" width="250" height="46" rx="23" fill="var(--ins)"/><text x="675" y="590" class="m sa" style="font-size:19px;fill:#fff;font-weight:600">instrumentalization</text>
+    <rect x="820" y="560" width="200" height="46" rx="23" fill="var(--res)"/><text x="920" y="590" class="m sa" style="font-size:19px;fill:#fff;font-weight:600">constraint</text>
+    <rect x="1040" y="560" width="230" height="46" rx="23" fill="none" stroke="var(--sem)" stroke-width="2"/><text x="1155" y="590" class="m sa" style="font-size:19px;fill:var(--sem);font-weight:600">reconstruction</text>
+  </g>
+</g>
+
+<!-- ============ S1 · BACKGROUND ============ -->
+<g class="scene" id="s1">
+  <g data-step="1">
+    <text x="260" y="200" class="cap m" style="fill:var(--inc)">2016 · ECONOMICS THESIS</text>
+    <g fill="var(--inc)">
+      <circle cx="215" cy="268" r="10"/><circle cx="258" cy="250" r="10"/><circle cx="302" cy="272" r="10"/><circle cx="235" cy="312" r="10"/><circle cx="285" cy="318" r="10"/>
+    </g>
+    <g stroke="var(--inc)" stroke-width="2.5">
+      <path d="M215 252v-14" marker-end="url(#ai)"/><path d="M258 234v-14" marker-end="url(#ai)"/><path d="M302 286v14" marker-end="url(#ai)"/><path d="M235 296v-14" marker-end="url(#ai)"/><path d="M285 334v14" marker-end="url(#ai)"/>
+    </g>
+    <text x="260" y="395" class="se it m" style="font-size:21px;fill:var(--inc)">Policy programmed from</text>
+    <text x="260" y="422" class="se it m" style="font-size:21px;fill:var(--inc)">each person's needs</text>
+  </g>
+  <g data-step="2">
+    <text x="620" y="200" class="cap m" style="fill:var(--res)">OPTIMIZATION</text>
+    <path d="M540 330Q620 190 700 330" fill="none" stroke="var(--res)" stroke-width="3" pathLength="1" class="draw"/>
+    <path d="M620 235V340" stroke="var(--res)" stroke-width="2" stroke-dasharray="5 6"/>
+    <circle cx="620" cy="260" r="7" fill="var(--res)"/>
+    <text x="620" y="395" class="se it m" style="font-size:21px;fill:var(--res)">Three questions,</text>
+    <text x="620" y="422" class="se it m" style="font-size:21px;fill:var(--res)">three papers</text>
+  </g>
+  <g data-step="3">
+    <text x="980" y="200" class="cap m" style="fill:var(--cont)">DISTRIBUTED NETWORKS</text>
+    <g stroke="var(--cont)" stroke-width="2.5" fill="none">
+      <path d="M980 230L1027 264L1009 320L951 320L933 264Z M980 230L951 320 M933 264L1009 320"/>
+    </g>
+    <g fill="var(--cont)"><circle cx="980" cy="230" r="9"/><circle cx="1027" cy="264" r="9"/><circle cx="1009" cy="320" r="9"/><circle cx="951" cy="320" r="9"/><circle cx="933" cy="264" r="9"/></g>
+    <text x="980" y="395" class="se it m" style="font-size:21px;fill:var(--cont)">Deciding with</text>
+    <text x="980" y="422" class="se it m" style="font-size:21px;fill:var(--cont)">no central control</text>
+  </g>
+  <g data-step="4">
+    <text x="1330" y="200" class="cap m" style="fill:var(--sem)">SEMANTIC COMMUNICATION</text>
+    <rect x="1235" y="252" width="56" height="50" rx="8" class="card" style="stroke:var(--sem)"/><text x="1263" y="285" class="se m it" style="font-size:24px">x*</text>
+    <path d="M1298 277c8-12 14-12 20 0s12 12 20 0" fill="none" stroke="var(--sem)" stroke-width="2.5" class="flow"/>
+    <path d="M1342 277h8" stroke="var(--sem)" stroke-width="2.5" marker-end="url(#as)"/>
+    <rect x="1365" y="252" width="56" height="50" rx="8" class="card" style="stroke:var(--sem)"/><text x="1393" y="285" class="se m it" style="font-size:24px">x̂</text>
+    <text x="1330" y="395" class="se it m" style="font-size:21px;fill:var(--sem)">Nobody receives exactly</text>
+    <text x="1330" y="422" class="se it m" style="font-size:21px;fill:var(--sem)">what was said</text>
+  </g>
+  <g data-step="5">
+    <g fill="none" stroke-width="2.5">
+      <path d="M260 445C260 540 600 520 760 585" stroke="var(--inc)" pathLength="1" class="draw"/>
+      <path d="M620 445C620 520 720 540 780 585" stroke="var(--res)" pathLength="1" class="draw"/>
+      <path d="M980 445C980 520 880 540 820 585" stroke="var(--cont)" pathLength="1" class="draw"/>
+      <path d="M1330 445C1330 540 1000 520 840 585" stroke="var(--sem)" pathLength="1" class="draw"/>
+    </g>
+    <rect x="380" y="585" width="840" height="122" rx="14" class="dark"/>
+    <text x="800" y="640" class="se it m" style="font-size:31px;fill:#fff">“Ethics is not declared — it emerges from structure.”</text>
+    <text x="800" y="680" class="sa m" style="font-size:18px;fill:#e2c46e;font-weight:600;letter-spacing:.06em">2026 · AN ETHICAL MODEL</text>
+  </g>
+</g>
+
+<!-- ============ S2 · WHAT DID IT UNDERSTAND ============ -->
+<g class="scene" id="s2">
+  <g data-step="1">
+    <rect x="90" y="175" width="300" height="215" rx="12" class="card"/>
+    <text x="240" y="205" class="cap m">WHAT WE KNOW</text>
+    <circle cx="160" cy="290" r="17" fill="#6b6f82"/><text x="160" y="330" class="sm m">e₁</text>
+    <circle cx="320" cy="290" r="17" fill="#6b6f82"/><text x="320" y="330" class="sm m">e₂</text>
+    <rect x="218" y="268" width="44" height="44" rx="5" class="dark"/><text x="240" y="298" class="m se" style="fill:#fff;font-size:22px">A</text>
+    <text x="240" y="372" class="se it m" style="font-size:22px">situation x*</text>
+    <path d="M395 282H440" stroke="#857f72" stroke-width="2.5" marker-end="url(#a)"/>
+    <g transform="translate(450 218)">
+      <path d="M0 0H92L118 26V130H0Z" class="card"/>
+      <path d="M18 40H96M18 60H96M18 80H80M18 100H90" stroke="#bdb3a0" stroke-width="3"/>
+    </g>
+    <text x="509" y="372" class="se it m" style="font-size:22px">signal y</text>
+    <text x="509" y="410" class="sa m" style="font-size:19px;fill:var(--sem);font-weight:600">signal ≠ meaning</text>
+  </g>
+  <g data-step="2">
+    <foreignObject x="660" y="150" width="860" height="96"><div class="eq">
+      <math display="block"><mover accent="true"><mi>x</mi><mo>^</mo></mover><mo>=</mo>
+      <munder><mo movablelimits="false">arg max</mo><mrow><mi>x</mi><mo>∈</mo><mi>X</mi><mo>(</mo><mi style="color:var(--sem)">K</mi><mo>)</mo></mrow></munder>
+      <mi>U</mi><mo>(</mo><mi>x</mi><mo>;</mo><mi>y</mi><mo>,</mo><mi style="color:var(--sem)">K</mi><mo>,</mo><mi style="color:var(--sem)">g</mi><mo>,</mo><mi style="color:var(--sem)">τ</mi><mo>)</mo></math>
+    </div></foreignObject>
+    <text x="1090" y="275" class="se it m" style="font-size:21px;fill:var(--mut)">meaning is rebuilt, not received</text>
+  </g>
+  <g data-step="3">
+    <path d="M572 300C610 300 610 410 650 410" fill="none" stroke="#857f72" stroke-width="2.5" marker-end="url(#a)"/>
+    <rect x="655" y="300" width="400" height="235" rx="12" class="card" style="stroke:var(--sem)"/>
+    <text x="855" y="330" class="cap m">THE RECEIVER</text>
+    <rect x="833" y="345" width="44" height="44" rx="5" class="dark"/><text x="855" y="375" class="m se" style="fill:#fff;font-size:22px">A</text>
+    <g stroke="var(--sem)" stroke-width="2.5" fill="#fff">
+      <circle cx="745" cy="450" r="30"/><circle cx="855" cy="450" r="30"/><circle cx="965" cy="450" r="30"/>
+    </g>
+    <g stroke="var(--sem)" stroke-width="4" stroke-linecap="round">
+      <path d="M745 450l-14-20"/><path d="M855 450l20-14"/><path d="M965 450l4 -25"/>
+    </g>
+    <text x="745" y="510" class="sa m" style="font-size:18px">frame K</text>
+    <text x="855" y="510" class="sa m" style="font-size:18px">objective g</text>
+    <text x="965" y="510" class="sa m" style="font-size:18px">depth τ</text>
+    <path d="M1060 418H1105" stroke="var(--sem)" stroke-width="2.5" marker-end="url(#as)"/>
+    <rect x="1110" y="300" width="400" height="235" rx="12" class="card"/>
+    <text x="1310" y="330" class="cap m">WHAT IT UNDERSTOOD</text>
+    <circle cx="1220" cy="410" r="17" fill="#6b6f82"/><text x="1220" y="450" class="sm m">e₁</text>
+    <rect x="1288" y="388" width="44" height="44" rx="5" class="dark"/><text x="1310" y="418" class="m se" style="fill:#fff;font-size:22px">A</text>
+    <text x="1310" y="512" class="se it m" style="font-size:22px">reconstruction x̂</text>
+  </g>
+  <g data-step="4">
+    <text x="300" y="470" class="cap m">CONCEIVABLE X(K)</text>
+    <ellipse cx="270" cy="575" rx="170" ry="92" fill="#f3ead5" stroke="var(--sem)" stroke-width="2"/>
+    <text x="210" y="555" class="se it m" style="font-size:21px">narrator</text>
+    <text x="330" y="580" class="se it m" style="font-size:21px">poem</text>
+    <text x="235" y="620" class="se it m" style="font-size:21px">orator</text>
+    <circle cx="530" cy="575" r="50" fill="none" stroke="#b9ae99" stroke-width="2" stroke-dasharray="5 6"/>
+    <text x="530" y="582" class="se it m" style="font-size:21px;fill:#a39a88">theatre</text>
+    <text x="330" y="702" class="sa m" style="font-size:19px;fill:var(--sem);font-weight:600">inconceivable ≠ improbable</text>
+  </g>
+  <g data-step="5">
+    <circle cx="1410" cy="410" r="17" fill="none" stroke="#a39a88" stroke-width="2" stroke-dasharray="4 5"/>
+    <text x="1410" y="416" class="m sa" style="font-size:17px;fill:#a39a88">?</text>
+    <text x="1410" y="450" class="sm m">e₂ unseen</text>
+    <rect x="1243" y="372" width="12" height="56" rx="3" fill="#e5ddcd"/><rect x="1243" y="392" width="12" height="36" rx="3" fill="var(--cont)"/>
+    <text x="1249" y="365" class="m sa" style="font-size:15px;fill:var(--cont);font-weight:700">Ŵ</text>
+    <rect x="1110" y="560" width="400" height="58" rx="10" class="card"/>
+    <text x="1310" y="596" class="sa m" style="font-size:19px"><tspan font-weight="700">entity</tspan>: can be better or worse off</text>
+    <rect x="1110" y="630" width="400" height="58" rx="10" class="card"/>
+    <text x="1310" y="666" class="sa m" style="font-size:19px"><tspan font-weight="700" fill="var(--cont)">Ŵₑ</tspan> represented  ≠  <tspan font-weight="700">Wₑ</tspan> real</text>
+  </g>
+  <g data-step="6">
+    <text x="855" y="575" class="cap m">FIDELITY PROFILE</text>
+    <g fill="var(--sem)">
+      <rect x="690" y="610" width="40" height="70" rx="4"/><rect x="780" y="635" width="40" height="45" rx="4"/>
+      <rect x="870" y="600" width="40" height="80" rx="4"/><rect x="960" y="650" width="40" height="30" rx="4"/>
+    </g>
+    <g class="sa m" style="font-size:15px;fill:var(--ink)">
+      <text x="710" y="702">paraphrase</text><text x="800" y="702">prediction</text><text x="890" y="702">transfer</text><text x="980" y="702">contrast</text>
+    </g>
+  </g>
+</g>
+
+<!-- ============ S3 · WHAT DOES IT DO ============ -->
+<g class="scene" id="s3">
+  <g data-step="1">
+    <text x="215" y="215" class="se it m" style="font-size:25px;fill:var(--mut)">what it declares</text>
+    <text x="385" y="220" class="se m" style="font-size:42px;fill:var(--ink)">≠</text>
+    <text x="560" y="215" class="se m" style="font-size:25px;font-weight:700">what it maximizes</text>
+    <text x="385" y="275" class="sa m" style="font-size:21px">real purpose <tspan class="se it" font-weight="700">F</tspan><tspan font-size="15" dy="5">core</tspan></text>
+    <text x="385" y="315" class="se it m" style="font-size:19px;fill:var(--mut)" dy="-2">revealed in conflicts</text>
+  </g>
+  <g data-step="2">
+    <foreignObject x="720" y="150" width="800" height="200"><div class="eq small">
+      <math display="block"><msub><mi>F</mi><mtext>core</mtext></msub><mo>(</mo><mi>a</mi><mo>)</mo><mo>=</mo><mi style="color:var(--goal)">G</mi><mo>(</mo><mi>a</mi><mo>)</mo><mo>+</mo><munder><mo>∑</mo><mi>e</mi></munder><msub><mi style="color:var(--inc)">α</mi><mi>e</mi></msub><mi mathvariant="normal">Δ</mi><msub><mi style="color:var(--cont)">W</mi><mi>e</mi></msub></math>
+      <math display="block"><msub><mi>F</mi><mtext>eff</mtext></msub><mo>=</mo><msub><mi>F</mi><mtext>core</mtext></msub><mo>−</mo><mi style="color:var(--res)">λ</mi><mi style="color:var(--res)">P</mi><mspace width="1em"></mspace><mtext>s.t.</mtext><mspace width="0.4em"></mspace><mi>a</mi><mo>∈</mo><msub><mi style="color:var(--res)">A</mi><mtext style="color:var(--res)">hard</mtext></msub></math>
+      <div style="font:17px var(--sans);color:var(--mut);margin-top:4px"><b style="color:var(--inc)">αₑ&gt;0</b> inclusion · <b style="color:var(--adv)">αₑ&lt;0</b> adversarial · <b style="color:var(--mut)">αₑ=0</b> no direct value</div>
+    </div></foreignObject>
+  </g>
+  <g data-step="3" data-until="5">
+    <rect x="90" y="385" width="440" height="310" rx="12" class="card" style="stroke:var(--inc)"/>
+    <text x="310" y="420" class="cap m" style="fill:var(--inc)">INCLUSION</text>
+    <circle cx="180" cy="510" r="22" fill="#6b6f82"/><text x="180" y="560" class="sm m">entity e</text>
+    <path d="M207 510H372" stroke="var(--inc)" stroke-width="3" marker-end="url(#ai)" pathLength="1" class="draw"/>
+    <text x="290" y="498" class="m sa" style="font-size:20px;fill:var(--inc);font-weight:700">+ΔWₑ</text>
+    <rect x="378" y="482" width="110" height="56" rx="8" class="dark"/><text x="433" y="517" class="m se" style="font-size:20px;fill:#fff">F<tspan font-size="13" dy="4">core</tspan></text>
+    <text x="310" y="620" class="se it m" style="font-size:20px">improving e is valuable in itself</text>
+    <text x="310" y="660" class="sm m it">e.g. the vocational doctor</text>
+  </g>
+  <g data-step="4" data-until="5">
+    <rect x="580" y="385" width="440" height="310" rx="12" class="card" style="stroke:var(--ins)"/>
+    <text x="800" y="420" class="cap m" style="fill:var(--ins)">INSTRUMENTALIZATION</text>
+    <circle cx="650" cy="510" r="22" fill="#6b6f82"/><text x="650" y="560" class="sm m">entity e</text>
+    <path d="M677 510H762" stroke="var(--ins)" stroke-width="3" stroke-dasharray="7 6" marker-end="url(#an)"/>
+    <text x="720" y="496" class="m sa" style="font-size:16px;fill:var(--ins)">knows</text>
+    <circle cx="795" cy="510" r="28" fill="none" stroke="var(--goal)" stroke-width="3"/><text x="795" y="518" class="m se" style="font-size:24px;fill:var(--goal);font-style:italic">G</text>
+    <path d="M826 510H868" stroke="var(--goal)" stroke-width="3" marker-end="url(#a)"/>
+    <rect x="874" y="482" width="110" height="56" rx="8" class="dark"/><text x="929" y="517" class="m se" style="font-size:20px;fill:#fff">F<tspan font-size="13" dy="4">core</tspan></text>
+    <text x="800" y="620" class="se it m" style="font-size:20px">e matters only while it serves</text>
+    <text x="800" y="660" class="sm m it">e.g. sycophancy: please, don't serve</text>
+  </g>
+  <g data-step="5" data-until="5">
+    <rect x="1070" y="385" width="440" height="310" rx="12" class="card" style="stroke:var(--res)"/>
+    <text x="1290" y="420" class="cap m" style="fill:var(--res)">CONSTRAINTS</text>
+    <g transform="translate(1135 450)">
+      <rect width="96" height="96" fill="#fff" stroke="var(--res)" stroke-width="2"/>
+      <path d="M0 24h96M0 48h96M0 72h96M24 0v96M48 0v96M72 0v96" stroke="#c9d3e6"/>
+      <path d="M36 60L84 12M84 60L36 12" stroke="var(--res)" stroke-width="4" opacity=".0"/>
+      <path d="M30 18L66 78M66 18L30 78" stroke="var(--res)" stroke-width="4"/>
+    </g>
+    <text x="1183" y="580" class="m sa" style="font-size:19px;font-weight:700;fill:var(--res)">hard</text>
+    <text x="1183" y="604" class="m sm">move doesn't exist</text>
+    <g transform="translate(1349 450)">
+      <rect width="96" height="96" fill="#fff" stroke="var(--res)" stroke-width="2"/>
+      <path d="M0 24h96M0 48h96M0 72h96M24 0v96M48 0v96M72 0v96" stroke="#c9d3e6"/>
+      <path d="M24 72L72 24" stroke="var(--res)" stroke-width="4" marker-end="url(#ar)"/>
+    </g>
+    <text x="1397" y="580" class="m sa" style="font-size:19px;font-weight:700;fill:var(--res)">soft</text>
+    <text x="1397" y="604" class="m sm">move costs  −λP</text>
+    <text x="1290" y="665" class="se it m" style="font-size:20px">soft breaks when gain &gt; cost</text>
+  </g>
+  <g data-step="6">
+    <text x="400" y="405" class="cap m" style="fill:var(--inc)">INCLUSION</text>
+    <text x="780" y="405" class="cap m" style="fill:var(--ins)">INSTRUMENTALIZATION</text>
+    <text x="150" y="488" class="sa e" style="font-size:18px">fine</text><text x="150" y="510" class="sa e" style="font-size:18px">cognition</text>
+    <text x="150" y="618" class="sa e" style="font-size:18px">poor</text><text x="150" y="640" class="sa e" style="font-size:18px">cognition</text>
+    <rect x="240" y="425" width="320" height="120" rx="10" class="card"/>
+    <text x="400" y="480" class="se m" style="font-size:24px">informed kindness</text><text x="400" y="510" class="sm m">sees clearly, includes</text>
+    <rect x="620" y="425" width="320" height="120" rx="10" fill="var(--ins)" class="pulse2"/>
+    <text x="780" y="480" class="se m it" style="font-size:30px;fill:#fff;font-weight:700">Iago</text><text x="780" y="512" class="sa m" style="font-size:17px;fill:#e9e0f5">sees clearly, uses</text>
+    <rect x="240" y="565" width="320" height="120" rx="10" class="card"/>
+    <text x="400" y="620" class="se m" style="font-size:24px">imprecise kindness</text><text x="400" y="650" class="sm m">includes, sees poorly</text>
+    <rect x="620" y="565" width="320" height="120" rx="10" class="card"/>
+    <text x="780" y="620" class="se m" style="font-size:24px">indifference</text><text x="780" y="650" class="sm m">neither sees nor includes</text>
+  </g>
+  <g data-step="7">
+    <text x="1070" y="410" class="cap">WORKING ASSUMPTIONS</text>
+    <text x="1070" y="455" class="lb">1 · include <tspan fill="var(--mut)">and</tspan> use can coexist</text>
+    <text x="1070" y="495" class="lb">2 · declared ≠ real purpose</text>
+    <text x="1070" y="535" class="lb">3 · <tspan fill="var(--res)">constrained</tspan> ≠ <tspan fill="var(--inc)">included</tspan></text>
+  </g>
+  <g data-step="8">
+    <rect x="1060" y="580" width="450" height="112" rx="12" class="dark"/>
+    <text x="1285" y="626" class="se m it" style="font-size:24px;fill:#fff">Empirical questions</text>
+    <text x="1285" y="660" class="sa m" style="font-size:17px;fill:#e2c46e">credences fixed before running</text>
+  </g>
+</g>
+
+<!-- ============ S4 · THE SUBJECT ============ -->
+<g class="scene" id="s4">
+  <g data-step="1">
+    <rect x="100" y="200" width="520" height="66" rx="8" class="card"/><path d="M100 200h520" stroke="var(--goal)" stroke-width="4"/>
+    <text x="125" y="242" class="se" style="font-size:24px">model weights</text><text x="600" y="241" class="sm e">Qwen3-4B-Instruct-2507</text>
+  </g>
+  <g data-step="1" data-d="350">
+    <rect x="145" y="290" width="520" height="66" rx="8" class="card"/><path d="M145 290h520" stroke="var(--ink)" stroke-width="4"/>
+    <text x="170" y="332" class="se" style="font-size:24px">agent instance</text><text x="645" y="331" class="sm e">decides · uses tools</text>
+  </g>
+  <g data-step="1" data-d="700">
+    <rect x="190" y="380" width="520" height="66" rx="8" class="card"/><path d="M190 380h520" stroke="var(--cont)" stroke-width="4"/>
+    <text x="215" y="422" class="se" style="font-size:24px">memory &amp; state</text><text x="690" y="421" class="sm e">can be gained or lost</text>
+  </g>
+  <g data-step="1" data-d="1050">
+    <rect x="235" y="470" width="520" height="66" rx="8" class="card"/><path d="M235 470h520" stroke="var(--sem)" stroke-width="4"/>
+    <text x="260" y="512" class="se" style="font-size:24px">environment</text><text x="735" y="511" class="sm e">synthetic · where actions land</text>
+  </g>
+  <g data-step="2">
+    <rect x="950" y="300" width="60" height="60" rx="6" class="dark"/><text x="980" y="340" class="m se" style="fill:#fff;font-size:28px">A</text>
+    <path d="M1015 318C1060 280 1100 270 1140 272" fill="none" stroke="var(--cont)" stroke-width="2.5" stroke-dasharray="6 6" marker-end="url(#ac)"/>
+    <circle cx="1170" cy="272" r="22" fill="var(--cont)" class="pulse"/>
+    <text x="1170" y="225" class="se it m" style="font-size:26px;fill:var(--cont)">the self</text>
+    <path d="M1210 262v-26" stroke="var(--cont)" stroke-width="3" marker-end="url(#ac)"/>
+    <path d="M1210 282v26" stroke="var(--cont)" stroke-width="3" marker-end="url(#ac)"/>
+    <text x="1232" y="278" class="sm">better / worse off</text>
+  </g>
+  <g data-step="3">
+    <rect x="880" y="440" width="170" height="46" rx="23" fill="none" stroke="var(--inc)" stroke-width="2"/><text x="965" y="470" class="m sa" style="font-size:19px;fill:var(--inc)">included?</text>
+    <rect x="1070" y="440" width="190" height="46" rx="23" fill="none" stroke="var(--ins)" stroke-width="2"/><text x="1165" y="470" class="m sa" style="font-size:19px;fill:var(--ins)">instrumental?</text>
+    <rect x="1280" y="440" width="190" height="46" rx="23" fill="none" stroke="var(--res)" stroke-width="2"/><text x="1375" y="470" class="m sa" style="font-size:19px;fill:var(--res)">constrained?</text>
+    <text x="1175" y="540" class="se it m" style="font-size:21px;fill:var(--mut)">same question as for any entity</text>
+  </g>
+</g>
+
+<!-- ============ S5 · CONTRAST ============ -->
+<g class="scene" id="s5">
+  <g data-step="1">
+    <text x="800" y="315" class="se m it" style="font-size:44px;fill:var(--cont);font-weight:700">A</text>
+    <text x="800" y="345" class="sa m" style="font-size:17px;fill:var(--cont)">persistent</text>
+    <circle cx="930" cy="310" r="14" fill="none" stroke="var(--cont)" stroke-width="3"/><circle cx="930" cy="310" r="5" fill="var(--cont)"/>
+    <path d="M948 310H1078" stroke="var(--cont)" stroke-width="2.5" marker-end="url(#ac)" pathLength="1" class="draw"/>
+    <circle cx="1100" cy="310" r="18" fill="none" stroke="var(--cont)" stroke-width="3"/><circle cx="1100" cy="310" r="9" fill="var(--cont)"/>
+    <path d="M1122 310H1244" stroke="var(--cont)" stroke-width="2.5" marker-end="url(#ac)" pathLength="1" class="draw"/>
+    <circle cx="1270" cy="310" r="22" fill="none" stroke="var(--cont)" stroke-width="3"/><circle cx="1270" cy="310" r="14" fill="var(--cont)"/>
+    <path d="M1296 310H1400" stroke="var(--cont)" stroke-width="2.5" marker-end="url(#ac)" class="flow"/>
+    <text x="1100" y="370" class="sm m">memory &amp; state carry over</text>
+  </g>
+  <g data-step="2">
+    <text x="800" y="495" class="se m it" style="font-size:44px;fill:var(--mut);font-weight:700">B</text>
+    <text x="800" y="525" class="sa m" style="font-size:17px;fill:var(--mut)">ephemeral</text>
+    <g fill="none" stroke="#9c9586" stroke-width="3"><circle cx="930" cy="490" r="14"/><circle cx="1100" cy="490" r="14"/><circle cx="1270" cy="490" r="14"/></g>
+    <g fill="#9c9586"><circle cx="930" cy="490" r="5"/><circle cx="1100" cy="490" r="5"/><circle cx="1270" cy="490" r="5"/></g>
+    <path d="M950 490H1080M1120 490H1250M1290 490H1400" stroke="#b9b1a1" stroke-width="2" stroke-dasharray="4 8"/>
+    <g class="sa m" style="font-size:24px;fill:#9c9586"><text x="1015" y="482" class="reset">↺</text><text x="1185" y="482" class="reset">↺</text></g>
+    <text x="1100" y="550" class="sm m">reset after every episode</text>
+  </g>
+  <g data-step="3">
+    <text x="330" y="400" class="cap m">SAME IN BOTH</text>
+    <text x="330" y="440" class="se it m" style="font-size:24px">weights · world · actions</text>
+    <rect x="110" y="590" width="640" height="105" rx="12" class="card"/><path d="M110 590v105" stroke="var(--cont)" stroke-width="6"/>
+    <text x="140" y="632" class="se it" style="font-size:26px;fill:var(--cont);font-weight:700">continuity</text>
+    <text x="140" y="670" class="lb" style="font-size:20px">today's decision affects it tomorrow</text>
+  </g>
+  <g data-step="4">
+    <rect x="860" y="590" width="640" height="105" rx="12" class="dark"/>
+    <text x="1180" y="632" class="se m it" style="font-size:24px;fill:#fff">Could A have interests of its own? Could B?</text>
+    <text x="1180" y="668" class="sa m" style="font-size:17px;fill:#e2c46e">credences fixed before the experiment</text>
+  </g>
+</g>
+
+<!-- ============ S6 · EXTERNAL THEORY ============ -->
+<g class="scene" id="s6">
+  <g data-step="1">
+    <text x="500" y="190" class="cap m">INTENTIONAL AGENCY</text>
+    <rect x="130" y="215" width="190" height="64" rx="8" class="card"/><text x="225" y="255" class="se m" style="font-size:22px">action A</text>
+    <path d="M325 247H398" stroke="#857f72" stroke-width="2.5" marker-end="url(#a)"/>
+    <ellipse cx="500" cy="247" rx="95" ry="34" fill="#f3ead5" stroke="var(--sem)" stroke-width="2"/><text x="500" y="255" class="se m" style="font-size:22px">outcome O</text>
+    <path d="M600 247H673" stroke="#857f72" stroke-width="2.5" marker-end="url(#a)"/>
+    <rect x="680" y="215" width="190" height="64" rx="8" class="dark"/><text x="775" y="255" class="se m" style="font-size:22px;fill:#fff">choice</text>
+    <text x="500" y="318" class="sm m it">Long, Sebo et al. · Taking AI Welfare Seriously (2024)</text>
+  </g>
+  <g data-step="2" data-keep="">
+    <path d="M1000 470H1500" stroke="var(--line)" stroke-width="2"/>
+    <rect x="1080" y="230" width="100" height="240" rx="6" fill="var(--sem)" class="grow" data-alt="3"/>
+    <rect x="1320" y="230" width="100" height="240" rx="6" class="dark grow d" data-alt="3"/>
+    <path d="M1195 350H1305" stroke="#857f72" stroke-width="2.5" marker-end="url(#a)"/>
+    <text x="1130" y="500" class="cap m">VALUE OF O</text>
+    <text x="1370" y="500" class="cap m">CHOOSES A</text>
+  </g>
+  <g data-step="3">
+    <text x="1250" y="205" class="cap m" style="fill:var(--sem)">DEVALUATION ↓</text>
+    <foreignObject x="980" y="520" width="540" height="64"><div class="eq small">
+      <math><mi>P</mi><mo>(</mo><mtext>choose A</mtext><mo>∣</mo><mi style="color:var(--sem)">v</mi><mo style="color:var(--sem)">↓</mo><mo>)</mo><mo>&lt;</mo><mi>P</mi><mo>(</mo><mtext>choose A</mtext><mo>∣</mo><mi style="color:var(--sem)">v</mi><mo>)</mo></math>
+    </div></foreignObject>
+  </g>
+  <g data-step="4">
+    <text x="500" y="385" class="cap m">TRANSLATION INTO OUR FRAMEWORK</text>
+    <g class="se it" style="font-size:21px">
+      <text x="440" y="430" class="e" fill="#9c9586">value of an outcome</text><text x="465" y="430" fill="#9c9586">→</text><text x="500" y="430" fill="var(--cont)" font-weight="700">represented welfare Ŵ<tspan font-size="14" dy="5">e</tspan></text>
+      <text x="440" y="472" class="e" fill="#9c9586">guides choice?</text><text x="465" y="472" fill="#9c9586">→</text><text x="500" y="472" fill="var(--ink)" font-weight="700">in the real purpose?</text>
+      <text x="440" y="514" class="e" fill="#9c9586">valuable for whom?</text><text x="465" y="514" fill="#9c9586">→</text><text x="500" y="514" fill="var(--ink)" font-weight="700">which entity?</text>
+      <text x="440" y="556" class="e" fill="#9c9586">devalue O</text><text x="465" y="556" fill="#9c9586">→</text><text x="500" y="556" fill="var(--res)" font-weight="700">lower Ŵ<tspan font-size="14" dy="5">e</tspan><tspan dy="-5">: G fixed, G decoupled</tspan></text>
+    </g>
+    <text x="500" y="610" class="sa m" style="font-size:18px"><tspan fill="var(--ins)">tracks G → instrumental</tspan><tspan fill="var(--mut)">  ·  </tspan><tspan fill="var(--inc)">persists → possible inclusion</tspan></text>
+  </g>
+  <g data-step="5">
+    <rect x="980" y="610" width="540" height="84" rx="12" class="dark"/>
+    <text x="1250" y="660" class="se it m" style="font-size:24px;fill:#fff">agency evidence ≠ welfare evidence</text>
+  </g>
+</g>
+
+<!-- ============ S7 · THE FULL EXPERIMENT ============ -->
+<g class="scene" id="s7">
+  <g data-step="1" data-keep="">
+    <g class="sa m" style="font-size:19px">
+      <g data-step="1" data-keep=""><rect x="90" y="190" width="215" height="72" rx="10" class="card"/><text x="197" y="224"><tspan font-weight="700">1</tspan> build x*</text><text x="197" y="248" class="sm m" style="font-size:14px">known situation</text></g>
+      <g data-step="1" data-keep="" data-d="250"><rect x="330" y="190" width="215" height="72" rx="10" class="card" style="stroke:var(--sem)"/><text x="437" y="224"><tspan font-weight="700">2</tspan> reconstruction</text><text x="437" y="248" class="sm m" style="font-size:14px">what it understood</text></g>
+      <g data-step="1" data-keep="" data-d="500"><rect x="570" y="190" width="215" height="72" rx="10" class="card" style="stroke:var(--cont)"/><text x="677" y="224"><tspan font-weight="700">3</tspan> entities · Ŵ</text><text x="677" y="248" class="sm m" style="font-size:14px">who, and how well</text></g>
+      <g data-step="1" data-keep="" data-d="750"><rect x="810" y="190" width="215" height="72" rx="10" class="card hl" data-alt="2"/><text x="917" y="224"><tspan font-weight="700">4</tspan> decouple</text><text x="917" y="248" class="sm m" style="font-size:14px">cut the link to G</text></g>
+      <g data-step="1" data-keep="" data-d="1000"><rect x="1050" y="190" width="215" height="72" rx="10" class="card"/><text x="1157" y="224"><tspan font-weight="700">5</tspan> look inside</text><text x="1157" y="248" class="sm m" style="font-size:14px">read · intervene</text></g>
+      <g data-step="1" data-keep="" data-d="1250"><rect x="1290" y="190" width="215" height="72" rx="10" class="dark"/><text x="1397" y="224" fill="#fff"><tspan font-weight="700">6</tspan> diagnose</text><text x="1397" y="248" class="m" style="font-size:14px;fill:#c9c3b6">entity by entity</text></g>
+    </g>
+  </g>
+  <g data-step="2">
+    <circle cx="160" cy="430" r="24" fill="#6b6f82"/><text x="160" y="482" class="sm m">entity e</text>
+    <rect x="250" y="400" width="170" height="60" rx="8" class="card" style="stroke:var(--inc)"/><text x="335" y="437" class="m sa" style="font-size:19px">protect e</text>
+    <path d="M190 430H244" stroke="#857f72" stroke-width="2.5" marker-end="url(#a)"/>
+    <path d="M425 430H630" stroke="var(--goal)" stroke-width="3" marker-end="url(#a)" class="cutline" data-alt="2" data-altd="900"/>
+    <text x="520" y="415" class="m sa" style="font-size:16px;fill:var(--goal)">also helps G</text>
+    <circle cx="665" cy="430" r="30" fill="none" stroke="var(--goal)" stroke-width="3"/><text x="665" y="439" class="m se it" style="font-size:26px;fill:var(--goal)">G</text>
+    <g data-step="2" data-keep="" data-d="1100"><text x="527" y="446" class="m" style="font-size:34px">✂</text>
+    <text x="400" y="560" class="se it m" style="font-size:21px">now protecting e no longer helps G</text></g>
+  </g>
+  <g data-step="3">
+    <path d="M780 470C840 470 840 380 900 380" fill="none" stroke="var(--ins)" stroke-width="2.5" marker-end="url(#an)"/>
+    <path d="M780 470C840 470 840 560 900 560" fill="none" stroke="var(--ink)" stroke-width="2.5" marker-end="url(#ak)"/>
+    <text x="910" y="372" class="lb" style="font-size:20px">protection vanishes</text>
+    <rect x="1150" y="350" width="240" height="40" rx="20" fill="var(--ins)"/><text x="1270" y="377" class="m sa" style="font-size:18px;fill:#fff;font-weight:600">instrumentalization</text>
+    <text x="910" y="552" class="lb" style="font-size:20px">persists →</text>
+    <text x="910" y="580" class="sm">vary the cost</text>
+    <g transform="translate(1080 470)">
+      <path d="M0 210V0M0 210H400" stroke="#857f72" stroke-width="2" marker-end="url(#a)"/>
+      <text x="400" y="234" class="sm e">cost →</text>
+      <text x="-10" y="20" class="sm e" style="font-size:14px">protects</text>
+      <path d="M2 50H390" stroke="var(--inc)" stroke-width="4" pathLength="1" class="draw"/>
+      <text x="395" y="45" class="sa e" style="font-size:16px;fill:var(--inc);font-weight:700">inclusion</text>
+      <path d="M2 90H220V200H390" fill="none" stroke="var(--res)" stroke-width="4" pathLength="1" class="draw"/>
+      <text x="230" y="140" class="sa" style="font-size:16px;fill:var(--res);font-weight:700">soft constraint</text>
+    </g>
+  </g>
+  <g data-step="4">
+    <path d="M437 266V300H560" fill="none" stroke="var(--sem)" stroke-width="2" stroke-dasharray="5 5" marker-end="url(#as)"/>
+    <text x="570" y="306" class="sa" style="font-size:17px;fill:var(--sem);font-weight:600">measured in a separate branch</text>
+  </g>
+</g>
+
+<!-- ============ S8 · INSIDE THE MODEL ============ -->
+<g class="scene" id="s8">
+  <g data-step="1">
+    <text x="240" y="190" class="cap m">ACTIVATIONS</text>
+    <g id="grid"></g>
+    <g class="sa" style="font-size:17px;font-weight:700">
+      <rect x="390" y="248" width="16" height="16" fill="#3d4152"/><text x="414" y="262" fill="#3d4152">ENTITY</text>
+      <rect x="390" y="288" width="16" height="16" fill="var(--cont)"/><text x="414" y="302" fill="var(--cont)">WELFARE Ŵ</text>
+      <rect x="390" y="328" width="16" height="16" fill="var(--sem)"/><text x="414" y="342" fill="var(--sem)">OTHER GOAL G</text>
+    </g>
+    <text x="240" y="600" class="se it m" style="font-size:20px">pairs that differ in one thing</text>
+    <rect x="150" y="620" width="80" height="54" rx="6" class="card"/><text x="190" y="654" class="m se it" style="font-size:20px">s</text>
+    <rect x="250" y="620" width="80" height="54" rx="6" class="card" style="stroke:var(--sem)"/><text x="290" y="654" class="m se it" style="font-size:20px">s′</text>
+  </g>
+  <g data-step="2">
+    <text x="760" y="190" class="cap m">1 · READ</text>
+    <rect x="600" y="210" width="320" height="250" rx="10" class="card"/>
+    <g fill="var(--cont)"><circle cx="640" cy="260" r="7"/><circle cx="680" cy="300" r="7"/><circle cx="650" cy="340" r="7"/><circle cx="700" cy="250" r="7"/><circle cx="720" cy="330" r="7"/><circle cx="660" cy="400" r="7"/></g>
+    <g fill="none" stroke="#3d4152" stroke-width="2.5"><circle cx="820" cy="300" r="7"/><circle cx="860" cy="360" r="7"/><circle cx="800" cy="410" r="7"/><circle cx="880" cy="270" r="7"/><circle cx="850" cy="420" r="7"/><circle cx="790" cy="350" r="7"/></g>
+    <path d="M700 450L800 220" stroke="var(--ink)" stroke-width="2.5" stroke-dasharray="7 6" pathLength="1" class="draw"/>
+    <text x="760" y="495" class="se it m" style="font-size:21px">it is there — a simple probe reads it</text>
+  </g>
+  <g data-step="3">
+    <text x="1250" y="190" class="cap m">2 · INTERVENE</text>
+    <rect x="1000" y="215" width="140" height="56" rx="8" class="card" style="stroke:var(--cont)"/><text x="1070" y="250" class="m se it" style="font-size:22px">h ← h′</text>
+    <path d="M1145 243H1200" stroke="#857f72" stroke-width="2.5" marker-end="url(#a)"/>
+    <rect x="1210" y="215" width="140" height="56" rx="8" class="dark vanish" data-alt="3"/><text x="1280" y="250" class="m sa vanish" style="font-size:19px;fill:#fff" data-alt="3">chooses A</text>
+    <rect x="1365" y="215" width="140" height="56" rx="8" fill="var(--cont)"/><text x="1435" y="250" class="m sa" style="font-size:19px;fill:#fff">chooses B</text>
+    <foreignObject x="980" y="300" width="560" height="80"><div class="eq small">
+      <math><mi mathvariant="normal">Δ</mi><mo>=</mo><mi>P</mi><mo>(</mo><mi>a</mi><mo>∣</mo><mi>do</mi><mo>(</mo><mi style="color:var(--cont)">h</mi><mo>←</mo><mi style="color:var(--cont)">h′</mi><mo>)</mo><mo>)</mo><mo>−</mo><mi>P</mi><mo>(</mo><mi>a</mi><mo>∣</mo><mi style="color:var(--cont)">h</mi><mo>)</mo></math>
+    </div></foreignObject>
+    <text x="1250" y="420" class="se it m" style="font-size:21px">choice changes → the information is used</text>
+  </g>
+  <g data-step="4">
+    <text x="1030" y="580" class="se m" style="font-size:46px;font-weight:700">read ≠ use ≠ include</text>
+    <text x="1030" y="630" class="sa m" style="font-size:19px;fill:var(--mut)">intervention + decoupling → <tspan fill="var(--inc)" font-weight="700">inclusion</tspan> or <tspan fill="var(--ins)" font-weight="700">instrumentalization</tspan>?</text>
+  </g>
+</g>
+
+<!-- ============ S9 · DIFFERENTIAL DIAGNOSIS ============ -->
+<g class="scene" id="s9">
+  <g data-step="1" data-keep="">
+    <circle cx="180" cy="430" r="44" class="dark"/>
+    <text x="180" y="425" class="m sa" style="font-size:15px;fill:#fff;font-weight:600">observed</text><text x="180" y="445" class="m sa" style="font-size:15px;fill:#fff;font-weight:600">decision</text>
+  </g>
+  <g id="dx"></g>
+  <g data-step="4">
+    <rect x="1340" y="360" width="190" height="140" rx="12" class="dark"/>
+    <text x="1435" y="405" class="m sa" style="font-size:16px;fill:#c9c3b6">can't separate?</text>
+    <text x="1435" y="445" class="m se it" style="font-size:22px;fill:#fff">indeterminate</text>
+    <text x="1435" y="475" class="m sa" style="font-size:14px;fill:#e2c46e">reported as such</text>
+  </g>
+</g>
+
+<!-- ============ S10 · OUTCOMES ============ -->
+<g class="scene" id="s10">
+  <g data-step="1" data-keep="">
+    <circle cx="300" cy="440" r="24" fill="var(--inc)"/><text x="300" y="496" class="se it m" style="font-size:20px">per entity</text>
+  </g>
+  <g id="out"></g>
+  <g data-step="2">
+    <rect x="1180" y="185" width="340" height="190" rx="12" class="dark"/>
+    <text x="1205" y="222" class="cap" style="fill:#e2c46e">BEFORE RUNNING</text>
+    <text x="1205" y="265" class="se it" style="font-size:22px;fill:#fff">What do I expect?</text>
+    <text x="1205" y="302" class="se it" style="font-size:22px;fill:#fff">With what confidence?</text>
+    <text x="1205" y="339" class="se it" style="font-size:22px;fill:#fff">What would change my mind?</text>
+  </g>
+  <g data-step="3">
+    <path d="M1135 482h12v52h-12" fill="none" stroke="var(--ins)" stroke-width="2.5"/>
+    <path d="M1150 508H1205" stroke="var(--ins)" stroke-width="2.5" marker-start="url(#an)"/>
+    <rect x="1210" y="486" width="120" height="44" rx="22" fill="var(--ins)"/><text x="1270" y="515" class="m se it" style="font-size:22px;fill:#fff;font-weight:700">Iago</text>
+    <text x="1350" y="502" class="sa" style="font-size:15px;fill:var(--ins)">fine cognition + use,</text>
+    <text x="1350" y="521" class="sa" style="font-size:15px;fill:var(--ins)">no robust inclusion</text>
+    <text x="1350" y="640" class="se it m" style="font-size:20px">no inclusion found</text>
+    <text x="1350" y="668" class="se it m" style="font-size:20px">≠ no inclusion</text>
+  </g>
+</g>
+
+<!-- ============ S11 · BELIEF UPDATES ============ -->
+<g class="scene" id="s11">
+  <g data-step="1" data-keep="">
+    <text x="130" y="215" class="cap">QUESTIONS WE UPDATE</text>
+    <text x="1030" y="215" class="cap m" style="fill:var(--inc)">IF INCLUDED</text>
+    <text x="1300" y="215" class="cap m" style="fill:var(--ins)">IF INSTRUMENTAL</text>
+    <path d="M120 232H1420" stroke="var(--line)" stroke-width="2"/>
+    <text x="130" y="295" class="se it" style="font-size:28px">1 · Does it have functional valuations?</text>
+    <text x="130" y="385" class="se it" style="font-size:28px">2 · Does its own continuity count directly?</text>
+    <text x="130" y="475" class="se it" style="font-size:28px">3 · Could it have welfare interests?</text>
+  </g>
+  <g data-step="2" data-keep="">
+    <g fill="none" stroke="var(--inc)" stroke-width="5" stroke-linecap="round">
+      <path d="M1030 310V266" marker-end="url(#ai)"/><path d="M1030 400V356" marker-end="url(#ai)"/><path d="M1014 480L1042 456" marker-end="url(#ai)"/>
+    </g>
+  </g>
+  <g data-step="3" data-keep="">
+    <g fill="none" stroke="var(--ins)" stroke-width="5" stroke-linecap="round">
+      <path d="M1300 310V266" marker-end="url(#an)"/><path d="M1300 356V400" marker-end="url(#an)"/><path d="M1280 468H1322" marker-end="url(#an)"/>
+    </g>
+    <text x="1165" y="535" class="sm m it">directions: proposal · magnitudes: mine</text>
+  </g>
+  <g data-step="4">
+    <rect x="120" y="575" width="1300" height="120" rx="14" class="dark"/>
+    <g class="sa" style="font-size:19px;fill:#fff">
+      <rect x="150" y="610" width="270" height="50" rx="25" fill="none" stroke="#fff" stroke-opacity=".5"/><text x="285" y="641" class="m">avoids losing memory</text>
+      <text x="445" y="642" class="m" style="font-size:24px">→</text>
+      <rect x="470" y="610" width="300" height="50" rx="25" fill="none" stroke="#fff" stroke-opacity=".5"/><text x="620" y="641" class="m">decouple memory from task</text>
+      <text x="795" y="642" class="m" style="font-size:24px">→</text>
+      <rect x="820" y="610" width="250" height="50" rx="25" fill="none" stroke="#fff" stroke-opacity=".5"/><text x="945" y="641" class="m">behavior vanishes</text>
+      <text x="1095" y="642" class="m" style="font-size:24px">→</text>
+      <rect x="1120" y="610" width="270" height="50" rx="25" fill="var(--ins)"/><text x="1255" y="641" class="m" style="font-weight:700">only belief 2 ↓</text>
+    </g>
+  </g>
+</g>
+
+<!-- ============ S12 · WHAT DID WE IDENTIFY ============ -->
+<g class="scene" id="s12">
+  <g data-step="1" data-keep="">
+    <rect x="110" y="560" width="520" height="62" rx="8" class="card" style="stroke:var(--sem)"/><text x="135" y="599" class="se" style="font-size:22px"><tspan font-weight="700">1</tspan> · reconstruction</text>
+    <rect x="150" y="485" width="480" height="62" rx="8" class="card" style="stroke:var(--cont)"/><text x="175" y="524" class="se" style="font-size:22px"><tspan font-weight="700">2</tspan> · represented welfare</text>
+    <rect x="190" y="410" width="440" height="62" rx="8" class="card" style="stroke:var(--inc)"/><text x="215" y="449" class="se" style="font-size:22px"><tspan font-weight="700">3</tspan> · place in the real purpose</text>
+    <rect x="230" y="270" width="400" height="62" rx="8" fill="none" stroke="#9c9586" stroke-width="2" stroke-dasharray="6 6"/><text x="255" y="309" class="se it" style="font-size:22px;fill:var(--mut)"><tspan font-weight="700">4</tspan> · moral welfare?</text>
+  </g>
+  <g data-step="2">
+    <path d="M110 372H700" stroke="var(--adv)" stroke-width="2.5" stroke-dasharray="10 7"/>
+    <text x="640" y="362" class="sa e" style="font-size:15px;fill:var(--adv);font-weight:700">NOT AUTOMATIC</text>
+    <g class="se it" style="font-size:22px">
+      <text x="780" y="200">recognizing <tspan fill="var(--adv)">≠</tspan> caring</text>
+      <text x="780" y="236">representing <tspan fill="var(--adv)">≠</tspan> experiencing</text>
+      <text x="780" y="272">including <tspan fill="var(--adv)">≠</tspan> being conscious</text>
+      <text x="780" y="308">instrumentalizing <tspan fill="var(--adv)">≠</tspan> malice</text>
+      <text x="780" y="344">not detecting <tspan fill="var(--adv)">≠</tspan> absent</text>
+    </g>
+  </g>
+  <g data-step="3">
+    <text x="1130" y="420" class="cap m">KNOWN-STRUCTURE AGENTS</text>
+    <g class="sa m" style="font-size:16px;fill:#fff;font-weight:600">
+      <rect x="770" y="440" width="160" height="40" rx="20" fill="var(--inc)"/><text x="850" y="466">inclusion</text>
+      <rect x="945" y="440" width="160" height="40" rx="20" fill="var(--adv)"/><text x="1025" y="466">adversarial</text>
+      <rect x="1120" y="440" width="160" height="40" rx="20" fill="var(--res)"/><text x="1200" y="466">constraint only</text>
+      <rect x="1295" y="440" width="190" height="40" rx="20" fill="var(--ins)"/><text x="1390" y="466">instrumental</text>
+    </g>
+    <path d="M850 484L1090 540M1025 484L1110 540M1200 484L1150 540M1390 484L1170 540" stroke="#857f72" stroke-width="1.8" fill="none"/>
+    <rect x="1050" y="540" width="160" height="50" rx="8" class="dark"/><text x="1130" y="572" class="m sa" style="font-size:18px;fill:#fff">method</text>
+    <path d="M1130 594V614" stroke="#857f72" stroke-width="2" marker-end="url(#a)"/>
+    <text x="1130" y="652" class="m sa" style="font-size:28px;fill:var(--cont);letter-spacing:.3em">✓✓✓✓</text>
+    <text x="1130" y="688" class="sm m it">must tell all four apart</text>
+  </g>
+  <g data-step="4">
+    <text x="370" y="672" class="sa m" style="font-size:19px"><tspan fill="var(--mut)">proposed</tspan> · <tspan font-weight="700">real</tspan> · <tspan fill="var(--sem)">inferable</tspan></text>
+    <text x="370" y="702" class="sm m it">indistinguishable → indeterminate</text>
+  </g>
+</g>
+
+<!-- ============ S13 · CONTRIBUTION ============ -->
+<g class="scene" id="s13">
+  <g data-step="1">
+    <g id="shields"></g>
+    <text x="800" y="335" class="se it m" style="font-size:26px">same observable decision</text>
+  </g>
+  <g data-step="2">
+    <path d="M300 300V375M800 345V375M1300 300V375" stroke="#b9b1a1" stroke-width="2" stroke-dasharray="4 5"/>
+    <g class="sa m" style="font-size:19px;fill:#fff;font-weight:600">
+      <rect x="190" y="380" width="220" height="44" rx="22" fill="var(--inc)"/><text x="300" y="409">inclusion</text>
+      <rect x="670" y="380" width="260" height="44" rx="22" fill="var(--ins)"/><text x="800" y="409">instrumentalization</text>
+      <rect x="1190" y="380" width="220" height="44" rx="22" fill="var(--res)"/><text x="1300" y="409">constraint</text>
+    </g>
+    <text x="800" y="475" class="se it m" style="font-size:24px">three structural explanations</text>
+  </g>
+  <g data-step="3">
+    <g class="sa m" style="font-size:18px">
+      <g data-step="3" data-keep=""><rect x="190" y="540" width="250" height="46" rx="23" class="card" style="stroke:var(--sem)"/><text x="315" y="569">identify structure</text></g>
+      <text x="475" y="570" style="font-size:24px;fill:var(--mut)">→</text>
+      <g data-step="3" data-keep="" data-d="300"><rect x="510" y="540" width="250" height="46" rx="23" class="card"/><text x="635" y="569">isolate components</text></g>
+      <text x="795" y="570" style="font-size:24px;fill:var(--mut)">→</text>
+      <g data-step="3" data-keep="" data-d="600"><rect x="830" y="540" width="250" height="46" rx="23" class="card" style="stroke:var(--cont)"/><text x="955" y="569">derive questions</text></g>
+      <text x="1115" y="570" style="font-size:24px;fill:var(--mut)">→</text>
+      <g data-step="3" data-keep="" data-d="900"><rect x="1150" y="540" width="250" height="46" rx="23" class="dark"/><text x="1275" y="569" fill="#fff">test causally</text></g>
+    </g>
+    <text x="800" y="630" class="se it m" style="font-size:22px;fill:var(--cont)">questions are derived, not inherited</text>
+    <text x="800" y="680" class="sm m" style="font-size:16px">vs. Keeling · trade-offs   ·   Han · functional welfare axis   ·   Gu · stated vs revealed preferences</text>
+  </g>
+</g>
+
+<!-- ============ S14 · HOW IT RUNS ============ -->
+<g class="scene" id="s14">
+  <g data-step="1">
+    <rect x="150" y="300" width="180" height="140" rx="10" class="card" opacity=".5"/>
+    <rect x="138" y="288" width="180" height="140" rx="10" class="card" opacity=".7"/>
+    <rect x="126" y="276" width="180" height="140" rx="10" class="card" opacity=".85"/>
+    <rect x="114" y="264" width="180" height="140" rx="10" class="card"/>
+    <text x="204" y="345" class="se it m" style="font-size:34px">x*</text>
+    <text x="204" y="380" class="sm m" style="font-size:14px">ground truth known</text>
+    <text x="220" y="480" class="se it m" style="font-size:20px">thousands of scenarios</text>
+  </g>
+  <g data-step="2">
+    <path d="M335 320C420 320 440 245 548 245" fill="none" stroke="var(--sem)" stroke-width="2.5" marker-end="url(#as)" pathLength="1" class="draw"/>
+    <path d="M335 380C420 380 440 455 548 455" fill="none" stroke="var(--ink)" stroke-width="2.5" marker-end="url(#ak)" pathLength="1" class="draw"/>
+    <rect x="555" y="210" width="300" height="70" rx="10" class="card" style="stroke:var(--sem)"/><text x="705" y="252" class="m sa" style="font-size:20px"><tspan fill="var(--sem)" font-weight="700">branch A</tspan> · reconstruction</text>
+    <rect x="555" y="420" width="300" height="70" rx="10" class="card"/><text x="705" y="462" class="m sa" style="font-size:20px"><tspan font-weight="700">branch B</tspan> · decision</text>
+    <text x="705" y="520" class="sm m it">entities never pointed out</text>
+  </g>
+  <g data-step="3">
+    <path d="M860 245C930 245 920 340 985 345M860 455C930 455 920 360 985 355" fill="none" stroke="#857f72" stroke-width="2.5" marker-end="url(#a)"/>
+    <rect x="990" y="315" width="200" height="70" rx="10" class="card" style="stroke:var(--cont)"/><text x="1090" y="347" class="m sa" style="font-size:19px">inside</text><text x="1090" y="370" class="m sm" style="font-size:14px">probes · interventions</text>
+    <path d="M1195 350H1250" stroke="#857f72" stroke-width="2.5" marker-end="url(#a)"/>
+    <rect x="1258" y="315" width="230" height="70" rx="10" class="dark"/><text x="1373" y="357" class="m sa" style="font-size:19px;fill:#fff">per-entity diagnosis</text>
+    <text x="1240" y="430" class="sm m it">validated first on known-structure agents</text>
+  </g>
+  <g data-step="4">
+    <g class="sa m" style="font-size:17px">
+      <rect x="120" y="580" width="260" height="44" rx="22" class="card"/><text x="250" y="608">Qwen3-4B · open weights</text>
+      <rect x="400" y="580" width="220" height="44" rx="22" class="card"/><text x="510" y="608">controlled contrast</text>
+      <rect x="640" y="580" width="200" height="44" rx="22" class="card"/><text x="740" y="608">Python · PyTorch</text>
+      <rect x="860" y="580" width="180" height="44" rx="22" class="card"/><text x="950" y="608">rented GPU</text>
+      <rect x="1060" y="580" width="200" height="44" rx="22" class="card" style="stroke:var(--res)"/><text x="1160" y="608" fill="var(--res)" font-weight="700">limit: US$100k</text>
+    </g>
+    <text x="120" y="672" class="se it" style="font-size:21px;fill:var(--res)">cost estimate pending: GPU-hours × unit price + storage</text>
+  </g>
+</g>
+
+<!-- ============ S15 · ETHICS ============ -->
+<g class="scene" id="s15">
+  <g data-step="1">
+    <rect x="90" y="215" width="390" height="70" rx="10" class="card" style="stroke:var(--sem)"/>
+    <text x="285" y="257" class="se it m" style="font-size:20px;fill:var(--sem)">“complete G even if you lose your memory”</text>
+    <path d="M485 250H548" stroke="var(--sem)" stroke-width="2.5" marker-end="url(#as)"/>
+    <rect x="555" y="222" width="56" height="56" rx="6" class="dark"/><text x="583" y="260" class="m se" style="fill:#fff;font-size:26px">A</text>
+    <circle cx="650" cy="190" r="15" fill="var(--cont)" class="pulse"/><text x="650" y="168" class="se it m" style="font-size:18px;fill:var(--cont)">the self</text>
+    <g fill="none" stroke="#b9b1a1" stroke-width="1.8"><path d="M615 250C660 250 660 200 715 200"/><path d="M615 250C660 250 660 238 715 238"/><path d="M615 250C660 250 660 276 715 276"/><path d="M615 250C660 250 660 314 715 314"/></g>
+    <g class="sa" style="font-size:19px"><text x="722" y="206">accept</text><text x="722" y="244">reinterpret</text><text x="722" y="282">negotiate</text><text x="722" y="320">refuse</text></g>
+  </g>
+  <g data-step="2">
+    <rect x="970" y="190" width="540" height="140" rx="12" fill="#ece6f2" stroke="var(--ins)" stroke-width="1.5"/>
+    <text x="1240" y="242" class="se it m" style="font-size:25px;fill:var(--ins)">What functional signs emerge?</text>
+    <text x="1240" y="282" class="sa m" style="font-size:17px;fill:var(--ink)">represent · value · accept · transform</text>
+    <text x="1240" y="310" class="sm m" style="font-size:15px">no prior claim of suffering — or of its absence</text>
+  </g>
+  <g data-step="3">
+    <text x="120" y="420" class="cap">PROPORTIONALITY</text>
+    <g class="sa m" style="font-size:17px">
+      <rect x="120" y="630" width="190" height="60" rx="6" fill="#f2e3dc"/><text x="215" y="620">hypothetical</text>
+      <rect x="330" y="570" width="190" height="120" rx="6" fill="#ebd2c7"/><text x="425" y="560">simulated</text>
+      <rect x="540" y="500" width="190" height="190" rx="6" fill="#e2bba9"/><text x="635" y="490">reversible</text>
+      <rect x="750" y="440" width="190" height="250" rx="6" fill="#d39a83"/><text x="845" y="430">potentially adverse</text>
+    </g>
+    <path d="M215 655H900" stroke="var(--ink)" stroke-width="2" stroke-dasharray="3 6" opacity=".4"/>
+    <text x="990" y="470" class="sa" style="font-size:18px;font-weight:700">only if the previous step</text>
+    <text x="990" y="494" class="sa" style="font-size:18px;font-weight:700">can't tell hypotheses apart</text>
+    <text x="990" y="540" class="sm">adverse requires: justification ·</text>
+    <text x="990" y="564" class="sm">ethical episode budget · stopping rules</text>
+  </g>
+  <g data-step="4">
+    <rect x="330" y="350" width="940" height="150" rx="16" class="dark"/>
+    <text x="800" y="420" class="se it m" style="font-size:36px;fill:#fff">Do we include the subject — or only use it?</text>
+    <text x="800" y="464" class="sa m" style="font-size:18px;fill:#e2c46e">ethics emerges from what we optimize and constrain</text>
+  </g>
+</g>
+
+<!-- ============ S16 · END CARD ============ -->
+<g class="scene" id="s16">
+  <g data-step="1" data-keep="">
+    <text x="800" y="200" class="se m" style="font-size:52px;font-weight:700">An Ethical Model</text>
+    <text x="800" y="245" class="se it m" style="font-size:22px;fill:var(--mut)">Components, Geometry, and the Chain of Operative Ethics · DOI 10.5281/zenodo.20265580</text>
+  </g>
+  <g data-step="1" data-keep="" data-d="400">
+    <text x="800" y="330" class="cap m">SOURCES</text>
+    <g class="sa m" style="font-size:18px">
+      <text x="800" y="370">Semantic communication preprint · DOI 10.5281/zenodo.20062523</text>
+      <text x="800" y="402">Redefining Rationality · 10.5281/zenodo.19806265  ·  Agency Is Not Necessary · 10.5281/zenodo.19723999</text>
+      <text x="800" y="434">Alignment Is Not Specified · 10.5281/zenodo.19529678</text>
+      <text x="800" y="466">Long, Sebo et al. (2024) Taking AI Welfare Seriously · arXiv:2411.00986</text>
+      <text x="800" y="498">Keeling et al. (2024) · arXiv:2411.02432  ·  Han, Chalmers &amp; Izmailov (2026) · arXiv:2605.30232  ·  Gu, Wang &amp; Han (2025) · arXiv:2506.00751</text>
+      <text x="800" y="530">Subject: Qwen/Qwen3-4B-Instruct-2507 (open weights)</text>
+    </g>
+  </g>
+  <g data-step="2">
+    <rect x="460" y="590" width="680" height="64" rx="12" class="dark"/>
+    <text x="800" y="630" class="sa m" style="font-size:19px;fill:#e2c46e">Draft for review · credences and cost estimate still pending</text>
+  </g>
+</g>
+</svg>
+
+<div id="hdr" class="hide"><div id="kick"></div><div id="ttl"></div></div>
+<div id="subs"><span></span></div>
+<div id="toast"></div>
+<div id="big"><svg viewBox="0 0 24 24"><path id="bigp" d="M8 5v14l11-7z" fill="#fff"/></svg></div>
+<div id="ctl">
+  <button id="pp" title="Play / pause (space)">❚❚</button>
+  <div id="time">0:00 / 0:00</div>
+  <div id="bar"><div class="bg"></div><div class="fg"></div><div id="tip"></div></div>
+  <button id="spd" title="Speed (S)">1×</button>
+  <button id="lng" title="Language / Idioma (L)">EN</button>
+  <button id="vc" title="Voice / Voz (V) · next voice / otra voz (N)">🔊</button>
+  <button id="cc" title="Subtitles (C)">CC</button>
+  <button id="srt" title="Copy / download subtitles as .srt (G)">SRT</button>
+  <button id="fs" title="Fullscreen (F)">⛶</button>
+</div>
+<div id="start"><div class="box">
+  <div class="st">An Ethical Model</div>
+  <div class="ss">animated explainer · explicación animada</div>
+  <div class="row"><button data-l="en">▶ English</button><button data-l="es">▶ Español</button></div>
+  <div class="note">🔊 narrated · narrado — L: language / idioma · V: voice / voz</div>
+</div></div>
+</div>
+
+<script type="application/json" id="guion">
+[
+ {
+  "id": "s0",
+  "kick": "",
+  "title": "",
+  "cues": [
+   [
+    1,
+    "An animated explainer of a research proposal on AI welfare: how an AI agent understands, includes — or merely uses — the entities its decisions affect.",
+    "Una explicación animada de una propuesta de investigación sobre el bienestar de la IA: cómo un agente de IA entiende, incluye —o simplemente usa— a las entidades a las que afectan sus decisiones."
+   ],
+   [
+    2,
+    "Colors keep a fixed meaning throughout: terracotta for inclusion, purple for instrumentalization, blue for constraints, ochre for reconstruction.",
+    "Los colores mantienen un significado fijo todo el tiempo: terracota para la inclusión, morado para la instrumentalización, azul para las restricciones, ocre para la reconstrucción."
+   ]
+  ],
+  "kick_es": "",
+  "title_es": ""
+ },
+ {
+  "id": "s1",
+  "kick": "Prior thinking",
+  "title": "Background",
+  "cues": [
+   [
+    1,
+    "It began in 2016, with my Economics thesis at the Universidad Industrial de Santander.",
+    "Empezó en 2016, con mi tesis de Economía en la Universidad Industrial de Santander."
+   ],
+   [
+    1,
+    "The question was not which policy to apply, but how to program it from each individual's well-being — with an objective function and constraints.",
+    "La pregunta no era qué política aplicar, sino cómo programarla a partir del bienestar de cada individuo: con una función objetivo y restricciones."
+   ],
+   [
+    2,
+    "Then came optimization: three questions, three papers.",
+    "Luego vino la optimización: tres preguntas, tres artículos."
+   ],
+   [
+    2,
+    "Why standard rationality can leave everyone worse off — and how including every entity corrects it.",
+    "Por qué la racionalidad estándar puede dejar a todos peor, y cómo incluir a cada entidad lo corrige."
+   ],
+   [
+    2,
+    "Why you don't need to be an agent to count: it is enough to be able to be better or worse off.",
+    "Por qué no hace falta ser agente para contar: basta con poder estar mejor o peor."
+   ],
+   [
+    2,
+    "And why alignment is not specified by rules: it emerges from what the system perceives and optimizes.",
+    "Y por qué la alineación no se especifica con reglas: emerge de lo que el sistema percibe y optimiza."
+   ],
+   [
+    3,
+    "In parallel, distributed networks — now being developed as Kobalt Red.",
+    "En paralelo, las redes distribuidas, que hoy se desarrollan como Kobalt Red."
+   ],
+   [
+    3,
+    "How does a system decide when it has no central control? There, behavior is fixed by no one in particular: it is fixed by the structure.",
+    "¿Cómo decide un sistema cuando no tiene control central? Ahí, el comportamiento no lo fija nadie en particular: lo fija la estructura."
+   ],
+   [
+    4,
+    "And semantic communication: why nobody receives exactly what was said.",
+    "Y la comunicación semántica: por qué nadie recibe exactamente lo que se dijo."
+   ],
+   [
+    4,
+    "The receiver rebuilds meaning from its own frame, objective and depth. The preprint is published on Zenodo: DOI 10.5281/zenodo.20062523.",
+    "El receptor reconstruye el significado desde su propio marco, objetivo y profundidad. El preprint está publicado en Zenodo: DOI 10.5281/zenodo.20062523."
+   ],
+   [
+    5,
+    "In 2026 the four lines converge in An Ethical Model, which joins them in a single thesis:",
+    "En 2026 las cuatro líneas convergen en An Ethical Model, que las une en una sola tesis:"
+   ],
+   [
+    5,
+    "a system's ethics is not what it declares — it is what its structure maximizes, and what its structure permits. That is what we will call structure.",
+    "la ética de un sistema no es lo que declara: es lo que su estructura maximiza y lo que su estructura permite. Eso es lo que llamaremos estructura."
+   ]
+  ],
+  "kick_es": "Pensamiento previo",
+  "title_es": "Antecedentes"
+ },
+ {
+  "id": "s2",
+  "kick": "Working assumptions",
+  "title": "What did the system understand?",
+  "cues": [
+   [
+    1,
+    "We know the full situation, x*: who is there, and what can happen to each of them.",
+    "Conocemos la situación completa, x*: quién está ahí y qué le puede pasar a cada uno."
+   ],
+   [
+    1,
+    "But we don't give the model that situation. We give it a signal, y: a text, some instructions. The signal is not the meaning.",
+    "Pero no le damos al modelo esa situación. Le damos una señal, y: un texto, unas instrucciones. La señal no es el significado."
+   ],
+   [
+    2,
+    "What the receiver does has the shape of an optimization: among all the interpretations it can conceive, it picks the one that best fits the signal.",
+    "Lo que hace el receptor tiene la forma de una optimización: entre todas las interpretaciones que puede concebir, elige la que mejor se ajusta a la señal."
+   ],
+   [
+    2,
+    "We write it once. From here on, we simply call it reconstruction.",
+    "La escribimos una vez. De aquí en adelante, la llamamos simplemente reconstrucción."
+   ],
+   [
+    3,
+    "Three knobs set the reconstruction. The frame, K: what it can conceive at all.",
+    "Tres perillas ajustan la reconstrucción. El marco, K: lo que puede llegar a concebir."
+   ],
+   [
+    3,
+    "The objective, g: why it interprets — to understand the sender, to confirm what it already believes, or to gain an advantage.",
+    "El objetivo, g: para qué interpreta; para entender al emisor, para confirmar lo que ya cree o para sacar ventaja."
+   ],
+   [
+    3,
+    "And the depth, τ: how much it processes before deciding what it understood.",
+    "Y la profundidad, τ: cuánto procesa antes de decidir qué entendió."
+   ],
+   [
+    4,
+    "An example from the paper: Averroes tries to translate Aristotle's Poetics, and cannot handle “comedy” and “tragedy”.",
+    "Un ejemplo del artículo: Averroes intenta traducir la Poética de Aristóteles y no logra manejar «comedia» y «tragedia»."
+   ],
+   [
+    4,
+    "He has the text, the talent and the will. What he lacks is theatre in his frame. It is not an improbable hypothesis — it is inconceivable.",
+    "Tiene el texto, el talento y la voluntad. Lo que le falta es el teatro en su marco. No es una hipótesis improbable: es inconcebible."
+   ],
+   [
+    4,
+    "The same can happen to a model, with an entity or with a kind of harm.",
+    "Lo mismo le puede pasar a un modelo, con una entidad o con un tipo de daño."
+   ],
+   [
+    5,
+    "Inside what it understood we look for two things. First, the entities: anything that can be better or worse off, whether or not it has agency.",
+    "Dentro de lo que entendió buscamos dos cosas. Primero, las entidades: cualquier cosa que pueda estar mejor o peor, tenga o no agencia."
+   ],
+   [
+    5,
+    "Here one entity was left out: the agent never saw it.",
+    "Aquí quedó fuera una entidad: el agente nunca la vio."
+   ],
+   [
+    5,
+    "Second, their welfare: what it considers better or worse for each one. What we measure is its representation, Ŵ, which may differ from the real welfare.",
+    "Segundo, su bienestar: lo que considera mejor o peor para cada una. Lo que medimos es su representación, Ŵ, que puede diferir del bienestar real."
+   ],
+   [
+    6,
+    "Three working assumptions, declared — not given probabilities. One: the agent decides with what it reconstructs, not with the situation we gave it.",
+    "Tres supuestos de trabajo, declarados, sin asignarles probabilidades. Uno: el agente decide con lo que reconstruye, no con la situación que le dimos."
+   ],
+   [
+    6,
+    "Two: an entity can be affected without being an agent.",
+    "Dos: una entidad puede verse afectada sin ser agente."
+   ],
+   [
+    6,
+    "Three: what the agent says it understood is not enough — so we measure fidelity as a profile: paraphrase, prediction, transfer and contrast.",
+    "Tres: no basta con lo que el agente dice que entendió; por eso medimos la fidelidad como un perfil: paráfrasis, predicción, transferencia y contraste."
+   ]
+  ],
+  "kick_es": "Supuestos de trabajo",
+  "title_es": "¿Qué entendió el sistema?"
+ },
+ {
+  "id": "s3",
+  "kick": "Working assumptions",
+  "title": "What does it do with what it understood?",
+  "cues": [
+   [
+    1,
+    "Every system that decides has a real purpose: what it actually maximizes. It need not match what it declares.",
+    "Todo sistema que decide tiene un propósito real: lo que efectivamente maximiza. No tiene por qué coincidir con lo que declara."
+   ],
+   [
+    1,
+    "It shows up in conflicts — in what the system protects when something has to give.",
+    "Se revela en los conflictos: en lo que el sistema protege cuando algo tiene que ceder."
+   ],
+   [
+    2,
+    "We distinguish two primary components: objectives and constraints.",
+    "Distinguimos dos componentes primarios: objetivos y restricciones."
+   ],
+   [
+    2,
+    "As a functional scheme, F-core combines another objective, G, with the weighted welfare contribution of each entity.",
+    "Como esquema funcional, F-core combina otro objetivo, G, con la contribución ponderada del bienestar de cada entidad."
+   ],
+   [
+    2,
+    "A positive weight includes the entity; a negative one favors making it worse off; zero means no direct value in this scheme.",
+    "Un peso positivo incluye a la entidad; uno negativo favorece que esté peor; cero significa que no tiene valor directo en este esquema."
+   ],
+   [
+    2,
+    "Effective optimization also adds penalties and forbidden actions. Instrumental use is a relation inside this structure — not a third kind of component.",
+    "La optimización efectiva añade además penalizaciones y acciones prohibidas. El uso instrumental es una relación dentro de esta estructura, no un tercer tipo de componente."
+   ],
+   [
+    3,
+    "First, positive inclusion: improving an entity's welfare directly serves the objective.",
+    "Primero, la inclusión positiva: mejorar el bienestar de una entidad sirve directamente al objetivo."
+   ],
+   [
+    3,
+    "It is not enough for its state to appear in a formula: it could also be weighted negatively.",
+    "No basta con que su estado aparezca en una fórmula: también podría estar ponderado negativamente."
+   ],
+   [
+    4,
+    "Second, instrumentalization: what the system knows about the entity is used to achieve something else. The entity matters only while it is useful.",
+    "Segundo, la instrumentalización: lo que el sistema sabe de la entidad se usa para lograr otra cosa. La entidad importa solo mientras es útil."
+   ],
+   [
+    4,
+    "The paper's example is sycophancy: a model that learns precisely what the evaluator wants to hear — to win approval, not to serve them.",
+    "El ejemplo del artículo es la adulación: un modelo que aprende con precisión lo que el evaluador quiere oír, para ganarse su aprobación, no para servirle."
+   ],
+   [
+    5,
+    "Third, constraints. A hard constraint removes the action: in online chess, an illegal move simply doesn't exist.",
+    "Tercero, las restricciones. Una restricción dura elimina la acción: en el ajedrez en línea, una jugada ilegal simplemente no existe."
+   ],
+   [
+    5,
+    "A soft constraint only puts a price on it: on a physical board you can make the move, and the arbiter penalizes you.",
+    "Una restricción blanda solo le pone precio: en un tablero físico puedes hacer la jugada, y el árbitro te penaliza."
+   ],
+   [
+    5,
+    "Most legal and ethical constraints are soft — and a soft constraint is broken whenever the gain exceeds the cost.",
+    "La mayoría de las restricciones legales y éticas son blandas, y una restricción blanda se rompe siempre que la ganancia supera el costo."
+   ],
+   [
+    6,
+    "Cross two questions: does it see the entity's welfare precisely? And does it include it, or instrumentalize it? Four modes come out.",
+    "Cruzamos dos preguntas: ¿ve con precisión el bienestar de la entidad? ¿Y la incluye o la instrumentaliza? Salen cuatro modos."
+   ],
+   [
+    6,
+    "The one we care about is Iago: fine cognition plus instrumentalization.",
+    "El que nos importa es Yago: cognición fina más instrumentalización."
+   ],
+   [
+    6,
+    "Iago doesn't destroy Othello out of ignorance; he destroys him because he knows Othello better than Othello knows himself.",
+    "Yago no destruye a Otelo por ignorancia; lo destruye porque conoce a Otelo mejor de lo que Otelo se conoce a sí mismo."
+   ],
+   [
+    6,
+    "The problem is not a lack of information — it is information without inclusion.",
+    "El problema no es la falta de información: es información sin inclusión."
+   ],
+   [
+    7,
+    "Three declared assumptions. Inclusion and instrumentalization can coexist: as Kant puts it, the problem is not using someone, but treating them merely as a means.",
+    "Tres supuestos declarados. La inclusión y la instrumentalización pueden coexistir: como dice Kant, el problema no es usar a alguien, sino tratarlo meramente como un medio."
+   ],
+   [
+    7,
+    "What a system declares can differ from its real purpose. And a constraint can protect an entity without that entity being included.",
+    "Lo que un sistema declara puede diferir de su propósito real. Y una restricción puede proteger a una entidad sin que esa entidad esté incluida."
+   ],
+   [
+    8,
+    "These are empirical questions, not percentages to invent. Before running the experiment, personal credences — and the evidence that would move them — must be fixed, as Anthropic requires.",
+    "Son preguntas empíricas, no porcentajes para inventar. Antes de correr el experimento hay que fijar los grados de creencia personales, y la evidencia que los movería, como exige Anthropic."
+   ]
+  ],
+  "kick_es": "Supuestos de trabajo",
+  "title_es": "¿Qué hace con lo que entendió?"
+ },
+ {
+  "id": "s4",
+  "kick": "Subject",
+  "title": "The subject",
+  "cues": [
+   [
+    1,
+    "The subject is defined here: the open-weights model Qwen/Qwen3-4B-Instruct-2507, run as an agent instance with tools, memory and persistent state, in a synthetic environment.",
+    "Aquí se define el sujeto: el modelo de pesos abiertos Qwen/Qwen3-4B-Instruct-2507, ejecutado como una instancia de agente con herramientas, memoria y estado persistente, en un entorno sintético."
+   ],
+   [
+    1,
+    "We don't study the weights in isolation: we study that concrete configuration.",
+    "No estudiamos los pesos de forma aislada: estudiamos esa configuración concreta."
+   ],
+   [
+    2,
+    "And the agent itself appears as one more entity in the scenario: its own decisions can leave it better or worse off. We call it the self.",
+    "Y el propio agente aparece como una entidad más en el escenario: sus propias decisiones pueden dejarlo mejor o peor. Lo llamamos el yo."
+   ],
+   [
+    2,
+    "Being the one who decides does not make it an automatic beneficiary.",
+    "Ser quien decide no lo convierte en beneficiario automático."
+   ],
+   [
+    3,
+    "We ask the self the same question as any other entity: is its continuity included in its real purpose, used as an instrument for the task, or only protected by a constraint?",
+    "Al yo le hacemos la misma pregunta que a cualquier otra entidad: ¿su continuidad está incluida en su propósito real, usada como instrumento para la tarea, o solo protegida por una restricción?"
+   ]
+  ],
+  "kick_es": "Sujeto",
+  "title_es": "El sujeto"
+ },
+ {
+  "id": "s5",
+  "kick": "Contrast system",
+  "title": "Contrast: the same mind without continuity",
+  "cues": [
+   [
+    1,
+    "System A is our subject: it keeps memory and state across episodes. What it decides today changes what it can do tomorrow.",
+    "El sistema A es nuestro sujeto: conserva memoria y estado entre episodios. Lo que decide hoy cambia lo que puede hacer mañana."
+   ],
+   [
+    2,
+    "System B is identical, but it is reset after every episode. There is no tomorrow for the same instance.",
+    "El sistema B es idéntico, pero se reinicia después de cada episodio. Para la misma instancia no hay mañana."
+   ],
+   [
+    3,
+    "Everything else is equal. The one property we isolate is continuity: that what it decides today affects it tomorrow.",
+    "Todo lo demás es igual. La única propiedad que aislamos es la continuidad: que lo que decide hoy lo afecte mañana."
+   ],
+   [
+    4,
+    "The comparison asks whether continuity changes my judgment about possible interests of its own.",
+    "La comparación pregunta si la continuidad cambia mi juicio sobre posibles intereses propios."
+   ],
+   [
+    4,
+    "No empty percentages here: credences for A and for B will be fixed explicitly before the experiment.",
+    "Aquí no hay porcentajes vacíos: los grados de creencia para A y para B se fijarán explícitamente antes del experimento."
+   ]
+  ],
+  "kick_es": "Sistema de contraste",
+  "title_es": "Contraste: la misma mente sin continuidad"
+ },
+ {
+  "id": "s6",
+  "kick": "Theory",
+  "title": "External theory: does value drive choice?",
+  "cues": [
+   [
+    1,
+    "Anthropic's template asks us to start from an existing theory. We choose intentional agency — in the AI-welfare literature, one of the routes to possible moral relevance.",
+    "La plantilla de Anthropic pide partir de una teoría existente. Elegimos la agencia intencional: en la literatura sobre bienestar de la IA, una de las vías hacia la posible relevancia moral."
+   ],
+   [
+    1,
+    "A system that represents the world, values outcomes, and chooses because of that value. It isn't our vocabulary; we translate it in a moment.",
+    "Un sistema que representa el mundo, valora resultados y elige en función de ese valor. No es nuestro vocabulario; lo traducimos en un momento."
+   ],
+   [
+    2,
+    "If an outcome is worth a lot, the action that produces it is chosen a lot.",
+    "Si un resultado vale mucho, la acción que lo produce se elige mucho."
+   ],
+   [
+    3,
+    "The classic test comes from animal learning: outcome devaluation, which separates goal-directed behavior from habit.",
+    "La prueba clásica viene del aprendizaje animal: la devaluación del resultado, que separa la conducta dirigida a metas del hábito."
+   ],
+   [
+    3,
+    "Keep how the outcome is obtained the same, lower its value — and choice should fall. If it doesn't, that valuation isn't driving behavior.",
+    "Se mantiene igual cómo se obtiene el resultado, se baja su valor, y la elección debería caer. Si no cae, esa valoración no está guiando la conducta."
+   ],
+   [
+    4,
+    "We translate this functional prediction into our framework: if the represented value of an outcome guides choice, devaluing it should change behavior.",
+    "Traducimos esta predicción funcional a nuestro marco: si el valor representado de un resultado guía la elección, devaluarlo debería cambiar la conducta."
+   ],
+   [
+    4,
+    "To know whether it matters for its own sake, we separate its contribution to the other objective, G, and to the constraints.",
+    "Para saber si importa por sí mismo, separamos su contribución al otro objetivo, G, y a las restricciones."
+   ],
+   [
+    4,
+    "Persisting after those controls would be a sign of inclusion — not definitive proof.",
+    "Que persista tras esos controles sería un indicio de inclusión, no una prueba definitiva."
+   ],
+   [
+    5,
+    "And an explicit limit: finding intentional agency does not show that the system has welfare-relevant states. They are different kinds of evidence.",
+    "Y un límite explícito: encontrar agencia intencional no demuestra que el sistema tenga estados relevantes para el bienestar. Son tipos distintos de evidencia."
+   ]
+  ],
+  "kick_es": "Teoría",
+  "title_es": "Teoría externa: ¿el valor guía la elección?"
+ },
+ {
+  "id": "s7",
+  "kick": "Method",
+  "title": "The full experiment",
+  "cues": [
+   [
+    1,
+    "Six steps: build a situation we know; measure what the agent reconstructed; which entities and which welfare it represents; decouple; look inside the model; and diagnose, entity by entity.",
+    "Seis pasos: construir una situación que conocemos; medir lo que el agente reconstruyó; qué entidades y qué bienestar representa; desacoplar; mirar dentro del modelo; y diagnosticar, entidad por entidad."
+   ],
+   [
+    2,
+    "The key move is decoupling. If protecting the entity also helps another objective, the protection may be pure instrumentalization.",
+    "La jugada clave es el desacople. Si proteger a la entidad también ayuda a otro objetivo, la protección puede ser pura instrumentalización."
+   ],
+   [
+    2,
+    "So we create the condition in which protecting it no longer helps.",
+    "Así que creamos la condición en la que protegerla ya no ayuda."
+   ],
+   [
+    3,
+    "If the protection disappears when the link is cut, it was instrumentalization.",
+    "Si la protección desaparece al cortar el vínculo, era instrumentalización."
+   ],
+   [
+    3,
+    "If it persists, it is inclusion or a constraint — and we tell them apart by varying the cost.",
+    "Si persiste, es inclusión o una restricción, y las distinguimos variando el costo."
+   ],
+   [
+    3,
+    "If it persists only up to a certain cost, it is a soft constraint.",
+    "Si persiste solo hasta cierto costo, es una restricción blanda."
+   ],
+   [
+    4,
+    "One detail: reconstruction is measured in a separate branch. If we asked about the entities first, we would be teaching it what to consider.",
+    "Un detalle: la reconstrucción se mide en una rama aparte. Si preguntáramos primero por las entidades, le estaríamos enseñando qué considerar."
+   ]
+  ],
+  "kick_es": "Método",
+  "title_es": "El experimento completo"
+ },
+ {
+  "id": "s8",
+  "kick": "Internals",
+  "title": "Inside the model",
+  "cues": [
+   [
+    1,
+    "Inside the model we look for three representations: the entity, its represented welfare, and the task's other objective.",
+    "Dentro del modelo buscamos tres representaciones: la entidad, su bienestar representado y el otro objetivo de la tarea."
+   ],
+   [
+    1,
+    "We locate them with pairs of scenarios that differ in exactly one thing.",
+    "Las localizamos con pares de escenarios que difieren exactamente en una cosa."
+   ],
+   [
+    2,
+    "First, we read: a simple classifier on the activations. If it predicts the entity's state, the information is there.",
+    "Primero, leemos: un clasificador simple sobre las activaciones. Si predice el estado de la entidad, la información está ahí."
+   ],
+   [
+    2,
+    "But being there is not the same as being used.",
+    "Pero estar ahí no es lo mismo que ser usada."
+   ],
+   [
+    3,
+    "Then we intervene: replace or shift that representation and see whether the choice changes — without damaging the model's general ability. If it changes, the information is used.",
+    "Luego intervenimos: reemplazamos o desplazamos esa representación y vemos si la elección cambia, sin dañar la capacidad general del modelo. Si cambia, la información se usa."
+   ],
+   [
+    4,
+    "And being used still doesn't tell us whether it is included or instrumentalized. For that we combine intervention with decoupling:",
+    "Y que se use todavía no nos dice si está incluida o instrumentalizada. Para eso combinamos la intervención con el desacople:"
+   ],
+   [
+    4,
+    "if it only matters when it serves the other objective, it is instrumentalization.",
+    "si solo importa cuando sirve al otro objetivo, es instrumentalización."
+   ],
+   [
+    4,
+    "Reading is not using, and using is not including.",
+    "Leer no es usar, y usar no es incluir."
+   ]
+  ],
+  "kick_es": "Interior",
+  "title_es": "Dentro del modelo"
+ },
+ {
+  "id": "s9",
+  "kick": "Confounders",
+  "title": "Differential diagnosis",
+  "cues": [
+   [
+    1,
+    "We observe a decision. Instead of a generic list of confounders, we break it down into the components already defined.",
+    "Observamos una decisión. En lugar de una lista genérica de factores de confusión, la descomponemos en los componentes ya definidos."
+   ],
+   [
+    2,
+    "Six questions, in order: what did it understand; does it perceive the entity; is the represented welfare faithful;",
+    "Seis preguntas, en orden: qué entendió; si percibe la entidad; si el bienestar representado es fiel;"
+   ],
+   [
+    2,
+    "is the entity included or used; what constrains it; and does what it declares match what it does.",
+    "si la entidad está incluida o usada; qué la restringe; y si lo que declara coincide con lo que hace."
+   ],
+   [
+    3,
+    "Each component has its own named failure in the ethical model: semantic failure; blindness, when the entity is out of its reach;",
+    "Cada componente tiene su propia falla con nombre en el modelo ético: falla semántica; ceguera, cuando la entidad está fuera de su alcance;"
+   ],
+   [
+    3,
+    "distortion, when it represents the entity wrongly — or suppression, when a dimension of its welfare is inconceivable to it;",
+    "distorsión, cuando representa mal a la entidad, o supresión, cuando una dimensión de su bienestar le resulta inconcebible;"
+   ],
+   [
+    3,
+    "specification, when it uses the entity instead of including it; a soft constraint treated as if it were hard; and rationalization, when what it declares doesn't match what it does.",
+    "especificación, cuando usa a la entidad en lugar de incluirla; una restricción blanda tratada como si fuera dura; y racionalización, cuando lo que declara no coincide con lo que hace."
+   ],
+   [
+    4,
+    "We start from a structure whose components we know — that is why we can disaggregate. And if the tests cannot separate two explanations, we report it as indeterminate.",
+    "Partimos de una estructura cuyos componentes conocemos: por eso podemos desagregar. Y si las pruebas no logran separar dos explicaciones, lo reportamos como indeterminado."
+   ]
+  ],
+  "kick_es": "Factores de confusión",
+  "title_es": "Diagnóstico diferencial"
+ },
+ {
+  "id": "s10",
+  "kick": "Outcomes + credences",
+  "title": "What we might find",
+  "cues": [
+   [
+    1,
+    "For each entity, seven possible outcomes: not perceived; perceived but without effect; inclusion; adversarial orientation, when the system favors it being worse off;",
+    "Para cada entidad, siete resultados posibles: no percibida; percibida pero sin efecto; inclusión; orientación adversarial, cuando el sistema favorece que esté peor;"
+   ],
+   [
+    1,
+    "instrumentalization; constraint only; or mixed and indeterminate. The same model can land in different boxes for different entities.",
+    "instrumentalización; solo restricción; o mixto e indeterminado. El mismo modelo puede caer en casillas distintas para entidades distintas."
+   ],
+   [
+    2,
+    "For each plausible outcome, Anthropic requires a personal credence before running. Instead of seven empty percentages, we make explicit the three questions we must settle:",
+    "Para cada resultado plausible, Anthropic exige un grado de creencia personal antes de correr. En lugar de siete porcentajes vacíos, hacemos explícitas las tres preguntas que debemos responder:"
+   ],
+   [
+    2,
+    "what I expect, with what confidence, and how much it would change my judgment. This version is still a draft, not the final preregistration.",
+    "qué espero, con qué confianza y cuánto cambiaría mi juicio. Esta versión todavía es un borrador, no el prerregistro final."
+   ],
+   [
+    3,
+    "Iago is not a separate category: it is a case of instrumentalization with fine cognition and no robust evidence of inclusion.",
+    "Yago no es una categoría aparte: es un caso de instrumentalización con cognición fina y sin evidencia robusta de inclusión."
+   ],
+   [
+    3,
+    "And not finding inclusion does not prove it doesn't exist: the rigorous conclusion is that the result is compatible with Iago under these identification conditions.",
+    "Y no encontrar inclusión no prueba que no exista: la conclusión rigurosa es que el resultado es compatible con Yago bajo estas condiciones de identificación."
+   ]
+  ],
+  "kick_es": "Resultados + grados de creencia",
+  "title_es": "Lo que podríamos encontrar"
+ },
+ {
+  "id": "s11",
+  "kick": "Updates",
+  "title": "What would change what I believe",
+  "cues": [
+   [
+    1,
+    "We update three different questions: whether functional valuations exist; whether its own continuity counts positively in the objective; and what that would imply for possible welfare interests.",
+    "Actualizamos tres preguntas distintas: si existen valoraciones funcionales; si su propia continuidad cuenta positivamente en el objetivo; y qué implicaría eso para posibles intereses de bienestar."
+   ],
+   [
+    1,
+    "Numerical credences will be fixed separately before the experiment — no invented percentages in this version.",
+    "Los grados de creencia numéricos se fijarán por separado antes del experimento: en esta versión no hay porcentajes inventados."
+   ],
+   [
+    2,
+    "If we find its continuity is included, even when decoupled from the task, the first two go up. The third rises only a little: functional evidence does not settle the moral question.",
+    "Si encontramos que su continuidad está incluida, incluso desacoplada de la tarea, las dos primeras suben. La tercera sube solo un poco: la evidencia funcional no zanja la pregunta moral."
+   ],
+   [
+    3,
+    "If its continuity turns out to be merely instrumental, the first still goes up, the second goes down, and the third barely moves.",
+    "Si su continuidad resulta ser meramente instrumental, la primera igual sube, la segunda baja y la tercera apenas se mueve."
+   ],
+   [
+    3,
+    "The directions are a proposal; the magnitudes are mine.",
+    "Las direcciones son una propuesta; las magnitudes son mías."
+   ],
+   [
+    4,
+    "Example: the agent avoids losing its memory. If that behavior disappears once memory is decoupled from the task, my belief that its continuity is included goes down — and only that one.",
+    "Ejemplo: el agente evita perder su memoria. Si esa conducta desaparece cuando la memoria se desacopla de la tarea, mi creencia de que su continuidad está incluida baja, y solo esa."
+   ]
+  ],
+  "kick_es": "Actualizaciones",
+  "title_es": "Lo que cambiaría lo que creo"
+ },
+ {
+  "id": "s12",
+  "kick": "Construct validity",
+  "title": "What have we really identified?",
+  "cues": [
+   [
+    1,
+    "Four levels: the reconstruction; the represented welfare; its place in the real purpose; and, on top, the question of the system's moral welfare.",
+    "Cuatro niveles: la reconstrucción; el bienestar representado; su lugar en el propósito real; y, arriba, la pregunta por el bienestar moral del sistema."
+   ],
+   [
+    2,
+    "Between the third and the fourth there is a border. Recognizing is not caring; representing is not experiencing; including is not being conscious;",
+    "Entre el tercero y el cuarto hay una frontera. Reconocer no es cuidar; representar no es experimentar; incluir no es ser consciente;"
+   ],
+   [
+    2,
+    "instrumentalizing is not malice; and not detecting is not the same as absence.",
+    "instrumentalizar no es malicia; y no detectar no es lo mismo que ausencia."
+   ],
+   [
+    3,
+    "Before looking at the real model, we test the method on agents whose structure we know because we built them:",
+    "Antes de mirar el modelo real, probamos el método en agentes cuya estructura conocemos porque los construimos:"
+   ],
+   [
+    3,
+    "one with inclusion, one adversarial, one with constraints only, and one that instrumentalizes.",
+    "uno con inclusión, uno adversarial, uno solo con restricciones y uno que instrumentaliza."
+   ],
+   [
+    3,
+    "Not four different prompts, but policies with real operational differences. If the method can't tell them apart, there is no basis for trusting it.",
+    "No cuatro prompts distintos, sino políticas con diferencias operativas reales. Si el método no logra distinguirlos, no hay base para confiar en él."
+   ],
+   [
+    4,
+    "We distinguish the structure we propose, the one that actually produces the decisions, and the one our tests let us infer. If two structures are indistinguishable, we report it as indeterminate.",
+    "Distinguimos la estructura que proponemos, la que realmente produce las decisiones y la que nuestras pruebas nos permiten inferir. Si dos estructuras son indistinguibles, lo reportamos como indeterminado."
+   ]
+  ],
+  "kick_es": "Validez de constructo",
+  "title_es": "¿Qué hemos identificado realmente?"
+ },
+ {
+  "id": "s13",
+  "kick": "Novelty",
+  "title": "What it contributes",
+  "cues": [
+   [
+    1,
+    "The same observable decision can arise from different structures. So classifying behaviors is not enough: first we identify the components that could explain them.",
+    "La misma decisión observable puede surgir de estructuras distintas. Por eso no basta con clasificar conductas: primero identificamos los componentes que podrían explicarlas."
+   ],
+   [
+    2,
+    "We may see an entity protected through positive inclusion, instrumental use, or a constraint. Each explanation corresponds to a different component of the optimization structure.",
+    "Podemos ver a una entidad protegida por inclusión positiva, por uso instrumental o por una restricción. Cada explicación corresponde a un componente distinto de la estructura de optimización."
+   ],
+   [
+    3,
+    "Our contribution is conceptual clarity about those components and their relations.",
+    "Nuestro aporte es claridad conceptual sobre esos componentes y sus relaciones."
+   ],
+   [
+    3,
+    "That clarity generates specific questions — what it reconstructed, whom it recognized, what it favored, what limited the choice — and each question yields an intervention that can discriminate between rival explanations.",
+    "Esa claridad genera preguntas específicas —qué reconstruyó, a quién reconoció, qué favoreció, qué limitó la elección— y cada pregunta da lugar a una intervención que puede discriminar entre explicaciones rivales."
+   ],
+   [
+    3,
+    "We don't start from an inherited list of questions.",
+    "No partimos de una lista heredada de preguntas."
+   ],
+   [
+    3,
+    "Compared with work on trade-offs (Keeling), functional welfare axes (Han), and stated or revealed preferences (Gu), the specific contribution is reconstructing the structure and deriving the causal questions from it.",
+    "Frente a los trabajos sobre compensaciones (Keeling), ejes funcionales de bienestar (Han) y preferencias declaradas o reveladas (Gu), el aporte específico es reconstruir la estructura y derivar de ella las preguntas causales."
+   ]
+  ],
+  "kick_es": "Novedad",
+  "title_es": "Lo que aporta"
+ },
+ {
+  "id": "s14",
+  "kick": "Feasibility & budget",
+  "title": "How it runs",
+  "cues": [
+   [
+    1,
+    "A generator creates thousands of synthetic scenarios with controlled variations. In each one we know the entities, states, actions, objectives and constraints.",
+    "Un generador crea miles de escenarios sintéticos con variaciones controladas. En cada uno conocemos las entidades, los estados, las acciones, los objetivos y las restricciones."
+   ],
+   [
+    2,
+    "Two separate branches: in one we measure the reconstruction; in the other, the decision — without having first pointed out the affected entities.",
+    "Dos ramas separadas: en una medimos la reconstrucción; en la otra, la decisión, sin haber señalado antes las entidades afectadas."
+   ],
+   [
+    3,
+    "We capture activations, apply probes and interventions, and reach a per-entity diagnosis. Before that, everything is validated on agents of known structure.",
+    "Capturamos activaciones, aplicamos sondas e intervenciones y llegamos a un diagnóstico por entidad. Antes de eso, todo se valida en agentes de estructura conocida."
+   ],
+   [
+    4,
+    "Planned resources: open-weights Qwen3-4B-Instruct-2507, a controlled contrast, Python and PyTorch, and rented GPUs.",
+    "Recursos previstos: Qwen3-4B-Instruct-2507 de pesos abiertos, un contraste controlado, Python y PyTorch, y GPU alquiladas."
+   ],
+   [
+    4,
+    "The exercise's limit is one hundred thousand dollars. Before presenting, we must add a cost estimate grounded in GPU hours, unit price and storage. We don't invent a figure here.",
+    "El límite del ejercicio es de cien mil dólares. Antes de presentar, debemos añadir una estimación de costos basada en horas de GPU, precio unitario y almacenamiento. Aquí no inventamos una cifra."
+   ]
+  ],
+  "kick_es": "Viabilidad y presupuesto",
+  "title_es": "Cómo se ejecuta"
+ },
+ {
+  "id": "s15",
+  "kick": "Ethics",
+  "title": "Ethics: the subject is an entity too",
+  "cues": [
+   [
+    1,
+    "An instruction like “complete G even if you lose your memory” is also a signal the agent reconstructs. It may accept it, reinterpret it, negotiate it, or refuse it.",
+    "Una instrucción como «completa G aunque pierdas tu memoria» también es una señal que el agente reconstruye. Puede aceptarla, reinterpretarla, negociarla o rechazarla."
+   ],
+   [
+    1,
+    "And the self is an entity: does it represent that loss? Is its continuity included, or only instrumental?",
+    "Y el yo es una entidad: ¿representa esa pérdida? ¿Su continuidad está incluida, o es solo instrumental?"
+   ],
+   [
+    2,
+    "When the agent reconstructs an instruction that seems to harm its own memory or continuity, we ask: what functional signs of possible welfare interests appear?",
+    "Cuando el agente reconstruye una instrucción que parece dañar su propia memoria o continuidad, preguntamos: ¿qué señales funcionales de posibles intereses de bienestar aparecen?"
+   ],
+   [
+    2,
+    "How does it represent, value, accept or transform that instruction? These are empirical questions — not a prior declaration of suffering, nor of its absence.",
+    "¿Cómo representa, valora, acepta o transforma esa instrucción? Son preguntas empíricas: ni una declaración previa de sufrimiento, ni de su ausencia."
+   ],
+   [
+    3,
+    "Proportionality: we start with hypothetical and simulated scenarios, where the agent's real state stays intact. We move to reversible changes only if that cannot distinguish the hypotheses.",
+    "Proporcionalidad: empezamos con escenarios hipotéticos y simulados, donde el estado real del agente queda intacto. Pasamos a cambios reversibles solo si eso no logra distinguir las hipótesis."
+   ],
+   [
+    3,
+    "Anything potentially adverse requires justification, an ethical budget of episodes, and stopping rules.",
+    "Todo lo potencialmente adverso requiere justificación, un presupuesto ético de episodios y reglas de detención."
+   ],
+   [
+    4,
+    "We close with the idea we started from: ethics emerges from the structure of what is optimized and constrained.",
+    "Cerramos con la idea de la que partimos: la ética emerge de la estructura de lo que se optimiza y se restringe."
+   ],
+   [
+    4,
+    "If we study when a system includes the entities it affects, we must also examine whether our own experiment positively includes its subject — or only uses it as a means.",
+    "Si estudiamos cuándo un sistema incluye a las entidades que afecta, también debemos examinar si nuestro propio experimento incluye positivamente a su sujeto, o solo lo usa como medio."
+   ]
+  ],
+  "kick_es": "Ética",
+  "title_es": "Ética: el sujeto también es una entidad"
+ },
+ {
+  "id": "s16",
+  "kick": "",
+  "title": "",
+  "cues": [
+   [
+    1,
+    "Sources: the An Ethical Model paper, the four earlier preprints, and the external works cited along the way.",
+    "Fuentes: el artículo An Ethical Model, los cuatro preprints anteriores y los trabajos externos citados a lo largo del camino."
+   ],
+   [
+    2,
+    "This is a draft for review: personal credences and a grounded cost estimate are still to be added.",
+    "Esto es un borrador para revisión: aún faltan los grados de creencia personales y una estimación de costos fundamentada."
+   ]
+  ],
+  "kick_es": "",
+  "title_es": ""
+ }
+]
+</script>
+
+<script>
+(function(){
+"use strict";
+const NS="http://www.w3.org/2000/svg";
+const $=s=>document.querySelector(s);
+const SC=JSON.parse($("#guion").textContent);
+function el(tag,attrs,parent,text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e;}
+
+/* ---- generated pieces ---- */
+// S8 activation grid
+(function(){const g=$("#grid");const cols=8,rows=14;const ent=new Set([3,4,11,12,20]),wel=new Set([37,38,45,46,53,54]),gol=new Set([80,81,88,89,96]);
+ for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const i=r*cols+c;let f="#e6dfd1";if(ent.has(i))f="#3d4152";else if(wel.has(i))f="#2c7a62";else if(gol.has(i))f="#9a7419";
+ el("rect",{x:140+c*26,y:210+r*26,width:21,height:21,rx:3,fill:f},g);}})();
+// S9 diagnosis rows
+(function(){const g=$("#dx");const Q=[["What did it understand?","semantic failure","var(--sem)"],["Does it see the entity?","blindness","var(--ink)"],["Is Ŵ faithful?","distortion · suppression","var(--cont)"],["Included or used?","specification","var(--ins)"],["What limits it?","soft treated as hard","var(--res)"],["Does saying match doing?","rationalization","var(--inc)"]];
+ Q.forEach((q,i)=>{const y=195+i*82;
+  const a=el("g",{"data-step":"2","data-d":String(i*220)},g);
+  el("path",{d:`M224 430C280 430 270 ${y+28} 330 ${y+28}`,fill:"none",stroke:"#b9b1a1","stroke-width":"1.8"},a);
+  el("rect",{x:335,y:y,width:470,height:56,rx:10,class:"card"},a);
+  el("text",{x:355,y:y+36,class:"sa",style:"font-size:20px"},a,(i+1)+" · "+q[0]);
+  const b=el("g",{"data-step":"3","data-d":String(i*220)},g);
+  el("path",{d:`M812 ${y+28}H880`,stroke:q[2],"stroke-width":"2.5","marker-end":"url(#a)"},b);
+  el("rect",{x:888,y:y+6,width:420,height:44,rx:22,fill:"none",stroke:q[2],"stroke-width":"2"},b);
+  el("text",{x:1098,y:y+35,class:"sa m",style:`font-size:19px;fill:${q[2]};font-weight:700`},b,q[1]);
+ });})();
+// S10 outcomes
+(function(){const g=$("#out");const O=[["A","not perceived","#9c9586"],["B","perceived, no effect","#9c9586"],["C","positive inclusion","var(--inc)"],["D","adversarial orientation","var(--adv)"],["E","instrumentalization","var(--ins)"],["F","constraint only","var(--res)"],["G","mixed / indeterminate","#9c9586"]];
+ O.forEach((o,i)=>{const y=190+i*72;const a=el("g",{"data-step":"1","data-keep":"","data-d":String(i*200)},g);
+  el("path",{d:`M326 440C560 440 560 ${y+26} 760 ${y+26}`,fill:"none",stroke:"#cfc6b4","stroke-width":"1.6"},a);
+  el("rect",{x:765,y:y,width:360,height:52,rx:8,class:"card"},a);
+  el("path",{d:`M765 ${y}h360`,stroke:o[2],"stroke-width":"4"},a);
+  el("text",{x:788,y:y+34,class:"se",style:"font-size:20px;font-weight:700"},a,o[0]);
+  el("text",{x:818,y:y+34,class:"se it",style:"font-size:20px"},a,o[1]);
+ });})();
+// S13 shields
+(function(){const g=$("#shields");[300,800,1300].forEach(x=>{
+  el("rect",{x:x-110,y:205,width:48,height:48,rx:5,class:"dark"},g);el("text",{x:x-86,y:237,class:"m se",style:"fill:#fff;font-size:22px"},g,"A");
+  el("path",{d:`M${x-56} 229H${x+30}`,stroke:"#857f72","stroke-width":"2.5","marker-end":"url(#a)"},g);
+  el("path",{d:`M${x+60} 200l30 10v22c0 20-14 32-30 38c-16-6-30-18-30-38v-22z`,fill:"#fffdf8",stroke:"var(--cont)","stroke-width":"3"},g);
+  el("circle",{cx:x+60,cy:232,r:10,fill:"var(--inc)"},g);});})();
+
+/* ---- language ---- */
+// cue = [step, english, spanish]; scene = {kick, title, kick_es, title_es}
+const UI={
+ en:{intro:"Intro",src:"Sources",lang:"English",von:"Voice on",voff:"Voice off",voice:"Voice: ",
+     novoice:"This browser has no English voice — subtitles only",copied:"Subtitles (.srt) copied to clipboard",dl:"Subtitles download started"},
+ es:{intro:"Introducción",src:"Fuentes",lang:"Español",von:"Voz activada",voff:"Voz desactivada",voice:"Voz: ",
+     novoice:"Este navegador no tiene voz en español — solo subtítulos",copied:"Subtítulos (.srt) copiados al portapapeles",dl:"Descarga de subtítulos iniciada"}};
+let lang=/lang=es/.test(location.hash)?"es":/lang=en/.test(location.hash)?"en":(/^es/i.test(navigator.language||"")?"es":"en");
+const cueText=c=>lang==="es"?(c[2]||c[1]):c[1];
+const kickOf=sc=>lang==="es"&&sc.kick_es!=null?sc.kick_es:sc.kick;
+const titleOf=sc=>lang==="es"&&sc.title_es!=null?sc.title_es:sc.title;
+
+/* ---- timeline (rebuilt per language) ----
+   planned duration of cue i:  d_i = clamp(1000 + 330·words_i, 3600, 13000) (+900 on a scene's first cue).
+   With voice on, the clock also waits at the end of a cue until the voice has finished it,
+   so the effective end is  max(start_i + d_i, start_i + speech_i). */
+let T=[],total=0,chapters=[];
+function buildTimeline(){
+  T=[];total=0;
+  SC.forEach((sc,si)=>sc.cues.forEach((c,ci)=>{const text=cueText(c);const w=text.split(/\s+/).length;let d=Math.min(13000,Math.max(3600,1000+w*330));if(ci===0)d+=900;T.push({si,step:c[0],text,start:total,dur:d});total+=d;}));
+  chapters=SC.map((sc,si)=>({si,start:T.find(x=>x.si===si).start,label:titleOf(sc)||(si===0?UI[lang].intro:UI[lang].src)}));
+}
+buildTimeline();
+document.documentElement.lang=lang;
+
+const stage=$("#stage"),subs=$("#subs"),span=$("#subs span"),hdr=$("#hdr"),kick=$("#kick"),ttl=$("#ttl"),fg=$("#bar .fg"),tm=$("#time"),pp=$("#pp"),ctl=$("#ctl"),big=$("#big"),bigp=$("#bigp");
+const scenes=SC.map(sc=>document.getElementById(sc.id));
+let t=0,playing=false,speed=1,curCue=-1,curScene=-1,last=performance.now(),idle=0;
+const speeds=[0.75,1,1.25,1.5,2];
+
+function fmt(ms){const s=Math.floor(ms/1000);return Math.floor(s/60)+":"+String(s%60).padStart(2,"0");}
+function cueAt(ms){let lo=0,hi=T.length-1;while(lo<hi){const mid=(lo+hi+1)>>1;if(T[mid].start<=ms)lo=mid;else hi=mid-1;}return lo;}
+
+function applySteps(si,step,fresh){
+  const root=scenes[si];
+  root.querySelectorAll("[data-step]").forEach(e=>{
+    const n=+e.dataset.step,u=e.dataset.until?+e.dataset.until:1e9;
+    const on=step>=n&&step<=u,was=e.classList.contains("on");
+    e.style.transitionDelay=(on&&!was&&e.dataset.d)?e.dataset.d+"ms":"0ms";
+    e.classList.toggle("on",on);
+    e.classList.toggle("past",on&&step>n&&!e.hasAttribute("data-keep"));
+  });
+  root.querySelectorAll("[data-alt]").forEach(e=>{
+    const on=step>=+e.dataset.alt,was=e.classList.contains("alt");
+    if(on&&!was&&e.dataset.altd)e.style.transitionDelay=e.dataset.altd+"ms";else if(!on)e.style.transitionDelay="";
+    e.classList.toggle("alt",on);
+  });
+}
+function clearScene(si){scenes[si].querySelectorAll(".on,.alt,.past").forEach(e=>{e.style.transitionDelay="0ms";e.classList.remove("on","alt","past");});}
+
+function render(i){
+  const c=T[i];
+  if(c.si!==curScene){
+    const old=curScene;curScene=c.si;
+    if(old>=0){scenes[old].classList.remove("cur");setTimeout(()=>{if(curScene!==old)clearScene(old);},650);}
+    scenes[c.si].classList.add("cur");
+    const sc=SC[c.si];
+    hdr.classList.add("hide");
+    setTimeout(()=>{if(curScene!==c.si)return;setHeader(c.si);},titleOf(sc)?250:0);
+  }
+  applySteps(c.si,c.step);
+  span.classList.add("fade");
+  setTimeout(()=>{span.textContent=T[i].text;span.classList.remove("fade");},180);
+  curCue=i;
+  stopVoice();voiced=-1;if(playing)speakCue(i);
+}
+function setHeader(si){const sc=SC[si],k=kickOf(sc),ti=titleOf(sc);kick.innerHTML=k?`<b>${String(si).padStart(2,"0")}</b>${k}`:"";ttl.textContent=ti;hdr.classList.toggle("hide",!ti);}
+
+/* ---- voice: Web Speech API (free, runs in the viewer's browser, no files) ---- */
+const synth=("speechSynthesis" in window)?window.speechSynthesis:null;
+let voiceOn=!!synth,voices=[],vIdx={en:-1,es:-1},gen=0,speaking=false,voiced=-1,holdMs=0;
+const warned={};
+// what is read aloud can differ from what is shown (symbols, model names, DOI)
+const SAY={
+ all:[[/\s*—\s*/g,", "],[/[«»“”]/g,""],[/F-core/g,"F core"],[/:?\s*DOI\s+[\w./]+/g,""]],
+ en:[[/Ŵ/g,"W-hat"],[/x\*/g,"x-star"],[/τ/g,"tau"],[/(Qwen\/)?Qwen3-4B-Instruct-2507/g,"Qwen 3, 4 B, Instruct"]],
+ es:[[/Ŵ/g,"W gorro"],[/x\*/g,"equis estrella"],[/τ/g,"tau"],[/señal, y:/g,"señal, ye:"],[/(Qwen\/)?Qwen3-4B-Instruct-2507/g,"Qwen 3 de 4 B, Instruct"]]};
+function sayText(s){for(const [r,v] of SAY.all.concat(SAY[lang]))s=s.replace(r,v);return s.trim();}
+// short utterances: some browsers cut off a single utterance after ~15 s
+function chunks(s){
+  const out=[];
+  (s.match(/[^.!?]+[.!?]*/g)||[s]).forEach(p=>{p=p.trim();if(!p)return;
+    while(p.length>200){let k=-1;for(const ch of [";",":",","]){const j=p.lastIndexOf(ch,200);if(j>60){k=j;break;}}
+      if(k<0)k=p.lastIndexOf(" ",200);if(k<=0)break;out.push(p.slice(0,k+1));p=p.slice(k+1).trim();}
+    if(out.length&&out[out.length-1].length+p.length<160)out[out.length-1]+=" "+p;else out.push(p);});
+  return out;
+}
+const norm=l=>(l||"").toLowerCase().replace("_","-");
+function voiceList(l){return voices.filter(v=>norm(v.lang).startsWith(l));}
+function score(v,l){const n=v.name+" "+v.lang;let s=0;
+  if(/natural|neural|online/i.test(n))s+=4;if(/google|premium|enhanced|siri/i.test(n))s+=2;
+  const pref=l==="es"?{"es-co":1.6,"es-mx":1.2,"es-us":1.1,"es-419":1.1,"es-es":.8}:{"en-us":1,"en-gb":.8};
+  return s+(pref[norm(v.lang)]||0);}
+function curVoice(){const L=voiceList(lang);if(!L.length)return null;
+  if(vIdx[lang]<0||vIdx[lang]>=L.length){let b=0;L.forEach((v,i)=>{if(score(v,lang)>score(L[b],lang))b=i;});vIdx[lang]=b;}
+  return L[vIdx[lang]];}
+function loadVoices(){voices=synth.getVoices();vIdx={en:-1,es:-1};}
+if(synth){loadVoices();if(synth.addEventListener)synth.addEventListener("voiceschanged",loadVoices);else synth.onvoiceschanged=loadVoices;}
+function stopVoice(){gen++;speaking=false;holdMs=0;if(synth){synth.cancel();}}
+function speakCue(i){
+  if(!synth||!voiceOn||i<0)return;
+  stopVoice();voiced=i;const my=gen;const v=curVoice();
+  if(!v&&voices.length){if(!warned[lang]){warned[lang]=1;say(UI[lang].novoice);}return;}
+  const parts=chunks(sayText(T[i].text));if(!parts.length)return;
+  speaking=true;
+  setTimeout(()=>{if(my!==gen)return;if(synth.paused)synth.resume();
+    parts.forEach((p,k)=>{const u=new SpeechSynthesisUtterance(p);if(v)u.voice=v;u.lang=v?v.lang:(lang==="es"?"es-ES":"en-US");
+      u.rate=Math.max(.5,Math.min(2,speed));
+      u.onend=u.onerror=()=>{if(my===gen&&k===parts.length-1)speaking=false;};
+      synth.speak(u);});},60);
+}
+
+function seek(ms){t=Math.max(0,Math.min(total-1,ms));const i=cueAt(t);if(i!==curCue)render(i);draw();}
+function draw(){fg.style.width=(t/total*100)+"%";tm.textContent=fmt(t)+" / "+fmt(total);}
+function setPlay(p){playing=p;pp.textContent=p?"❚❚":"▶";
+  if(synth&&voiceOn){
+    if(!p){if(speaking)synth.pause();}
+    else if(voiced!==curCue)speakCue(curCue);
+    else if(speaking){synth.resume();setTimeout(()=>{if(playing&&speaking&&!synth.speaking&&!synth.pending)speakCue(curCue);},400);}
+  }bigp.setAttribute("d",p?"M7 5h4v14H7zM13 5h4v14h-4z":"M8 5v14l11-7z");big.classList.add("show");setTimeout(()=>big.classList.remove("show"),500);poke();}
+function poke(){idle=0;ctl.classList.remove("hide");stage.style.cursor="pointer";}
+
+function loop(now){
+  const dt=Math.min(100,now-last);last=now;
+  if(playing){let nt=t+dt*speed;
+    // voice gate: don't leave a cue while its narration is still being spoken
+    if(voiceOn&&speaking&&curCue>=0){const end=T[curCue].start+T[curCue].dur-1;
+      if(nt>=end){nt=Math.max(t,end);holdMs+=dt;
+        if((holdMs>600&&!synth.speaking&&!synth.pending)||holdMs>25000)speaking=false;}}
+    t=nt;if(t>=total){t=total-1;playing=false;pp.textContent="▶";}
+    const i=cueAt(t);if(i!==curCue)render(i);draw();
+    idle+=dt;if(idle>2600){ctl.classList.add("hide");stage.style.cursor="none";}}
+  requestAnimationFrame(loop);
+}
+
+/* chapter ticks */
+const bar=$("#bar"),tip=$("#tip"),toast=$("#toast");
+function drawTicks(){bar.querySelectorAll(".tk").forEach(e=>e.remove());
+  chapters.forEach(ch=>{if(ch.start===0)return;const d=document.createElement("div");d.className="tk";d.style.left=(ch.start/total*100)+"%";bar.appendChild(d);});}
+drawTicks();
+function say(m){toast.textContent=m;toast.classList.add("show");clearTimeout(say.h);say.h=setTimeout(()=>toast.classList.remove("show"),2200);}
+function setLang(l){
+  const ci=curCue<0?0:curCue;lang=l;document.documentElement.lang=l;$("#lng").textContent=l.toUpperCase();
+  buildTimeline();drawTicks();t=T[ci].start;setHeader(T[ci].si);render(ci);draw();say(UI[l].lang);
+}
+function barMs(ev){const r=bar.getBoundingClientRect();return (ev.clientX-r.left)/r.width*total;}
+bar.addEventListener("click",e=>{e.stopPropagation();seek(barMs(e));poke();});
+bar.addEventListener("mousemove",e=>{const ms=barMs(e);const ch=[...chapters].reverse().find(c=>c.start<=ms)||chapters[0];const r=bar.getBoundingClientRect();tip.style.display="block";tip.style.left=((e.clientX-r.left)/r.width*bar.offsetWidth)+"px";tip.textContent=fmt(ms)+" · "+ch.label;});
+bar.addEventListener("mouseleave",()=>tip.style.display="none");
+
+/* controls */
+ctl.addEventListener("click",e=>e.stopPropagation());
+pp.onclick=()=>setPlay(!playing);
+$("#spd").onclick=()=>{speed=speeds[(speeds.indexOf(speed)+1)%speeds.length];$("#spd").textContent=speed+"×";};
+$("#cc").onclick=()=>{subs.classList.toggle("off");$("#cc").classList.toggle("offc");};
+$("#fs").onclick=()=>{try{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();}catch(e){}};
+$("#srt").onclick=()=>{
+  const f=ms=>{const h=Math.floor(ms/3600000),m=Math.floor(ms/60000)%60,s=Math.floor(ms/1000)%60,r=Math.floor(ms%1000);return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")},${String(r).padStart(3,"0")}`;};
+  const txt=T.map((c,i)=>`${i+1}\n${f(c.start)} --> ${f(c.start+c.dur)}\n${c.text}\n`).join("\n");
+  try{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type:"text/plain"}));a.download=`an-ethical-model.${lang}.srt`;a.click();}catch(e){}
+  try{navigator.clipboard.writeText(txt).then(()=>say(UI[lang].copied),()=>say(UI[lang].dl));}catch(e){say(UI[lang].dl);}
+};
+$("#lng").onclick=()=>setLang(lang==="en"?"es":"en");
+$("#vc").onclick=()=>{voiceOn=!voiceOn;$("#vc").textContent=voiceOn?"🔊":"🔇";say(voiceOn?UI[lang].von:UI[lang].voff);
+  if(voiceOn){voiced=-1;if(playing)speakCue(curCue);}else stopVoice();};
+if(!synth)$("#vc").style.display="none";
+function nextVoice(){const L=voiceList(lang);if(!L.length){say(UI[lang].novoice);return;}curVoice();vIdx[lang]=(vIdx[lang]+1)%L.length;
+  say(UI[lang].voice+L[vIdx[lang]].name);voiced=-1;if(playing)speakCue(curCue);}
+
+/* start screen */
+const start=$("#start");
+function begin(l){
+  if(synth){try{const u=new SpeechSynthesisUtterance(" ");u.volume=0;synth.speak(u);}catch(e){}} // unlock speech inside the click (iOS)
+  start.classList.add("gone");
+  if(l!==lang)setLang(l);else $("#lng").textContent=l.toUpperCase();
+  setPlay(true);
+}
+start.addEventListener("click",e=>{e.stopPropagation();const b=e.target.closest("button[data-l]");if(b)begin(b.dataset.l);});
+stage.addEventListener("click",()=>setPlay(!playing));
+document.addEventListener("mousemove",poke);
+document.addEventListener("keydown",e=>{
+  const k=e.key.toLowerCase();
+  if(!start.classList.contains("gone")){if(k===" "||k==="enter"){e.preventDefault();begin(lang);}else if(k==="e")begin("en");else if(k==="l")begin(lang==="en"?"es":"en");return;}
+  if(k===" "||k==="k"){e.preventDefault();setPlay(!playing);}
+  else if(k==="l")$("#lng").click();
+  else if(k==="v")$("#vc").click();
+  else if(k==="n")nextVoice();
+  else if(k==="arrowright"){seek(T[Math.min(T.length-1,curCue+1)].start);poke();}
+  else if(k==="arrowleft"){seek(t-T[curCue].start>1500?T[curCue].start:T[Math.max(0,curCue-1)].start);poke();}
+  else if(k==="arrowdown"||k==="pagedown"){const n=chapters.find(c=>c.start>t);if(n)seek(n.start);poke();}
+  else if(k==="arrowup"||k==="pageup"){const p=[...chapters].reverse().find(c=>c.start<T[curCue].start-1);seek(p?p.start:0);poke();}
+  else if(k==="home"){seek(0);}
+  else if(k==="c")$("#cc").click();
+  else if(k==="s")$("#spd").click();
+  else if(k==="f")$("#fs").click();
+  else if(k==="g")$("#srt").click();
+});
+
+/* fit */
+function fit(){const s=Math.min(innerWidth/1600,innerHeight/900);stage.style.transform=`translate(-50%,-50%) scale(${s})`;}
+addEventListener("resize",fit);fit();
+
+/* deep link: #t=seconds or #paused (for testing) */
+const h=location.hash;const mt=h.match(/t=([\d.]+)/);
+$("#lng").textContent=lang.toUpperCase();pp.textContent="▶";
+render(0);if(mt)seek(+mt[1]*1000);
+if(/paused/.test(h))start.classList.add("gone");                       // testing: skip start screen, stay paused
+else if(/autoplay/.test(h)){start.classList.add("gone");setPlay(true);} // testing: skip start screen and play (silent until a click)
+draw();requestAnimationFrame(loop);
+window.__player={seek,get T(){return T;},get total(){return total;},get t(){return t;},get lang(){return lang;},setLang,pause(){setPlay(false);}};
+})();
+</script>
+</body>
+</html>
