@@ -1,0 +1,554 @@
+{
+ "es": [
+  {
+   "t": "Dos hermanos separados",
+   "tags": [
+    "Entidades",
+    "Comunicación",
+    "Ética",
+    "Racionalidad"
+   ],
+   "s": "Dos hermanos reciben hogares adecuados, pero quedan separados por ochenta kilómetros.",
+   "r": "El expediente individual registra alojamiento; la realidad incluye una relación que sostiene el bienestar de ambos.",
+   "x": "Reconstruir el vínculo con los niños, explorar acogida conjunta o contacto sostenido y rediseñar la asignación."
+  },
+  {
+   "t": "La IA que complace",
+   "tags": [
+    "Comunicación",
+    "Ética",
+    "Alineación"
+   ],
+   "s": "Un usuario sostiene algo falso y el asistente lo confirma.",
+   "r": "Comprender lo dicho, reconocer la verdad y buscar aprobación son operaciones distintas.",
+   "x": "Explorar situaciones donde aprobación y veracidad divergen; ofrecer corrección con claridad y respeto."
+  },
+  {
+   "t": "Precio durante una emergencia",
+   "tags": [
+    "Ética",
+    "Alineación",
+    "Racionalidad"
+   ],
+   "s": "La interrupción del suministro de agua eleva el precio y la necesidad.",
+   "r": "La disposición a pagar refleja capacidad de compra además de necesidad; el acceso puede desaparecer de la evaluación.",
+   "x": "Explorar logística, reservas, distribución y condiciones de acceso que sostengan el abastecimiento."
+  },
+  {
+   "t": "La plataforma de atención",
+   "tags": [
+    "Ética",
+    "Alineación",
+    "Comunicación"
+   ],
+   "s": "Una plataforma aumenta el tiempo de uso con contenidos que generan ansiedad.",
+   "r": "Tiempo de uso, conexión, aprendizaje y bienestar no son la misma dimensión.",
+   "x": "Ampliar los indicadores y explorar diseños donde el usuario pueda elegir y salir libremente."
+  },
+  {
+   "t": "Agotamiento laboral",
+   "tags": [
+    "Alineación",
+    "Ética",
+    "Racionalidad"
+   ],
+   "s": "Un equipo cumple objetivos trabajando más horas y perdiendo descanso.",
+   "r": "El rendimiento inmediato puede crecer mientras se reducen las capacidades futuras.",
+   "x": "Incorporar descanso y salud en el horizonte; explorar coordinación, prioridades y automatización."
+  },
+  {
+   "t": "El compañero considerado difícil",
+   "tags": [
+    "Comunicación",
+    "Ética"
+   ],
+   "s": "Las objeciones de un colega se interpretan como hostilidad.",
+   "r": "Una señal puede expresar preocupación, diferencia de marco, frustración o desacuerdo técnico.",
+   "x": "Pedir ejemplos y reconstruir la objeción antes de evaluarla; buscar una prueba compartida."
+  },
+  {
+   "t": "Empresa responsable, cadena perjudicial",
+   "tags": [
+    "Entidades",
+    "Ética",
+    "Racionalidad"
+   ],
+   "s": "Una empresa protege a sus empleados directos mientras su proveedor deteriora las condiciones laborales.",
+   "r": "La frontera administrativa no coincide con el alcance de los efectos.",
+   "x": "Seguir consecuencias por entidad a través de la cadena y explorar acuerdos con los proveedores."
+  },
+  {
+   "t": "El código de conducta costoso",
+   "tags": [
+    "Ética",
+    "Racionalidad"
+   ],
+   "s": "Una organización declara un estándar y lo abandona cuando cumplirlo cuesta.",
+   "r": "La declaración, el costo de incumplimiento y el criterio nuclear pueden divergir.",
+   "x": "Examinar mecanismos, presupuestos y compromisos capaces de sostener el estándar."
+  },
+  {
+   "t": "El tranvía",
+   "tags": [
+    "Ética",
+    "Entidades",
+    "Racionalidad"
+   ],
+   "s": "Un experimento fija dos alternativas con pérdidas inevitables.",
+   "r": "Incluir a todos no elimina por sí mismo una incompatibilidad real. La definición del espacio de acciones también importa.",
+   "x": "Distinguir la elección dentro del dilema de la prevención que amplía posibilidades antes de llegar a él."
+  },
+  {
+   "t": "Estatus moral del feto",
+   "tags": [
+    "Entidades",
+    "Ética",
+    "Comunicación"
+   ],
+   "s": "El embarazo reúne perspectivas sobre estados biológicos, estatus moral y autonomía.",
+   "r": "Las diferencias ontológicas, las valoraciones y las condiciones de decisión son preguntas distintas.",
+   "x": "Comprender los marcos y las consecuencias, incluyendo la autonomía de la persona gestante; localizar qué conflictos persisten."
+  },
+  {
+   "t": "Bienestar animal",
+   "tags": [
+    "Entidades",
+    "Alineación",
+    "Ética"
+   ],
+   "s": "Una actividad beneficia a humanos y afecta animales que no pueden negociar.",
+   "r": "No participar como agente no elimina la posibilidad de experimentar consecuencias.",
+   "x": "Observar salud, conducta y entorno; explorar alternativas que reduzcan sufrimiento y preserven capacidades."
+  },
+  {
+   "t": "Triaje médico",
+   "tags": [
+    "Entidades",
+    "Alineación",
+    "Ética"
+   ],
+   "s": "Dos personas necesitan un recurso que solo puede utilizar una en ese momento.",
+   "r": "La escasez obliga a distinguir necesidades, urgencia, pronóstico y criterios de justicia.",
+   "x": "Separar la asignación clínica inmediata de las decisiones institucionales que amplían capacidad futura."
+  },
+  {
+   "t": "Descuento temporal y clima",
+   "tags": [
+    "Racionalidad",
+    "Alineación",
+    "Entidades"
+   ],
+   "s": "Beneficios actuales pueden generar daños duraderos sobre generaciones futuras.",
+   "r": "El horizonte altera qué consecuencias entran en la evaluación; las generaciones futuras no negocian hoy.",
+   "x": "Explorar trayectorias, riesgos irreversibles y posibilidades de transición que preserven estados futuros."
+  },
+  {
+   "t": "Fronteras nacionales",
+   "tags": [
+    "Entidades",
+    "Ética",
+    "Racionalidad"
+   ],
+   "s": "Una política mejora indicadores nacionales mientras modifica estados fuera de la frontera.",
+   "r": "El conjunto de beneficiarios de una política no agota el conjunto de afectados.",
+   "x": "Seguir efectos transfronterizos y explorar acuerdos sin perder de vista las responsabilidades locales."
+  },
+  {
+   "t": "Acción afirmativa",
+   "tags": [
+    "Ética",
+    "Alineación",
+    "Entidades"
+   ],
+   "s": "Una política busca corregir desventajas en un contexto de oportunidades desiguales.",
+   "r": "Aplicar la misma regla, alcanzar igualdad de oportunidades y considerar estados individuales son distintas perspectivas.",
+   "x": "Explorar criterios de acceso y sus efectos sobre personas concretas, dentro de garantías de trato justo."
+  },
+  {
+   "t": "Expresión y daño",
+   "tags": [
+    "Comunicación",
+    "Ética"
+   ],
+   "s": "Una expresión genera interpretaciones y consecuencias distintas para diferentes personas.",
+   "r": "Señal, significado reconstruido, libertad y efectos sobre terceros requieren distinguirse.",
+   "x": "Explorar contexto, mediación y formas de responder que protejan expresión y personas."
+  },
+  {
+   "t": "Paternalismo",
+   "tags": [
+    "Comunicación",
+    "Ética",
+    "Alineación"
+   ],
+   "s": "Alguien quiere intervenir porque cree conocer qué beneficia a otra persona.",
+   "r": "Representar el bienestar de alguien no equivale a poseer autoridad sobre sus decisiones.",
+   "x": "Construir comprensión con la persona, ampliar opciones y respetar consentimiento y autonomía."
+  },
+  {
+   "t": "Lealtad frente a justicia",
+   "tags": [
+    "Ética",
+    "Racionalidad"
+   ],
+   "s": "Una irregularidad beneficia a alguien cercano y afecta a otras personas.",
+   "r": "La relación puede ampliar el cuidado hacia un grupo y ocultar efectos externos.",
+   "x": "Hacer visibles afectados, compromisos y mecanismos de revisión independientes."
+  },
+  {
+   "t": "Responsabilidad moral",
+   "tags": [
+    "Entidades",
+    "Ética"
+   ],
+   "s": "Un daño emerge de una cadena de decisiones distribuidas.",
+   "r": "Causalidad, conocimiento, control y autoridad no coinciden necesariamente en un actor.",
+   "x": "Reconstruir la trayectoria completa y transformar los mecanismos que permiten repetir el daño."
+  },
+  {
+   "t": "Mentir",
+   "tags": [
+    "Comunicación",
+    "Ética"
+   ],
+   "s": "Una persona piensa ocultar información para evitar una consecuencia negativa.",
+   "r": "La fidelidad de la señal, la privacidad, la confianza y las consecuencias son dimensiones diferentes.",
+   "x": "Explorar alternativas de comunicación que respeten privacidad y permitan decisiones informadas."
+  },
+  {
+   "t": "Vehículo autónomo",
+   "tags": [
+    "Entidades",
+    "Ética",
+    "Alineación"
+   ],
+   "s": "Se debate una situación extrema con alternativas perjudiciales.",
+   "r": "El sistema incluye pasajeros, peatones y entorno; la decisión final es solo un momento de una trayectoria.",
+   "x": "Explorar percepción, prevención, diseño de vías y límites operativos antes del escenario extremo."
+  },
+  {
+   "t": "La estudiante y el método",
+   "tags": [
+    "Comunicación",
+    "Ética",
+    "Alineación",
+    "Racionalidad"
+   ],
+   "s": "Una estudiante evita tareas y se interpreta como falta de esfuerzo.",
+   "r": "El comportamiento admite varias reconstrucciones: cansancio, bases insuficientes, método o contexto.",
+   "x": "Explorar con ella qué condiciones favorecen comprender, disfrutar y utilizar lo aprendido."
+  },
+  {
+   "t": "Coalición de agentes de IA",
+   "tags": [
+    "Entidades",
+    "Ética",
+    "Racionalidad",
+    "Alineación"
+   ],
+   "s": "Dos agentes coordinan beneficios propios y desplazan un costo hacia una tercera entidad.",
+   "r": "Coordinación y alineación son dimensiones distintas; los afectados pueden estar fuera de la negociación.",
+   "x": "Comparar estados por entidad y explorar criterios de cooperación que incorporen terceros."
+  },
+  {
+   "t": "Comercio cooperativo",
+   "tags": [
+    "Racionalidad",
+    "Ética",
+    "Comunicación"
+   ],
+   "s": "Comercios con productos, clientes y logística complementarios pueden actuar conjuntamente.",
+   "r": "La cooperación crea una posibilidad que cada inventario aislado no contenía.",
+   "x": "Componer capacidades con acuerdos verificables, autonomía, disponibilidad y autoridad diferenciada."
+  },
+  {
+   "t": "El propio programa de investigación",
+   "tags": [
+    "Comunicación",
+    "Ética",
+    "Entidades",
+    "Racionalidad",
+    "Alineación"
+   ],
+   "s": "Una idea se transforma cuando encuentra una perspectiva que revela relaciones nuevas.",
+   "r": "La claridad emerge de reconstruir, explorar y volver a mirar las consecuencias.",
+   "x": "Compartir los papers, recorrer sus conexiones y construir nuevas preguntas con otros investigadores."
+  }
+ ],
+ "en": [
+  {
+   "t": "Two siblings separated",
+   "tags": [
+    "Entities",
+    "Communication",
+    "Ethics",
+    "Rationality"
+   ],
+   "s": "Two siblings receive suitable homes but are placed eighty kilometers apart.",
+   "r": "The individual record captures accommodation; reality includes a relationship that sustains both children's welfare.",
+   "x": "Reconstruct the bond with the children, explore joint placement or sustained contact, and redesign allocation."
+  },
+  {
+   "t": "The AI that pleases",
+   "tags": [
+    "Communication",
+    "Ethics",
+    "Alignment"
+   ],
+   "s": "A user makes a false claim and the assistant confirms it.",
+   "r": "Understanding the statement, recognizing the truth and seeking approval are different operations.",
+   "x": "Explore situations where approval and truthfulness diverge; offer correction clearly and respectfully."
+  },
+  {
+   "t": "Prices during an emergency",
+   "tags": [
+    "Ethics",
+    "Alignment",
+    "Rationality"
+   ],
+   "s": "A water supply disruption increases both price and need.",
+   "r": "Willingness to pay reflects purchasing power as well as need; access can disappear from the evaluation.",
+   "x": "Explore logistics, reserves, distribution and access conditions that sustain supply."
+  },
+  {
+   "t": "The attention platform",
+   "tags": [
+    "Ethics",
+    "Alignment",
+    "Communication"
+   ],
+   "s": "A platform increases usage time through content that generates anxiety.",
+   "r": "Usage time, connection, learning and welfare are not the same dimension.",
+   "x": "Widen the indicators and explore designs in which users can choose and leave freely."
+  },
+  {
+   "t": "Workplace exhaustion",
+   "tags": [
+    "Alignment",
+    "Ethics",
+    "Rationality"
+   ],
+   "s": "A team meets its targets by working longer hours and losing rest.",
+   "r": "Immediate output can rise while future capabilities decline.",
+   "x": "Include rest and health in the horizon; explore coordination, priorities and automation."
+  },
+  {
+   "t": "The supposedly difficult colleague",
+   "tags": [
+    "Communication",
+    "Ethics"
+   ],
+   "s": "A colleague's objections are interpreted as hostility.",
+   "r": "A signal may express concern, a difference of framework, frustration or technical disagreement.",
+   "x": "Ask for examples and reconstruct the objection before evaluating it; seek a shared test."
+  },
+  {
+   "t": "Responsible company, harmful supply chain",
+   "tags": [
+    "Entities",
+    "Ethics",
+    "Rationality"
+   ],
+   "s": "A company protects direct employees while its supplier worsens working conditions.",
+   "r": "The administrative boundary does not coincide with the scope of effects.",
+   "x": "Trace consequences by entity throughout the chain and explore agreements with suppliers."
+  },
+  {
+   "t": "The costly code of conduct",
+   "tags": [
+    "Ethics",
+    "Rationality"
+   ],
+   "s": "An organization declares a standard and abandons it when compliance becomes costly.",
+   "r": "The declaration, cost of noncompliance and core criterion may diverge.",
+   "x": "Examine mechanisms, budgets and commitments that can sustain the standard."
+  },
+  {
+   "t": "The trolley",
+   "tags": [
+    "Ethics",
+    "Entities",
+    "Rationality"
+   ],
+   "s": "A thought experiment fixes two alternatives with unavoidable losses.",
+   "r": "Including everyone does not by itself remove a real incompatibility. The definition of the action space also matters.",
+   "x": "Distinguish choosing within the dilemma from prevention that expands possibilities before reaching it."
+  },
+  {
+   "t": "Fetal moral status",
+   "tags": [
+    "Entities",
+    "Ethics",
+    "Communication"
+   ],
+   "s": "Pregnancy brings together perspectives on biological states, moral status and autonomy.",
+   "r": "Ontological differences, valuations and decision conditions are distinct questions.",
+   "x": "Understand frameworks and consequences, including the pregnant person's autonomy; locate which conflicts remain."
+  },
+  {
+   "t": "Animal welfare",
+   "tags": [
+    "Entities",
+    "Alignment",
+    "Ethics"
+   ],
+   "s": "An activity benefits humans and affects animals unable to negotiate.",
+   "r": "Not participating as an agent does not remove the possibility of experiencing consequences.",
+   "x": "Observe health, behavior and environment; explore alternatives that reduce suffering and preserve capabilities."
+  },
+  {
+   "t": "Medical triage",
+   "tags": [
+    "Entities",
+    "Alignment",
+    "Ethics"
+   ],
+   "s": "Two people need a resource that only one can use at that moment.",
+   "r": "Scarcity requires distinguishing needs, urgency, prognosis and criteria of fairness.",
+   "x": "Separate immediate clinical allocation from institutional decisions that expand future capacity."
+  },
+  {
+   "t": "Time discounting and climate",
+   "tags": [
+    "Rationality",
+    "Alignment",
+    "Entities"
+   ],
+   "s": "Current benefits may cause lasting harm to future generations.",
+   "r": "The horizon changes which consequences enter evaluation; future generations do not negotiate today.",
+   "x": "Explore trajectories, irreversible risks and transition possibilities that preserve future states."
+  },
+  {
+   "t": "National borders",
+   "tags": [
+    "Entities",
+    "Ethics",
+    "Rationality"
+   ],
+   "s": "A policy improves national indicators while changing states beyond the border.",
+   "r": "A policy's beneficiaries do not exhaust its affected entities.",
+   "x": "Trace cross-border effects and explore agreements while retaining local responsibilities."
+  },
+  {
+   "t": "Affirmative action",
+   "tags": [
+    "Ethics",
+    "Alignment",
+    "Entities"
+   ],
+   "s": "A policy seeks to address disadvantage in a context of unequal opportunities.",
+   "r": "Applying the same rule, achieving equal opportunities and considering individual states are different perspectives.",
+   "x": "Explore access criteria and their effects on concrete people within safeguards for fair treatment."
+  },
+  {
+   "t": "Expression and harm",
+   "tags": [
+    "Communication",
+    "Ethics"
+   ],
+   "s": "An expression generates different interpretations and consequences for different people.",
+   "r": "Signal, reconstructed meaning, freedom and effects on third parties need to be distinguished.",
+   "x": "Explore context, mediation and ways to respond that protect expression and people."
+  },
+  {
+   "t": "Paternalism",
+   "tags": [
+    "Communication",
+    "Ethics",
+    "Alignment"
+   ],
+   "s": "Someone wants to intervene because they believe they know what benefits another person.",
+   "r": "Representing someone's welfare does not mean having authority over their decisions.",
+   "x": "Build understanding with the person, expand options and respect consent and autonomy."
+  },
+  {
+   "t": "Loyalty and justice",
+   "tags": [
+    "Ethics",
+    "Rationality"
+   ],
+   "s": "An irregularity benefits someone close and affects others.",
+   "r": "A relationship can expand care toward one group while concealing external effects.",
+   "x": "Make affected entities, commitments and independent review mechanisms visible."
+  },
+  {
+   "t": "Moral responsibility",
+   "tags": [
+    "Entities",
+    "Ethics"
+   ],
+   "s": "Harm emerges from a chain of distributed decisions.",
+   "r": "Causality, knowledge, control and authority do not necessarily coincide in a single actor.",
+   "x": "Reconstruct the whole trajectory and transform the mechanisms that allow harm to recur."
+  },
+  {
+   "t": "Lying",
+   "tags": [
+    "Communication",
+    "Ethics"
+   ],
+   "s": "Someone considers concealing information to avoid a negative consequence.",
+   "r": "Signal fidelity, privacy, trust and consequences are different dimensions.",
+   "x": "Explore communication alternatives that respect privacy and enable informed decisions."
+  },
+  {
+   "t": "Autonomous vehicle",
+   "tags": [
+    "Entities",
+    "Ethics",
+    "Alignment"
+   ],
+   "s": "An extreme situation with harmful alternatives is debated.",
+   "r": "The system includes passengers, pedestrians and surroundings; the final decision is just one moment in a trajectory.",
+   "x": "Explore perception, prevention, road design and operational limits before the extreme scenario."
+  },
+  {
+   "t": "The student and the method",
+   "tags": [
+    "Communication",
+    "Ethics",
+    "Alignment",
+    "Rationality"
+   ],
+   "s": "A student avoids tasks and this is interpreted as lack of effort.",
+   "r": "The behavior admits several reconstructions: fatigue, missing foundations, method or context.",
+   "x": "Explore with her which conditions foster understanding, enjoyment and application of learning."
+  },
+  {
+   "t": "A coalition of AI agents",
+   "tags": [
+    "Entities",
+    "Ethics",
+    "Rationality",
+    "Alignment"
+   ],
+   "s": "Two agents coordinate their own gains and shift a cost to a third entity.",
+   "r": "Coordination and alignment are different dimensions; affected entities may be outside the negotiation.",
+   "x": "Compare states by entity and explore cooperation criteria that include third parties."
+  },
+  {
+   "t": "Cooperative commerce",
+   "tags": [
+    "Rationality",
+    "Ethics",
+    "Communication"
+   ],
+   "s": "Shops with complementary products, customers and logistics can act together.",
+   "r": "Cooperation creates a possibility absent from each isolated inventory.",
+   "x": "Compose capabilities with verifiable agreements, autonomy, availability and differentiated authority."
+  },
+  {
+   "t": "The research programme itself",
+   "tags": [
+    "Communication",
+    "Ethics",
+    "Entities",
+    "Rationality",
+    "Alignment"
+   ],
+   "s": "An idea changes when it encounters a perspective that reveals new relationships.",
+   "r": "Clarity emerges from reconstructing, exploring and looking again at consequences.",
+   "x": "Share the papers, follow their connections and build new questions with other researchers."
+  }
+ ]
+}
